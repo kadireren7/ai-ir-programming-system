@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::execution::evaluator::{execute, ExecutionResult, RuntimeMap};
+use crate::execution::evaluator::{default_reference_runtime, execute, ExecutionResult, RuntimeMap};
 use crate::execution::planner::build_execution_plan;
 use crate::execution::runtime::ExecutionContext;
 use crate::ir::goal::IrGoalEnvelope;
@@ -48,7 +48,7 @@ pub fn run_rust_pipeline(ir_bundle_json: &str) -> Result<Value, String> {
     let (exec_plan_value, exec) = if val_errors.is_empty() && sem_errors.is_empty() {
         let mut ctx = ExecutionContext::new(context.inputs);
         ctx.world_state = context.world_state;
-        let runtime: RuntimeMap = RuntimeMap::new();
+        let runtime: RuntimeMap = default_reference_runtime();
         let (res, final_plan) = execute(&n, &mut ctx, &runtime);
         (json!(final_plan), Some(res))
     } else {

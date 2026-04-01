@@ -29,6 +29,89 @@ pub struct ExecutionResult {
 pub type RuntimeImpl = Box<dyn Fn(Vec<Value>, &mut ExecutionContext) -> Value + Send + Sync>;
 pub type RuntimeMap = HashMap<String, RuntimeImpl>;
 
+fn py_str(v: &Value) -> String {
+    match v {
+        Value::Null => "None".to_string(),
+        Value::Bool(true) => "True".to_string(),
+        Value::Bool(false) => "False".to_string(),
+        Value::Number(n) => n.to_string(),
+        Value::String(s) => s.clone(),
+        _ => v.to_string(),
+    }
+}
+
+/// Same role as Python `default_ir_runtime_impls`: golden IR / bridge parity.
+pub fn default_reference_runtime() -> RuntimeMap {
+    let mut m: RuntimeMap = RuntimeMap::new();
+    m.insert(
+        "exists".to_string(),
+        Box::new(|args, _ctx| json!(args.get(0).map(|v| !v.is_null()).unwrap_or(false))),
+    );
+    m.insert(
+        "strings_equal".to_string(),
+        Box::new(|args, _ctx| {
+            let a = args.get(0).cloned().unwrap_or(Value::Null);
+            let b = args.get(1).cloned().unwrap_or(Value::Null);
+            json!(py_str(&a) == py_str(&b))
+        }),
+    );
+    m.insert(
+        "verify_username".to_string(),
+        Box::new(|_args, _ctx| Value::Bool(true)),
+    );
+    m.insert(
+        "verify_password".to_string(),
+        Box::new(|_args, _ctx| Value::Bool(true)),
+    );
+    m.insert(
+        "user_account_status".to_string(),
+        Box::new(|_args, _ctx| Value::String("active".to_string())),
+    );
+    m.insert(
+        "ip_blacklisted".to_string(),
+        Box::new(|_args, _ctx| Value::Bool(false)),
+    );
+    m.insert(
+        "log_successful_login".to_string(),
+        Box::new(|args, ctx| {
+            let username = args
+                .get(0)
+                .map(py_str)
+                .unwrap_or_else(|| "".to_string());
+            let ip = args.get(1).map(py_str).unwrap_or_else(|| "".to_string());
+            let entry = json!({"event": "login", "username": username, "ip": ip});
+            let log = ctx
+                .world_state
+                .entry("audit_log".to_string())
+                .or_insert_with(|| json!([]));
+            if let Some(arr) = log.as_array_mut() {
+                arr.push(entry);
+            }
+            Value::Null
+        }),
+    );
+    m.insert(
+        "reset_failed_attempts".to_string(),
+        Box::new(|args, ctx| {
+            if let Some(u) = args.get(0) {
+                ctx.world_state
+                    .insert("failed_attempts_reset_for".to_string(), u.clone());
+            }
+            Value::Null
+        }),
+    );
+    m.insert(
+        "start_session".to_string(),
+        Box::new(|args, ctx| {
+            if let Some(u) = args.get(0) {
+                ctx.world_state.insert("session_user".to_string(), u.clone());
+            }
+            Value::Null
+        }),
+    );
+    m
+}
+
 pub fn evaluate_expr(expr: &IrExpr, ctx: &mut ExecutionContext, runtime: &RuntimeMap) -> Value {
     match expr {
         IrExpr::Identifier { name, .. } => ctx

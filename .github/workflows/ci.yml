@@ -15,7 +15,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+        run: |
+          pip install -r requirements-dev.txt
+          pip install -e .
       - name: Pytest
         run: python -m pytest
       - uses: actions/setup-node@v4
@@ -33,7 +35,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install Python deps
-        run: pip install -r requirements-dev.txt
+        run: |
+          pip install -r requirements-dev.txt
+          pip install -e .
       - name: Cargo test
         run: cargo test --manifest-path rust-core/Cargo.toml
       - name: Engine parity (Python vs Rust on golden IR)
