@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TORQA Desktop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/desktop/desktop.css" />
+</head>
+<body class="desk">
+  <div class="desk-shell">
+    <aside class="desk-sidebar" aria-label="Proje">
+      <div class="desk-brand">
+        <span class="desk-logo">PX</span>
+        <div>
+          <div class="desk-title">TORQA</div>
+          <div class="desk-sub">Desktop · IR akışı</div>
+        </div>
+      </div>
+
+      <section class="desk-card">
+        <h2 class="desk-h2">Çalışma klasörü</h2>
+        <p class="desk-muted">Seçtiğiniz klasörün içine <code>torqa-flow</code> oluşturulur.</p>
+        <button type="button" id="btn-folder" class="desk-btn desk-btn-primary desk-btn-block">Klasör seç…</button>
+        <div id="workspace-path" class="desk-path mono" title="Seçilen klasör">Henüz seçilmedi</div>
+      </section>
+
+      <section class="desk-card">
+        <h2 class="desk-h2">Durum</h2>
+        <ul id="ready-list" class="desk-status"></ul>
+      </section>
+
+      <section class="desk-card desk-card-grow">
+        <h2 class="desk-h2">İpuçları</h2>
+        <ul class="desk-tips">
+          <li>Prompt ile IR üretmek için <code>OPENAI_API_KEY</code> gerekir (.env).</li>
+          <li>Tam konsol: <code class="mono">python -m webui</code></li>
+        </ul>
+      </section>
+    </aside>
+
+    <main class="desk-main">
+      <header class="desk-topbar">
+        <div class="desk-tabs" role="tablist">
+          <span class="desk-tab active" role="tab">Prompt</span>
+        </div>
+        <div class="desk-topbar-right mono desk-muted" id="desk-version"></div>
+      </header>
+
+      <div class="desk-editor-zone">
+        <label class="desk-label" for="prompt-input">Ne tür bir akış / IR istiyorsunuz?</label>
+        <textarea id="prompt-input" class="desk-prompt mono" rows="5" spellcheck="false" placeholder="Örn: Basit bir giriş doğrulama akışı; kullanıcı adı ve şifre kontrolü…"></textarea>
+
+        <div class="desk-actions">
+          <button type="button" id="btn-suggest" class="desk-btn desk-btn-accent">IR öner (AI)</button>
+          <button type="button" id="btn-write" class="desk-btn desk-btn-secondary" disabled>Projeyi klasöre yaz</button>
+        </div>
+
+        <p id="desk-message" class="desk-message" role="status"></p>
+
+        <label class="desk-label" for="bundle-preview">IR bundle önizleme</label>
+        <textarea id="bundle-preview" class="desk-json mono" rows="14" spellcheck="false" readonly placeholder="AI yanıtı burada görünür…"></textarea>
+      </div>
+    </main>
+  </div>
+  <script src="/static/desktop/desktop.js"></script>
+</body>
+</html>

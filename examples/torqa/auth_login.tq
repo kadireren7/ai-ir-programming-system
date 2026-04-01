@@ -1,0 +1,13 @@
+module auth.login
+
+intent user_login
+requires email, password
+ensures session.created
+
+flow:
+  validate email
+  validate password
+  find user by email
+  verify password
+  create session
+  emit login_success

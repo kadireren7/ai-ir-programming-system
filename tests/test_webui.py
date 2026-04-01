@@ -20,7 +20,7 @@ def test_api_health(client):
     assert r.status_code == 200
     data = r.json()
     assert data["status"] == "ok"
-    assert data["service"] == "project-x-webui"
+    assert data["service"] == "torqa-webui"
     assert data["canonical_ir_version"] == CANONICAL_IR_VERSION
     assert "package_version" in data
 
@@ -28,7 +28,7 @@ def test_api_health(client):
 def test_index_html(client):
     r = client.get("/")
     assert r.status_code == 200
-    assert b"Project-X Console" in r.content
+    assert b"TORQA Console" in r.content
 
 
 def test_examples_list(client):

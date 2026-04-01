@@ -1,0 +1,28 @@
+{
+  "name": "torqa-vscode",
+  "displayName": "TORQA (.tq)",
+  "description": "TextMate grammar for TORQA source (.tq) and transitional .pxir surface.",
+  "version": "0.0.1",
+  "publisher": "torqa",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "torqa",
+        "aliases": ["TORQA", "torqa"],
+        "extensions": [".tq", ".pxir"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "torqa",
+        "scopeName": "source.torqa",
+        "path": "./syntaxes/torqa.tmLanguage.json"
+      }
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 """
-project-x CLI: validate, diagnostics, project, run, patch, AI, quality, explain, check (full pipeline).
+torqa CLI: validate, diagnostics, project, run, patch, AI, quality, explain, check (full pipeline).
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from src.ir.explain import explain_ir_goal
 from src.ir.quality import build_ir_quality_report
 from src.orchestrator.system_orchestrator import SystemOrchestrator
 from src.projection.projection_strategy import ProjectionContext, explain_projection_strategy
+from src.evolution.ai_proposal_gate import evaluate_ai_proposal
 from src.language.authoring_prompt import language_reference_payload
 from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 
@@ -251,6 +252,14 @@ def cmd_preview_patch(args: argparse.Namespace) -> int:
     return 0 if rep.get("ok") else 1
 
 
+def cmd_proposal_gate(args: argparse.Namespace) -> int:
+    """SELF_EVOLUTION_PIPELINE gate: envelope + diagnostics + light secret scan."""
+    bundle = _load_bundle(Path(args.file))
+    out = evaluate_ai_proposal(bundle)
+    _emit(out, args)
+    return 1 if out.get("rejected") else 0
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     bundle = _load_bundle(Path(args.file))
     g = ir_goal_from_json(bundle)
@@ -285,21 +294,22 @@ def cmd_check(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
-        prog="project-x",
-        description="Project-X IR toolchain (canonical IR source of truth).",
+        prog="torqa",
+        description="TORQA toolchain — semantic core, validation, execution, projections.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="Examples:\n  project-x --json validate examples/core/valid_minimal_flow.json\n"
-        "  project-x guided examples/core/valid_minimal_flow.json --inputs-json '{\"username\":\"a\"}'\n"
-        "  project-x check examples/core/valid_minimal_flow.json --inputs-json '{\"username\":\"a\"}'\n"
-        "  project-x preview-patch bundle.json mutations.json\n"
-        "  project-x demo\n"
-        "  project-x surface examples/surface/minimal.pxir --out bundle.json\n"
-        "  project-x migrate old.json --from-version 1.3 --to-version 1.4 --out new.json\n",
+        epilog="Examples:\n  torqa --json validate examples/core/valid_minimal_flow.json\n"
+        "  torqa guided examples/core/valid_minimal_flow.json --inputs-json '{\"username\":\"a\"}'\n"
+        "  torqa check examples/core/valid_minimal_flow.json --inputs-json '{\"username\":\"a\"}'\n"
+        "  torqa preview-patch bundle.json mutations.json\n"
+        "  torqa demo\n"
+        "  torqa surface examples/surface/minimal.pxir --out bundle.json\n"
+        "  torqa migrate old.json --from-version 1.3 --to-version 1.4 --out new.json\n"
+        "  torqa proposal-gate bundle.json\n",
     )
     p.add_argument(
         "--json",
         action="store_true",
-        help="Emit compact JSON (place before subcommand: project-x --json validate FILE)",
+        help="Emit compact JSON (place before subcommand: torqa --json validate FILE)",
     )
 
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -378,7 +388,7 @@ def main(argv: list[str] | None = None) -> int:
 
     psurf = sub.add_parser(
         "surface",
-        help="Compile .pxir line-oriented subset to canonical IR bundle JSON",
+        help="Compile line-oriented surface subset (.pxir) to canonical JSON IR; .tq parser is planned",
     )
     psurf.add_argument("file", type=str)
     psurf.add_argument("--out", type=str, default=None, help="Write bundle JSON to this path")
@@ -393,6 +403,13 @@ def main(argv: list[str] | None = None) -> int:
     pmig.add_argument("--to-version", dest="to_version", type=str, required=True)
     pmig.add_argument("--out", type=str, default=None)
     pmig.set_defaults(func=cmd_migrate)
+
+    pgate = sub.add_parser(
+        "proposal-gate",
+        help="Reject or accept an AI-proposed bundle (envelope + diagnostics + policy scan; exit 1 if rejected)",
+    )
+    pgate.add_argument("file", type=str)
+    pgate.set_defaults(func=cmd_proposal_gate)
 
     pa = sub.add_parser("ai-suggest", help="LLM IR proposal (validated; needs OPENAI_API_KEY)")
     pa.add_argument("prompt", type=str)

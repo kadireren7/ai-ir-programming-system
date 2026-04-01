@@ -1,0 +1,330 @@
+/* Cursor / VS Code–inspired desktop shell */
+
+:root {
+  --bg: #1e1e1e;
+  --bg-sidebar: #252526;
+  --bg-input: #3c3c3c;
+  --bg-elevated: #2d2d2d;
+  --border: #3e3e42;
+  --text: #cccccc;
+  --text-dim: #858585;
+  --accent: #0078d4;
+  --accent-hover: #1a8cff;
+  --ok: #89d185;
+  --warn: #cca700;
+  --err: #f48771;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --sans: "Inter", system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body.desk {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.45;
+}
+
+.desk-shell {
+  display: flex;
+  height: 100vh;
+  min-height: 0;
+}
+
+.desk-sidebar {
+  width: 280px;
+  min-width: 240px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 10px;
+}
+
+.desk-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.desk-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0078d4, #5c2d91);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desk-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.desk-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.desk-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.desk-card-grow {
+  flex: 1;
+  min-height: 80px;
+}
+
+.desk-h2 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.desk-muted {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.desk-muted code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.desk-path {
+  margin-top: 10px;
+  font-size: 11px;
+  word-break: break-all;
+  color: var(--text-dim);
+  min-height: 2.6em;
+}
+
+.desk-status {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.desk-status li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.desk-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.desk-status .dot.ok {
+  background: var(--ok);
+}
+
+.desk-status .dot.bad {
+  background: var(--err);
+}
+
+.desk-status .dot.warn {
+  background: var(--warn);
+}
+
+.desk-tips {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.desk-tips li {
+  margin-bottom: 6px;
+}
+
+.desk-tips code {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.desk-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+}
+
+.desk-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 40px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+}
+
+.desk-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.desk-tab {
+  padding: 6px 14px;
+  border-radius: 6px 6px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: transparent;
+}
+
+.desk-tab.active {
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-bottom-color: var(--bg);
+  margin-bottom: -1px;
+}
+
+.desk-topbar-right {
+  font-size: 11px;
+}
+
+.desk-editor-zone {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.desk-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.desk-prompt,
+.desk-json {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text);
+  padding: 12px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.desk-prompt:focus,
+.desk-json:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.desk-json {
+  flex: 1;
+  min-height: 200px;
+}
+
+.desk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.desk-btn {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.desk-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.desk-btn-primary {
+  background: #0e639c;
+  border-color: #1177bb;
+  color: #fff;
+}
+
+.desk-btn-primary:hover:not(:disabled) {
+  background: #1177bb;
+}
+
+.desk-btn-accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.desk-btn-accent:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.desk-btn-secondary:hover:not(:disabled) {
+  background: #3c3c3c;
+}
+
+.desk-btn-block {
+  width: 100%;
+}
+
+.desk-message {
+  margin: 0;
+  font-size: 12px;
+  min-height: 1.2em;
+}
+
+.desk-message.err {
+  color: var(--err);
+}
+
+.desk-message.ok {
+  color: var(--ok);
+}

@@ -21,3 +21,5 @@ def test_full_report_flags_duplicate_example():
     assert rep["ok"] is False
     codes = {i["code"] for i in rep["issues"]}
     assert PX_IR_CONDITION_ID_COLLISION in codes
+    collision = next(i for i in rep["issues"] if i["code"] == PX_IR_CONDITION_ID_COLLISION)
+    assert collision.get("formal_phase") == "wellformed"

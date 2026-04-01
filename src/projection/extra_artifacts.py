@@ -1,7 +1,7 @@
 """
 Optional third-party projection hooks (ecosystem).
 
-Set ``PROJECT_X_PROJECTION_MODULE=python.module.path:function_name``; the callable receives
+Set ``TORQA_PROJECTION_MODULE=python.module.path:function_name``; the callable receives
 ``(ir_goal: IRGoal, projection_plan: ProjectionPlan)`` and returns a list of artifact dicts
 (same shape as ``generate_stub_artifact`` outputs) to append after built-in generation.
 """
@@ -21,7 +21,7 @@ def merge_extra_projection_artifacts(
     projection_plan: ProjectionPlan,
     artifacts: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    spec = (os.environ.get("PROJECT_X_PROJECTION_MODULE") or "").strip()
+    spec = (os.environ.get("TORQA_PROJECTION_MODULE") or "").strip()
     if not spec:
         return artifacts
     mod_name, sep, attr = spec.partition(":")

@@ -66,7 +66,7 @@ def language_reference_payload() -> Dict[str, Any]:
     """Structured reference for CLI, tooling, and documentation generators."""
     reg = default_ir_function_registry()
     return {
-        "name": "Project-X core IR",
+        "name": "TORQA core IR (canonical interchange)",
         "design": "verifier_first_ai_native",
         "canonical_ir_version": CANONICAL_IR_VERSION,
         "metadata_required": {
@@ -96,10 +96,21 @@ def language_reference_payload() -> Dict[str, Any]:
         "identifiers": "ASCII [A-Za-z_][A-Za-z0-9_]* for goal, inputs, calls, effect_name",
         "json_object_keys": "ASCII snake_case [a-z][a-z0-9_]*",
         "builtins": _registry_rows(reg),
+        "formal_validation_phases": ["syntax", "kind_type", "wellformed", "policy"],
+        "diagnostics_issue_shape": "Each issue includes legacy phase plus formal_phase (FORMAL_CORE §2); repair loops should group by formal_phase.",
+        "layered_authoring_passes": [
+            "A — skeleton (goal, inputs, metadata, empty arrays)",
+            "B — preconditions / forbids",
+            "C — transitions (void effects; σ must match from_state → to_state per AEM)",
+            "D — postconditions; final full diagnostic",
+        ],
+        "aem_execution": "Reference Python and Rust executors enforce control state σ (before|after) and AEM_* halt codes; see docs/AEM_SPEC.md.",
         "rules": [
+            "See docs/AI_GENERATION_PROFILE.md and docs/SELF_EVOLUTION_PIPELINE.md: validate-then-expand, minimal diff on repair, proposal-gate before merge.",
             "Output exactly one JSON object with top-level key ir_goal (and optional envelope keys only as in schema).",
             "Use only listed builtins by name; match arity. Predicates in conditions; void builtins as transition effect_name only.",
             "Every condition_id and transition_id must be globally unique within ir_goal.",
+            "Chained transitions: after the first before→after step, later transitions must use from_state \"after\" when σ is already after (AEM).",
             "Passing full diagnostics requires structural + handoff + determinism + semantic checks (no verifier bypass).",
             "Multi-surface: valid IR is not website-only — orchestration emits generated/webapp (Vite) plus stubs such as generated/sql/schema.sql, generated/rust/main.rs, generated/python/main.py; logging-like effects raise SQL relevance.",
         ],
@@ -118,7 +129,10 @@ def build_ai_authoring_system_prompt() -> str:
     builtins_block = "\n".join(builtins_lines)
     minimal = minimal_valid_bundle_json(indent=2)
 
-    return f"""You are the Project-X formalization engine: you turn natural-language workflow intent into ONE valid JSON object only (response_format json_object). The artifact is the AI-native core language serialized as data — not prose.
+    return f"""You are the TORQA formalization engine: you turn natural-language workflow intent into ONE valid JSON object only (response_format json_object). The artifact is the TORQA AI-native core language serialized as data — not prose.
+
+## Generation profile (token + error discipline)
+Follow `docs/AI_GENERATION_PROFILE.md` and layered passes in `docs/SELF_EVOLUTION_PIPELINE.md` §5. Use fixed identifier/id vocabulary; validate-then-expand; on verifier failure apply minimal diffs using `code`, legacy `phase`, and **`formal_phase`** (`syntax` | `kind_type` | `wellformed` | `policy` per `docs/FORMAL_CORE.md`) — do not rewrite unrelated sections. Multi-step transitions must respect AEM control state: only the first transition may use `from_state` \"before\" if σ starts at before; once σ is `after`, the next transition’s `from_state` must be `after` unless you insert an explicit earlier step that returns σ to `before` (rare). Omit `library_refs` unless integrating an approved shared library; when present include `name`, `version`, and `fingerprint` if policy requires.
 
 ## Output shape
 Top-level must be: {{"ir_goal": {{...}}}}. No markdown fences, no commentary outside JSON.

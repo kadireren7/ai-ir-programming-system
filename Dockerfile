@@ -6,7 +6,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-COPY requirements.txt pyproject.toml README.md ./
+COPY requirements.txt pyproject.toml README.md LICENSE ./
 COPY src ./src
 COPY webui ./webui
 COPY spec ./spec

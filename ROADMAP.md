@@ -1,14 +1,20 @@
-# Roadmap (honest)
+# TORQA roadmap (honest)
 
-1. **Website milestone** — Baseline done: `tests/test_website_generation_gate.py` + CI `scripts/ci_build_generated_webapp.py` (`npm install` + `npm run build` on materialized `generated/webapp`).
+1. **Website milestone** — Baseline done: `tests/test_website_generation_gate.py` + CI `scripts/ci_build_generated_webapp.py` (`npm install` + `npm run build` on materialized `generated/webapp`) — early **TORQA.web** projection path.
 2. ~~**Parity**~~ — `tests/test_engine_parity_ci.py` runs in the **rust** CI job after `cargo test` (golden `valid_minimal_flow`); local run skips if the bridge is unavailable.
 3. ~~**Patch UX**~~ — Web console: **Patch preview** tab + **Preview patch** button (`POST /api/preview-patch`); CLI had `preview-patch` already.
-4. ~~**Execution traces (baseline)**~~ — `execution_trace` on `/api/run` and `project-x guided`: enriched step summaries (`summary`, `effect_name`); Python fallback uses `ir_execution_plan_to_json`. Web **Trace** tab.
-5. **IR migration** — Real `migrate_ir_bundle` when `1.4+` appears.
+4. ~~**Execution traces (baseline)**~~ — `execution_trace` on `/api/run` and `torqa guided`: enriched step summaries (`summary`, `effect_name`); Python fallback uses `ir_execution_plan_to_json`. Web **Trace** tab.
+5. **IR migration** — `migrate_ir_bundle` for documented jumps (e.g. 1.3→1.4); future bumps as the core evolves.
 
-**Recently shipped:** `project-x guided` (diagnostics → full pipeline JSON), `docker-compose` + `Dockerfile` for the web console, shared `build_console_run_payload` (`src/orchestrator/pipeline_run.py`), golden `valid_start_session_flow.json`, `src/execution/trace_pack.py`, website gate + trace UI tests.
+**Recently shipped:** `torqa guided` (diagnostics → full pipeline JSON), `docker-compose` + `Dockerfile` for the web console, shared `build_console_run_payload` (`src/orchestrator/pipeline_run.py`), golden `valid_start_session_flow.json`, `src/execution/trace_pack.py`, website gate + trace UI tests, **`.tq` illustrative syntax** under `examples/torqa/`.
 
 See `docs/IMPLEMENTATION_STATUS.md` and `STATUS.md`.
+
+**AI-native vision (non-normative):** [`docs/AI_NATIVE_LANGUAGE_CHARTER.md`](docs/AI_NATIVE_LANGUAGE_CHARTER.md) — goals and boundaries; normative wire contract remains [`docs/CORE_SPEC.md`](docs/CORE_SPEC.md).
+
+**Specification stack (formal + ops):** [`docs/FORMAL_CORE.md`](docs/FORMAL_CORE.md) (single law + validation phases), [`docs/AEM_SPEC.md`](docs/AEM_SPEC.md) (abstract machine), [`docs/SELF_EVOLUTION_PIPELINE.md`](docs/SELF_EVOLUTION_PIPELINE.md) (evolution / policy), [`docs/AI_GENERATION_PROFILE.md`](docs/AI_GENERATION_PROFILE.md) (LLM profile; wired in `authoring_prompt.py`). Table and ordering: `CORE_SPEC.md` § *Specification stack*.
+
+**Implemented hooks:** Diagnostics issues carry **`formal_phase`** (`src/diagnostics/formal_phases.py`); Python + Rust executors enforce AEM **σ** + **`aem_codes`**; `torqa proposal-gate FILE` runs `src/evolution/ai_proposal_gate.py` (envelope + diagnostics + light secret scan).
 
 ---
 
@@ -16,8 +22,8 @@ See `docs/IMPLEMENTATION_STATUS.md` and `STATUS.md`.
 
 **What exists now**
 
-- **Web console** (`project-x-console` / Docker): browser UI, Monaco JSON editor, examples, Run, AI suggest (server needs `OPENAI_API_KEY`), no native “pick a folder on disk” workflow.
-- **CLI**: `project-x demo`, `project`, `guided`, `ai-suggest` — all path-based; no bundled graphical installer or VS Code–class shell.
+- **Web console** (`torqa-console` / Docker): browser UI, Monaco JSON editor, examples, Run, AI suggest (server needs `OPENAI_API_KEY`), no native “pick a folder on disk” workflow.
+- **CLI**: `torqa demo`, `project`, `guided`, `ai-suggest` — all path-based; no bundled graphical installer or VS Code–class shell.
 
 **Gap vs a downloadable Cursor-like product**
 
@@ -31,7 +37,7 @@ See `docs/IMPLEMENTATION_STATUS.md` and `STATUS.md`.
 
 **Suggested phases (if you prioritize this)**
 
-1. **MVP shell** — Tauri or Electron: embed `project-x-console` or static build + spawn local FastAPI; “Open folder” → set `PROJECT_ROOT`, list `.json` bundles, run `project-x project` into `generated/` under that root.
+1. **MVP shell** — Tauri or Electron: embed `torqa-console` or static build + spawn local FastAPI; “Open folder” → set `PROJECT_ROOT`, list `.json` bundles, run `torqa project` into `generated/` under that root.
 2. **Prompt UX** — Single panel: natural language → `ai-suggest` → show diff → apply to `ir_goal.json`; reuse patch preview APIs.
 3. **Polish** — Auto-open generated Vite app, session/undo, settings for model endpoint (not only OpenAI).
 
@@ -60,7 +66,7 @@ See `docs/IMPLEMENTATION_STATUS.md` and `STATUS.md`.
 
 1. **v1.3** — Verifier-first IR, multi-surface codegen, AI formalization behind the same wall. *(done)*  
 2. **v1.4+** — Real migrations (1.3→1.4), larger stdlib (`strings_equal`, …), Rust parity path in CI; canonical `ir_version` is **1.4**. *(in repo)*  
-3. **“Language” in the usual sense** — Reference `.pxir` surface (`src/surface/parse_pxir.py`), CLI `project-x surface`, VS Code grammar under `editors/vscode-project-x/`. *(subset + editor grammar; LSP/formatter still future)*  
-4. **Ecosystem** — Third-party projection hook (`PROJECT_X_PROJECTION_MODULE`), optional `library_refs` on bundles + envelope validation. *(hooks + schema; full package registry still future)*
+3. **“Language” in the usual sense** — Canonical **`.tq`** (`examples/torqa/`); transitional `.pxir` (`src/surface/parse_pxir.py`), CLI `torqa surface`, VS Code grammar under `editors/vscode-torqa/`. *(subset + editor grammar; LSP/formatter still future)*  
+4. **Ecosystem** — Third-party projection hook (`TORQA_PROJECTION_MODULE`), optional `library_refs` on bundles + envelope validation. *(hooks + schema; full package registry still future)*
 
 Use this section with `STATUS.md` for honest “where we are” messaging to users and investors.

@@ -36,7 +36,7 @@ def run_rust_core(ir_bundle_json: str) -> Dict[str, Any]:
             "stderr": "Repository rust-core directory is missing or inaccessible.",
         }
     try:
-        timeout = float(os.environ.get("PROJECT_X_RUST_TIMEOUT_SEC", str(_DEFAULT_RUST_TIMEOUT)))
+        timeout = float(os.environ.get("TORQA_RUST_TIMEOUT_SEC", str(_DEFAULT_RUST_TIMEOUT)))
     except ValueError:
         timeout = _DEFAULT_RUST_TIMEOUT
     try:
@@ -53,7 +53,7 @@ def run_rust_core(ir_bundle_json: str) -> Dict[str, Any]:
         return {
             "ok": False,
             "error": "rust_core_timeout",
-            "detail": f"cargo bridge exceeded {timeout}s (set PROJECT_X_RUST_TIMEOUT_SEC to adjust)",
+            "detail": f"cargo bridge exceeded {timeout}s (set TORQA_RUST_TIMEOUT_SEC to adjust)",
             "stderr": "Rust bridge subprocess timed out.",
         }
     except FileNotFoundError as ex:

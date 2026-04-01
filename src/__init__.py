@@ -1,1 +1,1 @@
-# Project-X package root (namespace for `src.*` imports).
+# TORQA package root (namespace for `src.*` imports).

@@ -7,6 +7,13 @@ use crate::execution::runtime::ExecutionContext;
 use crate::ir::expr::IrExpr;
 use crate::ir::goal::{IrCondition, IrGoal, IrTransition};
 
+pub const AEM_PRECOND_FALSE: &str = "AEM_PRECOND_FALSE";
+pub const AEM_FORBID_TRUE: &str = "AEM_FORBID_TRUE";
+pub const AEM_POSTCOND_FALSE: &str = "AEM_POSTCOND_FALSE";
+pub const AEM_EFFECT_REJECT: &str = "AEM_EFFECT_REJECT";
+pub const AEM_EFFECT_EXN: &str = "AEM_EFFECT_EXN";
+pub const AEM_STATE_MISMATCH: &str = "AEM_STATE_MISMATCH";
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExecutionResult {
     pub success: bool,
@@ -15,6 +22,8 @@ pub struct ExecutionResult {
     pub failed_step: Option<String>,
     pub errors: Vec<String>,
     pub after_state_summary: Value,
+    #[serde(default)]
+    pub aem_codes: Vec<String>,
 }
 
 pub type RuntimeImpl = Box<dyn Fn(Vec<Value>, &mut ExecutionContext) -> Value + Send + Sync>;
@@ -93,6 +102,8 @@ pub fn execute(
         .map(|t| (t.transition_id.clone(), t))
         .collect();
     let mut executed = Vec::new();
+    let mut sigma = "before".to_string();
+
     for s in &mut plan.steps {
         match s.kind.as_str() {
             "precondition" => {
@@ -108,6 +119,7 @@ pub fn execute(
                                 failed_step: Some(s.step_id.clone()),
                                 errors: vec![format!("Precondition '{}' failed.", c.condition_id)],
                                 after_state_summary: json!({}),
+                                aem_codes: vec![AEM_PRECOND_FALSE.to_string()],
                             },
                             plan,
                         );
@@ -128,6 +140,7 @@ pub fn execute(
                                 failed_step: Some(s.step_id.clone()),
                                 errors: vec![format!("Forbid '{}' triggered.", c.condition_id)],
                                 after_state_summary: json!({}),
+                                aem_codes: vec![AEM_FORBID_TRUE.to_string()],
                             },
                             plan,
                         );
@@ -137,6 +150,24 @@ pub fn execute(
             }
             "transition" => {
                 if let Some(t) = trans.get(&s.ref_id) {
+                    if sigma != t.from_state {
+                        s.status = "failed".to_string();
+                        return (
+                            ExecutionResult {
+                                success: false,
+                                result_text: None,
+                                executed_transitions: executed,
+                                failed_step: Some(s.step_id.clone()),
+                                errors: vec![format!(
+                                    "Transition {}: σ={} does not match from_state={} (AEM).",
+                                    t.transition_id, sigma, t.from_state
+                                )],
+                                after_state_summary: json!({}),
+                                aem_codes: vec![AEM_STATE_MISMATCH.to_string()],
+                            },
+                            plan,
+                        );
+                    }
                     if let Some(f) = runtime.get(&t.effect_name) {
                         let args = t
                             .arguments
@@ -144,12 +175,73 @@ pub fn execute(
                             .map(|a| evaluate_expr(a, ctx, runtime))
                             .collect::<Vec<_>>();
                         let _ = f(args, ctx);
+                    } else {
+                        s.status = "failed".to_string();
+                        return (
+                            ExecutionResult {
+                                success: false,
+                                result_text: None,
+                                executed_transitions: executed,
+                                failed_step: Some(s.step_id.clone()),
+                                errors: vec![format!(
+                                    "No runtime implementation for transition '{}'.",
+                                    t.effect_name
+                                )],
+                                after_state_summary: json!({}),
+                                aem_codes: vec![AEM_EFFECT_REJECT.to_string()],
+                            },
+                            plan,
+                        );
                     }
+                    sigma = t.to_state.clone();
                     executed.push(t.transition_id.clone());
                     s.status = "executed".to_string();
                 }
             }
-            "finish" => s.status = "done".to_string(),
+            "finish" => {
+                if !goal.postconditions.is_empty() {
+                    if sigma != "after" {
+                        s.status = "failed".to_string();
+                        return (
+                            ExecutionResult {
+                                success: false,
+                                result_text: None,
+                                executed_transitions: executed,
+                                failed_step: Some(s.step_id.clone()),
+                                errors: vec![format!(
+                                    "Postconditions require σ='after' (current σ={}).",
+                                    sigma
+                                )],
+                                after_state_summary: json!({}),
+                                aem_codes: vec![AEM_STATE_MISMATCH.to_string()],
+                            },
+                            plan,
+                        );
+                    }
+                    for c in &goal.postconditions {
+                        let ok = evaluate_expr(&c.expr, ctx, runtime).as_bool().unwrap_or(false);
+                        if !ok {
+                            s.status = "failed".to_string();
+                            return (
+                                ExecutionResult {
+                                    success: false,
+                                    result_text: None,
+                                    executed_transitions: executed,
+                                    failed_step: Some(s.step_id.clone()),
+                                    errors: vec![format!(
+                                        "Postcondition '{}' evaluated to false.",
+                                        c.condition_id
+                                    )],
+                                    after_state_summary: json!({}),
+                                    aem_codes: vec![AEM_POSTCOND_FALSE.to_string()],
+                                },
+                                plan,
+                            );
+                        }
+                    }
+                }
+                s.status = "done".to_string();
+            }
             _ => {}
         }
     }
@@ -161,6 +253,7 @@ pub fn execute(
             failed_step: None,
             errors: vec![],
             after_state_summary: json!({ "guarantees": {}, "reads": [], "writes": [] }),
+            aem_codes: vec![],
         },
         plan,
     )

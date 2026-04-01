@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "pxir",
+  "name": "torqa",
   "patterns": [
     { "include": "#comment" },
     { "include": "#keyword" },
@@ -10,7 +10,7 @@
     "comment": {
       "patterns": [
         {
-          "name": "comment.line.number-sign.pxir",
+          "name": "comment.line.number-sign.torqa",
           "match": "#.*$"
         }
       ]
@@ -18,19 +18,19 @@
     "keyword": {
       "patterns": [
         {
-          "name": "keyword.control.pxir",
-          "match": "\\b(?i)(goal|input|require|forbid|transition|result)\\b"
+          "name": "keyword.control.torqa",
+          "match": "\\b(?i)(module|intent|requires|ensures|flow|goal|input|require|forbid|transition|result|emit|validate|find|verify|create|by)\\b"
         }
       ]
     },
     "identifier": {
       "patterns": [
         {
-          "name": "variable.other.pxir",
+          "name": "variable.other.torqa",
           "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
         }
       ]
     }
   },
-  "scopeName": "source.pxir"
+  "scopeName": "source.torqa"
 }

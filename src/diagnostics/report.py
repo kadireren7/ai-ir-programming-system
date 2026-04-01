@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from src.diagnostics.codes import annotate
+from src.diagnostics.formal_phases import annotate_with_formal
 from src.ir.canonical_ir import (
     IRGoal,
     validate_ir,
@@ -32,12 +32,12 @@ def build_full_diagnostic_report(
     env_err = list(bundle_envelope_errors or [])
 
     issues: List[dict] = []
-    issues.extend(annotate(env_err, phase="envelope"))
-    issues.extend(annotate(structural, phase="structural"))
-    issues.extend(annotate(handoff, phase="handoff"))
-    issues.extend(annotate(determinism, phase="determinism"))
-    issues.extend(annotate(sem_err, phase="semantic"))
-    warnings = annotate(sem_warn, phase="semantic_warning")
+    issues.extend(annotate_with_formal(env_err, legacy_phase="envelope"))
+    issues.extend(annotate_with_formal(structural, legacy_phase="structural"))
+    issues.extend(annotate_with_formal(handoff, legacy_phase="handoff"))
+    issues.extend(annotate_with_formal(determinism, legacy_phase="determinism"))
+    issues.extend(annotate_with_formal(sem_err, legacy_phase="semantic"))
+    warnings = annotate_with_formal(sem_warn, legacy_phase="semantic_warning")
 
     ok = (
         len(env_err) == 0

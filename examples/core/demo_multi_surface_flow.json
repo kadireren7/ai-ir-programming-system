@@ -78,7 +78,7 @@
         "transition_id": "t_0002",
         "effect_name": "start_session",
         "arguments": [{ "type": "identifier", "name": "username" }],
-        "from_state": "before",
+        "from_state": "after",
         "to_state": "after"
       }
     ],
@@ -90,7 +90,7 @@
       "canonical_language": "english",
       "source_map": { "available": true, "prototype_only": true },
       "demo_pack": "multi_surface",
-      "demo_note": "Golden login IR tagged for demos: run project-x demo or load in web console; pipeline emits Vite webapp plus SQL/Rust/Python/Go/C++/TS stub surfaces."
+      "demo_note": "Golden login IR tagged for demos: run torqa demo or load in web console; pipeline emits Vite webapp plus SQL/Rust/Python/Go/C++/TS stub surfaces."
     }
   }
 }

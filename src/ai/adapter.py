@@ -14,12 +14,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src.diagnostics.codes import (
-    PX_AI_HTTP,
-    PX_AI_MAX_RETRIES,
-    PX_AI_NO_KEY,
-    annotate,
-)
+from src.diagnostics.codes import PX_AI_HTTP, PX_AI_MAX_RETRIES, PX_AI_NO_KEY
+from src.diagnostics.formal_phases import annotate_with_formal
 from src.diagnostics.report import build_full_diagnostic_report
 from src.ir.canonical_ir import ir_goal_from_json
 from src.language.authoring_prompt import build_ai_authoring_system_prompt
@@ -85,9 +81,9 @@ def suggest_ir_bundle_from_prompt(
             "ok": False,
             "ir_bundle": None,
             "attempts": [],
-            "issues": annotate(
+            "issues": annotate_with_formal(
                 ["OPENAI_API_KEY is not set; configure the key to enable AI suggestions."],
-                phase="ai",
+                legacy_phase="ai",
             ),
             "code": PX_AI_NO_KEY,
         }
@@ -132,7 +128,9 @@ def suggest_ir_bundle_from_prompt(
                 "ok": False,
                 "ir_bundle": None,
                 "attempts": attempts,
-                "issues": annotate([f"{PX_AI_HTTP}: {ex.code} {err_body[:500]}"], phase="ai"),
+                "issues": annotate_with_formal(
+                    [f"{PX_AI_HTTP}: {ex.code} {err_body[:500]}"], legacy_phase="ai"
+                ),
                 "code": PX_AI_HTTP,
             }
         except Exception as ex:
@@ -141,7 +139,7 @@ def suggest_ir_bundle_from_prompt(
                 "ok": False,
                 "ir_bundle": None,
                 "attempts": attempts,
-                "issues": annotate([str(ex)], phase="ai"),
+                "issues": annotate_with_formal([str(ex)], legacy_phase="ai"),
                 "code": PX_AI_HTTP,
             }
 
@@ -185,6 +183,8 @@ def suggest_ir_bundle_from_prompt(
         "ok": False,
         "ir_bundle": None,
         "attempts": attempts,
-        "issues": annotate(["Max retries exceeded; IR still invalid."], phase="ai"),
+        "issues": annotate_with_formal(
+            ["Max retries exceeded; IR still invalid."], legacy_phase="ai"
+        ),
         "code": PX_AI_MAX_RETRIES,
     }

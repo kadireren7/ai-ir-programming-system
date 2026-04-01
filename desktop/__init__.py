@@ -1,1 +1,1 @@
-"""Project-X desktop shell (pywebview + local FastAPI)."""
+"""TORQA desktop shell (pywebview + local FastAPI)."""

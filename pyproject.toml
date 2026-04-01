@@ -3,10 +3,11 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "project-x"
+name = "torqa"
 version = "0.0.0"
-description = "AI-first IR core with verifier, projections, and web console"
+description = "TORQA: AI-native core language — semantic-first, validation-oriented, projection-ready"
 readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.115.0",
@@ -21,14 +22,22 @@ dev = [
     "httpx>=0.27.0",
     "jsonschema>=4.23.0",
 ]
+# Base desktop (Tk) needs no extra wheels. pywebview pulls pythonnet on Windows and
+# often fails to build (Python 3.14+, NuGet). Optional embedded browser:
+#   pip install -e ".[desktop-webview]"
+desktop = []
+desktop-webview = [
+    "pywebview>=4.4",
+]
 
 [project.scripts]
-project-x = "src.cli.main:main"
-project-x-console = "webui.__main__:main"
+torqa = "src.cli.main:main"
+torqa-console = "webui.__main__:main"
+torqa-desktop = "desktop.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*", "webui*"]
+include = ["src*", "webui*", "desktop*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

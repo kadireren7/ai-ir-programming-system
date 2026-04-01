@@ -1,4 +1,4 @@
-"""Used when env ``PROJECT_X_PROJECTION_MODULE=tests.fixtures.extra_projection:build_extra_artifacts`` is set."""
+"""Used when env ``TORQA_PROJECTION_MODULE=tests.fixtures.extra_projection:build_extra_artifacts`` is set."""
 
 from __future__ import annotations
 

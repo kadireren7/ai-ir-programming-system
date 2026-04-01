@@ -78,7 +78,7 @@
         "transition_id": "t_0002",
         "effect_name": "start_session",
         "arguments": [{ "type": "identifier", "name": "username" }],
-        "from_state": "before",
+        "from_state": "after",
         "to_state": "after"
       }
     ],

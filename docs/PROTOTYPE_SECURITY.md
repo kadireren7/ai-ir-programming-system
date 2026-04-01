@@ -1,6 +1,6 @@
 # Prototype security notice
 
-Project-X is an **early architecture prototype**, not a hardened production platform.
+TORQA is an **early architecture prototype**, not a hardened production platform.
 
 - Generated web apps and server stubs are **demonstration projections**. Do not expose them to the public internet without a full security review.
 - The web console (`webui/`) runs a local FastAPI server. Bind to `127.0.0.1` for local trials; do not run it as a multi-tenant service without authentication and isolation.

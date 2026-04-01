@@ -13,13 +13,13 @@ REPO = Path(__file__).resolve().parents[1]
 
 @pytest.fixture
 def hook_env():
-    old = os.environ.get("PROJECT_X_PROJECTION_MODULE")
-    os.environ["PROJECT_X_PROJECTION_MODULE"] = "tests.fixtures.extra_projection:build_extra_artifacts"
+    old = os.environ.get("TORQA_PROJECTION_MODULE")
+    os.environ["TORQA_PROJECTION_MODULE"] = "tests.fixtures.extra_projection:build_extra_artifacts"
     yield
     if old is None:
-        os.environ.pop("PROJECT_X_PROJECTION_MODULE", None)
+        os.environ.pop("TORQA_PROJECTION_MODULE", None)
     else:
-        os.environ["PROJECT_X_PROJECTION_MODULE"] = old
+        os.environ["TORQA_PROJECTION_MODULE"] = old
 
 
 def test_merge_extra_projection_artifact(hook_env):

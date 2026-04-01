@@ -1,11 +1,12 @@
 """
-Project-X web console (English): load core IR examples, run verifier + orchestrator, preview projections.
+TORQA web console: load canonical IR examples, run verifier + orchestrator, preview projections.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
@@ -46,7 +47,7 @@ except ImportError:
 EXAMPLES_DIR = REPO_ROOT / "examples" / "core"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
-_LOG = logging.getLogger("project_x.webui")
+_LOG = logging.getLogger("torqa.webui")
 
 
 def _bundle_envelope_errors(bundle: Dict[str, Any]) -> List[str]:
@@ -61,7 +62,7 @@ async def lifespan(app: FastAPI):
         level=logging.INFO,
         format="%(levelname)s [%(name)s] %(message)s",
     )
-    _LOG.info("Project-X web console ready")
+    _LOG.info("TORQA web console ready")
     yield
 
 
@@ -87,8 +88,8 @@ class SystemHealthRequest(RunRequest):
 
 
 app = FastAPI(
-    title="Project-X Console",
-    description="AI-first core IR: validate, execute (engine), generate projections.",
+    title="TORQA Console",
+    description="TORQA: validate semantic core, execute (engine), generate projections.",
     version="0.3.0",
     lifespan=lifespan,
 )
@@ -107,11 +108,40 @@ def index_page():
     return FileResponse(index)
 
 
+DESKTOP_STATIC = STATIC_DIR / "desktop"
+
+
+@app.get("/desktop")
+def desktop_page():
+    page = DESKTOP_STATIC / "index.html"
+    if not page.is_file():
+        raise HTTPException(500, "desktop UI missing: webui/static/desktop/index.html")
+    return FileResponse(page)
+
+
+@app.get("/api/desktop/ready")
+def desktop_ready():
+    """Masaüstü arayüzü için ortam özeti (API anahtarı şema doğrulama vb.)."""
+    openai_ok = bool(os.environ.get("OPENAI_API_KEY", "").strip())
+    try:
+        import jsonschema  # noqa: F401
+
+        jsonschema_ok = True
+    except ImportError:
+        jsonschema_ok = False
+    return {
+        "openai_configured": openai_ok,
+        "jsonschema_available": jsonschema_ok,
+        "package_version": _package_version(),
+        "canonical_ir_version": CANONICAL_IR_VERSION,
+    }
+
+
 def _package_version() -> str:
     try:
         from importlib.metadata import version
 
-        return version("project-x")
+        return version("torqa")
     except Exception:
         return "0.0.0"
 
@@ -120,7 +150,7 @@ def _package_version() -> str:
 def health():
     return {
         "status": "ok",
-        "service": "project-x-webui",
+        "service": "torqa-webui",
         "canonical_ir_version": CANONICAL_IR_VERSION,
         "package_version": _package_version(),
     }

@@ -23,6 +23,14 @@ from src.ir.canonical_ir import (
     IRStringLiteral,
     IRTransition,
 )
+from src.diagnostics.aem_codes import (
+    AEM_EFFECT_EXN,
+    AEM_EFFECT_REJECT,
+    AEM_FORBID_TRUE,
+    AEM_POSTCOND_FALSE,
+    AEM_PRECOND_FALSE,
+    AEM_STATE_MISMATCH,
+)
 from src.semantics.ir_semantics import (
     IRFunctionSignature,
     build_ir_guarantee_table,
@@ -59,6 +67,7 @@ class IRExecutionResult:
         failed_step: Optional[IRExecutionStep] = None,
         errors: Optional[List[str]] = None,
         after_state_summary: Optional[dict] = None,
+        aem_codes: Optional[List[str]] = None,
     ):
         self.success = success
         self.result_text = result_text
@@ -66,6 +75,7 @@ class IRExecutionResult:
         self.failed_step = failed_step
         self.errors = errors or []
         self.after_state_summary = after_state_summary or {}
+        self.aem_codes = list(aem_codes or [])
 
 
 def build_ir_execution_plan(ir_goal: IRGoal) -> IRExecutionPlan:
@@ -250,6 +260,7 @@ def execute_ir_goal(
     forbid_by_id = {c.condition_id: c for c in ir_goal.forbids}
     trans_by_id = {t.transition_id: t for t in ir_goal.transitions}
     executed: List[str] = []
+    sigma = "before"
 
     for s in plan.steps:
         try:
@@ -265,6 +276,7 @@ def execute_ir_goal(
                             failed_step=s,
                             errors=[f"Precondition {c.condition_id} evaluated to false."],
                             after_state_summary={},
+                            aem_codes=[AEM_PRECOND_FALSE],
                         ),
                         plan,
                     )
@@ -281,25 +293,93 @@ def execute_ir_goal(
                             failed_step=s,
                             errors=[f"Forbid {c.condition_id} evaluated to true."],
                             after_state_summary={},
+                            aem_codes=[AEM_FORBID_TRUE],
                         ),
                         plan,
                     )
                 s.status = "passed"
             elif s.kind == "transition":
                 t = trans_by_id[s.ref_id]
+                if sigma != t.from_state:
+                    s.status = "failed"
+                    return (
+                        IRExecutionResult(
+                            False,
+                            None,
+                            list(executed),
+                            failed_step=s,
+                            errors=[
+                                f"Transition {t.transition_id}: control state σ={sigma!r} "
+                                f"does not match required from_state={t.from_state!r} (AEM)."
+                            ],
+                            after_state_summary={},
+                            aem_codes=[AEM_STATE_MISMATCH],
+                        ),
+                        plan,
+                    )
                 fn = runtime_impls.get(t.effect_name)
                 if fn is None:
-                    raise RuntimeError(
-                        f"No runtime implementation for transition '{t.effect_name}'"
+                    s.status = "failed"
+                    return (
+                        IRExecutionResult(
+                            False,
+                            None,
+                            list(executed),
+                            failed_step=s,
+                            errors=[
+                                f"No runtime implementation for transition '{t.effect_name}'."
+                            ],
+                            after_state_summary={},
+                            aem_codes=[AEM_EFFECT_REJECT],
+                        ),
+                        plan,
                     )
                 args = [
                     evaluate_ir_expr(a, context, reg, runtime_impls)
                     for a in t.arguments
                 ]
                 _invoke_runtime(fn, args, context)
+                sigma = t.to_state
                 executed.append(t.transition_id)
                 s.status = "executed"
             elif s.kind == "finish":
+                if ir_goal.postconditions:
+                    if sigma != "after":
+                        s.status = "failed"
+                        return (
+                            IRExecutionResult(
+                                False,
+                                None,
+                                list(executed),
+                                failed_step=s,
+                                errors=[
+                                    "Postconditions require control state σ='after' "
+                                    f"(current σ={sigma!r}) per AEM schedule."
+                                ],
+                                after_state_summary={},
+                                aem_codes=[AEM_STATE_MISMATCH],
+                            ),
+                            plan,
+                        )
+                    for c in ir_goal.postconditions:
+                        if not bool(
+                            evaluate_ir_expr(c.expr, context, reg, runtime_impls)
+                        ):
+                            s.status = "failed"
+                            return (
+                                IRExecutionResult(
+                                    False,
+                                    None,
+                                    list(executed),
+                                    failed_step=s,
+                                    errors=[
+                                        f"Postcondition {c.condition_id} evaluated to false."
+                                    ],
+                                    after_state_summary={},
+                                    aem_codes=[AEM_POSTCOND_FALSE],
+                                ),
+                                plan,
+                            )
                 s.status = "done"
         except Exception as ex:
             s.status = "failed"
@@ -311,6 +391,7 @@ def execute_ir_goal(
                     failed_step=s,
                     errors=[str(ex)],
                     after_state_summary={},
+                    aem_codes=[AEM_EFFECT_EXN],
                 ),
                 plan,
             )
@@ -321,6 +402,7 @@ def execute_ir_goal(
             ir_goal.result,
             list(executed),
             after_state_summary=_build_after_state_summary(ir_goal, executed, reg),
+            aem_codes=[],
         ),
         plan,
     )
@@ -346,6 +428,7 @@ def ir_execution_result_to_json(result: IRExecutionResult) -> dict:
         "executed_transitions": list(result.executed_transitions),
         "errors": list(result.errors),
         "after_state_summary": dict(result.after_state_summary),
+        "aem_codes": list(result.aem_codes),
     }
     out["failed_step"] = (
         ir_execution_step_to_json(result.failed_step)

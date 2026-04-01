@@ -34,4 +34,6 @@ def test_ai_system_prompt_covers_registry_and_rules():
     assert "exists" in text and "log_successful_login" in text
     assert "c_req_" in text and "c_forbid_" in text
     assert "python_prototype" in text
-    assert "Project-X" in text
+    assert "TORQA" in text
+    assert "formal_phase" in text
+    assert "AEM" in text

@@ -2,7 +2,7 @@
 
 ## Web (`webui/app.py`)
 
-Run locally: `project-x-console`, `python -m webui`, or `uvicorn webui.app:app`.
+Run locally: `TORQA-console`, `python -m webui`, or `uvicorn webui.app:app`.
 
 | Endpoint | Purpose |
 |----------|---------|

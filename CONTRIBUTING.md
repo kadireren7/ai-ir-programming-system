@@ -1,4 +1,4 @@
-# Contributing
+# Contributing — TORQA
 
 ## Canonical code layout
 
@@ -31,7 +31,7 @@ Optional AI features require `OPENAI_API_KEY` in the environment where uvicorn r
 
 ```bash
 pip install -e ".[dev]"
-project-x --help
+torqa --help
 ```
 
 ## IR contract

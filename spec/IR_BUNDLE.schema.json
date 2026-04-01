@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://project-x.local/spec/ir-bundle-1.4.json",
-  "title": "Project-X IR bundle (handoff envelope)",
-  "description": "Canonical JSON envelope for IRGoal. Source of truth is the structured core; this schema documents the wire format.",
+  "$id": "https://torqa.dev/spec/ir-bundle-1.4.json",
+  "title": "TORQA IR bundle (handoff envelope)",
+  "description": "Canonical JSON envelope for TORQA IRGoal interchange. Source of truth is the structured semantic core; this schema documents the wire format.",
   "type": "object",
   "required": ["ir_goal"],
   "additionalProperties": false,

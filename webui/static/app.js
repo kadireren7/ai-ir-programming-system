@@ -1,5 +1,5 @@
 /**
- * Project-X Console — Monaco-backed JSON editors + pipeline actions.
+ * TORQA Console — Monaco-backed JSON editors + pipeline actions.
  */
 /* global require, monaco */
 
@@ -155,7 +155,7 @@ function fillPipelineOutputPanels(out) {
   $("out-artifacts").textContent = JSON.stringify(
     {
       by_target_language: byTargetLanguage,
-      note: "Not only website: check generated/sql, generated/rust, generated/python, etc. when using project-x demo.",
+      note: "Not only website: check generated/sql, generated/rust, generated/python, etc. when using torqa demo.",
       artifacts: summary,
     },
     null,
@@ -190,7 +190,7 @@ function initMonaco() {
     require(
       ["vs/editor/editor.main"],
       () => {
-        monaco.editor.defineTheme("project-x", {
+        monaco.editor.defineTheme("torqa", {
           base: "vs-dark",
           inherit: true,
           rules: [],
@@ -203,7 +203,7 @@ function initMonaco() {
             "minimap.background": "#0a0e14",
           },
         });
-        monaco.editor.setTheme("project-x");
+        monaco.editor.setTheme("torqa");
 
         const editorOpts = {
           fontFamily: "'JetBrains Mono', ui-monospace, monospace",

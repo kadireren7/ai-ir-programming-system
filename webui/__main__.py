@@ -1,5 +1,5 @@
 """
-Run the Project-X web console: ``python -m webui`` or ``project-x-console``.
+Run the TORQA web console: ``python -m webui`` or ``torqa-console``.
 """
 
 from __future__ import annotations
@@ -10,19 +10,19 @@ import os
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="project-x-console",
-        description="Project-X web console (FastAPI + static UI).",
+        prog="torqa-console",
+        description="TORQA web console (FastAPI + static UI).",
     )
     parser.add_argument(
         "--host",
-        default=os.environ.get("PROJECT_X_HOST", "127.0.0.1"),
-        help="Bind address (default: 127.0.0.1 or PROJECT_X_HOST).",
+        default=os.environ.get("TORQA_WEB_HOST", "127.0.0.1"),
+        help="Bind address (default: 127.0.0.1 or TORQA_WEB_HOST).",
     )
     parser.add_argument(
         "--port",
         type=int,
-        default=int(os.environ.get("PROJECT_X_PORT", "8000")),
-        help="Port (default: 8000 or PROJECT_X_PORT).",
+        default=int(os.environ.get("TORQA_WEB_PORT", "8000")),
+        help="Port (default: 8000 or TORQA_WEB_PORT).",
     )
     parser.add_argument(
         "--no-reload",

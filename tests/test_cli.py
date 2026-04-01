@@ -39,6 +39,20 @@ def test_cli_language():
     assert data.get("canonical_ir_version")
     assert isinstance(data.get("builtins"), list)
     assert len(data["builtins"]) >= 3
+    assert data.get("formal_validation_phases") == [
+        "syntax",
+        "kind_type",
+        "wellformed",
+        "policy",
+    ]
+
+
+def test_cli_proposal_gate_minimal_ok():
+    p = REPO / "examples" / "core" / "valid_minimal_flow.json"
+    r = _run("proposal-gate", str(p))
+    assert r.returncode == 0, r.stderr
+    data = json.loads(r.stdout)
+    assert data.get("rejected") is False
 
 
 def test_cli_demo_multi_surface():
