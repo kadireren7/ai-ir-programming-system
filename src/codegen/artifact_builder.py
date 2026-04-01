@@ -70,6 +70,8 @@ def build_generation_plan(ir_goal: IRGoal, projection_plan: ProjectionPlan) -> D
     website_files = [
         "generated/webapp/package.json",
         "generated/webapp/tsconfig.json",
+        "generated/webapp/vite.config.ts",
+        "generated/webapp/index.html",
         "generated/webapp/README.md",
         "generated/webapp/src/main.tsx",
         "generated/webapp/src/App.tsx",
@@ -77,6 +79,7 @@ def build_generation_plan(ir_goal: IRGoal, projection_plan: ProjectionPlan) -> D
         "generated/webapp/src/pages/LoginPage.tsx",
         "generated/webapp/src/pages/DashboardPage.tsx",
         "generated/webapp/src/styles.css",
+        "generated/webapp/src/vite-env.d.ts",
     ]
     if len(ir_goal.transitions) > 0:
         website_files.append("generated/webapp/src/server_stub.ts")
@@ -178,7 +181,7 @@ def _generate_website_artifact(goal: IRGoal, plan: Dict[str, Any]) -> Dict[str, 
   "version": "0.1.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -188,7 +191,8 @@ def _generate_website_artifact(goal: IRGoal, plan: Dict[str, Any]) -> Dict[str, 
   "devDependencies": {
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
-    "typescript": "^5.6.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.6.3",
     "vite": "^5.4.8"
   }
 }
@@ -207,6 +211,37 @@ def _generate_website_artifact(goal: IRGoal, plan: Dict[str, Any]) -> Dict[str, 
   },
   "include": ["src"]
 }
+""",
+        ),
+        (
+            "generated/webapp/vite.config.ts",
+            """import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+});
+""",
+        ),
+        (
+            "generated/webapp/index.html",
+            """<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generated app</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+""",
+        ),
+        (
+            "generated/webapp/src/vite-env.d.ts",
+            """/// <reference types="vite/client" />
 """,
         ),
         (
@@ -361,6 +396,8 @@ def can_generate_simple_website(
     required = {
         "generated/webapp/package.json",
         "generated/webapp/tsconfig.json",
+        "generated/webapp/vite.config.ts",
+        "generated/webapp/index.html",
         "generated/webapp/src/main.tsx",
         "generated/webapp/src/App.tsx",
     }
