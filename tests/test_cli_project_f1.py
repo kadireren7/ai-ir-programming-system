@@ -33,15 +33,6 @@ def test_project_from_json_writes_and_is_idempotent(tmp_path):
     assert sorted(data1["written"]) == sorted(data2["written"])
 
 
-def test_project_from_tq_source(tmp_path):
-    tq = REPO / "examples" / "workspace_minimal" / "app.tq"
-    r = _run("project", "--root", str(tmp_path), "--source", str(tq), "--out", "out", "--engine-mode", "python_only")
-    assert r.returncode == 0, r.stderr + r.stdout
-    data = json.loads(r.stdout)
-    assert data["ok"] is True
-    assert data["written"]
-
-
 def test_project_login_flow_includes_local_webapp_hint(tmp_path):
     src = REPO / "examples" / "core" / "valid_login_flow.json"
     r = _run("project", "--root", str(tmp_path), "--source", str(src), "--out", "g", "--engine-mode", "python_only")

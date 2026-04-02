@@ -1,0 +1,17 @@
+[
+  "generated/cpp/main.cpp",
+  "generated/go/main.go",
+  "generated/rust/main.rs",
+  "generated/webapp/README.md",
+  "generated/webapp/index.html",
+  "generated/webapp/package.json",
+  "generated/webapp/src/App.tsx",
+  "generated/webapp/src/main.tsx",
+  "generated/webapp/src/pages/DashboardPage.tsx",
+  "generated/webapp/src/pages/LandingPage.tsx",
+  "generated/webapp/src/pages/LoginPage.tsx",
+  "generated/webapp/src/styles.css",
+  "generated/webapp/src/vite-env.d.ts",
+  "generated/webapp/tsconfig.json",
+  "generated/webapp/vite.config.ts"
+]
