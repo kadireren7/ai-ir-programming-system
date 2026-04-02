@@ -13,7 +13,7 @@ from src.ir.canonical_ir import IRGoal
 
 
 SUPPORTED_LANGUAGES = frozenset(
-    {"rust", "go", "cpp", "python", "typescript", "sql"}
+    {"rust", "go", "kotlin", "cpp", "python", "typescript", "sql"}
 )
 SUPPORTED_PURPOSES = frozenset(
     {

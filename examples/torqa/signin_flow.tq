@@ -1,0 +1,15 @@
+module auth.signin
+
+intent user_signin
+requires username, password, ip_address
+forbid locked
+ensures session.created
+result Sign-in completed
+
+flow:
+  validate username
+  validate password
+  find user by username
+  verify password
+  create session
+  emit login_success

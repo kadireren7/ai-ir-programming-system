@@ -8,6 +8,7 @@ from src.projection.extra_artifacts import merge_extra_projection_artifacts
 from src.codegen.ir_to_projection import (
     ir_goal_cpp_projection,
     ir_goal_go_projection,
+    ir_goal_kotlin_projection,
     ir_goal_python_projection,
     ir_goal_rust_projection,
     ir_goal_server_typescript_stub,
@@ -156,6 +157,8 @@ def generate_stub_artifact(goal: IRGoal, target: ProjectionTarget) -> Dict[str, 
         ]
     elif lang == "go":
         files = [("generated/go/main.go", ir_goal_go_projection(goal))]
+    elif lang == "kotlin":
+        files = [("generated/kotlin/Main.kt", ir_goal_kotlin_projection(goal))]
     else:
         files = [("generated/cpp/main.cpp", ir_goal_cpp_projection(goal))]
     return {

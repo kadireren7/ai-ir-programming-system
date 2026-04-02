@@ -28,6 +28,19 @@ let mutationsEditor = null;
 let monacoReady = false;
 let useFallback = false;
 
+/** @type {'ir' | 'tq'} */
+let editorMode = "ir";
+let savedIrText = "";
+let savedTqText = "";
+
+const DEFAULT_TQ_BOOT = `# TORQA surface — Load signin sample or paste .tq
+module auth.signin
+intent user_signin
+requires username, password, ip_address
+flow:
+  validate username
+`;
+
 /** Active step 1–4; earlier steps show as done. */
 let workflowActive = 1;
 
@@ -274,6 +287,42 @@ function enableTextareaFallback(msg) {
   setStatus(msg || "Monaco CDN unavailable — using basic text editor.", "bad");
 }
 
+function setEditorMode(mode) {
+  editorMode = mode;
+  const bIr = $("btn-mode-ir");
+  const bTq = $("btn-mode-tq");
+  if (bIr) bIr.classList.toggle("active", mode === "ir");
+  if (bTq) bTq.classList.toggle("active", mode === "tq");
+  const compileBtn = $("btn-compile-tq");
+  const tqSam = $("btn-load-tq-sample");
+  const fmt = $("btn-format-ir");
+  if (compileBtn) compileBtn.hidden = mode !== "tq";
+  if (tqSam) tqSam.hidden = mode !== "tq";
+  if (fmt) fmt.hidden = mode === "tq";
+
+  if (useFallback) {
+    const ta = $("ir-editor-fallback");
+    if (mode === "tq") {
+      savedIrText = ta.value;
+      ta.value = savedTqText || DEFAULT_TQ_BOOT;
+    } else {
+      savedTqText = ta.value;
+      ta.value = savedIrText || DEFAULT_IR;
+    }
+    return;
+  }
+  if (!irEditor || !window.monaco) return;
+  if (mode === "tq") {
+    savedIrText = irEditor.getValue();
+    window.monaco.editor.setModelLanguage(irEditor.getModel(), "plaintext");
+    irEditor.setValue(savedTqText || DEFAULT_TQ_BOOT);
+  } else {
+    savedTqText = irEditor.getValue();
+    window.monaco.editor.setModelLanguage(irEditor.getModel(), "json");
+    irEditor.setValue(savedIrText || DEFAULT_IR);
+  }
+}
+
 async function refreshExamples() {
   const data = await fetchJSON("/api/examples");
   const ul = $("example-list");
@@ -298,6 +347,84 @@ function selectedExampleName() {
 }
 
 $("btn-format-ir").addEventListener("click", formatIrEditor);
+
+const _irFileInput = $("ir-file-input");
+const _btnOpenIr = $("btn-open-ir-file");
+if (_btnOpenIr && _irFileInput) {
+  _btnOpenIr.addEventListener("click", () => _irFileInput.click());
+  _irFileInput.addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || "");
+      const chk = parseJsonLabel(text, "IR bundle");
+      if (!chk.ok) {
+        showParseHint(chk.error);
+        setStatus("Geçersiz JSON dosyası.", "bad");
+        return;
+      }
+      hideParseHint();
+      savedIrText = text;
+      if (editorMode !== "ir") setEditorMode("ir");
+      else setIrText(text);
+      setStatus("Dosya yüklendi: " + f.name, "ok");
+    };
+    reader.onerror = () => setStatus("Dosya okunamadı.", "bad");
+    reader.readAsText(f, "UTF-8");
+  });
+}
+
+const _bmIr = $("btn-mode-ir");
+const _bmTq = $("btn-mode-tq");
+if (_bmIr) _bmIr.addEventListener("click", () => setEditorMode("ir"));
+if (_bmTq) _bmTq.addEventListener("click", () => setEditorMode("tq"));
+
+const _bLts = $("btn-load-tq-sample");
+if (_bLts) {
+  _bLts.addEventListener("click", async () => {
+    try {
+      const data = await fetchJSON("/api/examples/tq/signin_flow.tq");
+      savedTqText = data.source || "";
+      if (useFallback) {
+        $("ir-editor-fallback").value = savedTqText;
+      } else if (irEditor) {
+        irEditor.setValue(savedTqText);
+      }
+      setEditorMode("tq");
+      setStatus("Loaded signin_flow.tq", "ok");
+    } catch (e) {
+      setStatus(String(e.message || e), "bad");
+    }
+  });
+}
+
+const _bCtq = $("btn-compile-tq");
+if (_bCtq) {
+  _bCtq.addEventListener("click", async () => {
+    const src = getIrText();
+    try {
+      const j = await fetchJSON("/api/compile-tq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: src }),
+      });
+      $("out-diagnostics").textContent = JSON.stringify(j, null, 2);
+      setTab("diagnostics");
+      if (!j.ok) {
+        setStatus(`${j.code || "tq"}: ${j.message || "compile failed"}`, "bad");
+        return;
+      }
+      savedIrText = JSON.stringify(j.ir_bundle, null, 2);
+      setEditorMode("ir");
+      setStatus("Compiled .tq → IR", "ok");
+      advanceWorkflow(2);
+    } catch (e) {
+      setStatus(String(e.message || e), "bad");
+    }
+  });
+}
 
 $("btn-load-example").addEventListener("click", async () => {
   const name = selectedExampleName();
@@ -347,6 +474,72 @@ $("btn-run").addEventListener("click", async () => {
     fillPipelineOutputPanels(out);
     setTab("validation");
     advanceWorkflow(4);
+  } catch (e) {
+    setStatus(String(e.message || e), "bad");
+  }
+});
+
+$("btn-download-zip").addEventListener("click", async () => {
+  setStatus("Building ZIP…", "neutral");
+  const ir = parseJsonLabel(getIrText(), "IR bundle");
+  if (!ir.ok) {
+    showParseHint(ir.error);
+    setStatus("Fix JSON before download.", "bad");
+    return;
+  }
+  hideParseHint();
+  try {
+    const res = await fetch("/api/materialize-project-zip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ir_bundle: ir.data,
+        demo_inputs: null,
+        engine_mode: $("engine-mode").value,
+      }),
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(t || res.statusText);
+    }
+    const metaB64 = res.headers.get("X-TORQA-Materialize-Meta");
+    let meta = { written_count: 0, local_webapp: null };
+    if (metaB64) {
+      try {
+        const pad = "=".repeat((4 - (metaB64.length % 4)) % 4);
+        const norm = (metaB64 + pad).replace(/-/g, "+").replace(/_/g, "/");
+        meta = JSON.parse(atob(norm));
+      } catch (_) {
+        /* ignore */
+      }
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "torqa-generated.zip";
+    a.click();
+    URL.revokeObjectURL(url);
+    const hintEl = $("zip-demo-hint");
+    const pre = $("zip-demo-commands");
+    const urlA = $("zip-demo-url");
+    const cnt = $("zip-demo-count");
+    if (hintEl && pre && urlA && cnt) {
+      hintEl.hidden = false;
+      cnt.textContent = String(meta.written_count ?? 0);
+      const lw = meta.local_webapp;
+      if (lw && lw.commands_posix) {
+        pre.textContent = lw.commands_posix;
+        urlA.href = lw.default_dev_url || "#";
+        urlA.textContent = lw.default_dev_url || "http://localhost:5173";
+      } else {
+        pre.textContent =
+          "# Bu pakette generated/webapp yok (farklı IR örneği seçin, örn. login flow).\n# ZIP içindeki diğer klasörleri inceleyin.";
+        urlA.textContent = "—";
+        urlA.removeAttribute("href");
+      }
+    }
+    setStatus("ZIP indirildi · altta localhost komutları", "ok");
   } catch (e) {
     setStatus(String(e.message || e), "bad");
   }

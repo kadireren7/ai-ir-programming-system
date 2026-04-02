@@ -1,6 +1,8 @@
 # TORQA roadmap (honest)
 
-1. **Website milestone** — Baseline done: `tests/test_website_generation_gate.py` + CI `scripts/ci_build_generated_webapp.py` (`npm install` + `npm run build` on materialized `generated/webapp`) — early **TORQA.web** projection path.
+**Asıl fikir (kuzey yıldızı):** [`docs/TORQA_VISION_NORTH_STAR.md`](docs/TORQA_VISION_NORTH_STAR.md).
+
+1. **Website milestone** — Baseline done: `tests/test_website_generation_gate.py` + CI `scripts/ci_build_generated_webapp.py` (`npm install` + `npm run build` on materialized `generated/webapp`) — early **TORQA.web** projection path. **Kotlin stub** — `generated/kotlin/Main.kt` via `generate_stub_artifact` when strategy selects `kotlin` (`tests/test_kotlin_stub.py`).
 2. ~~**Parity**~~ — `tests/test_engine_parity_ci.py` runs in the **rust** CI job after `cargo test` (golden `valid_minimal_flow`); local run skips if the bridge is unavailable.
 3. ~~**Patch UX**~~ — Web console: **Patch preview** tab + **Preview patch** button (`POST /api/preview-patch`); CLI had `preview-patch` already.
 4. ~~**Execution traces (baseline)**~~ — `execution_trace` on `/api/run` and `torqa guided`: enriched step summaries (`summary`, `effect_name`); Python fallback uses `ir_execution_plan_to_json`. Web **Trace** tab.
@@ -15,6 +17,8 @@ See `docs/IMPLEMENTATION_STATUS.md` and `STATUS.md`.
 **Specification stack (formal + ops):** [`docs/FORMAL_CORE.md`](docs/FORMAL_CORE.md) (single law + validation phases), [`docs/AEM_SPEC.md`](docs/AEM_SPEC.md) (abstract machine), [`docs/SELF_EVOLUTION_PIPELINE.md`](docs/SELF_EVOLUTION_PIPELINE.md) (evolution / policy), [`docs/AI_GENERATION_PROFILE.md`](docs/AI_GENERATION_PROFILE.md) (LLM profile; wired in `authoring_prompt.py`). Table and ordering: `CORE_SPEC.md` § *Specification stack*.
 
 **Implemented hooks:** Diagnostics issues carry **`formal_phase`** (`src/diagnostics/formal_phases.py`); Python + Rust executors enforce AEM **σ** + **`aem_codes`**; `torqa proposal-gate FILE` runs `src/evolution/ai_proposal_gate.py` (envelope + diagnostics + light secret scan).
+
+**Nihai vizyon (TORQA-öncelikli ürün + ayrı önizleme paketi):** [`docs/TORQA_NIHAI_VISION_ROADMAP.md`](docs/TORQA_NIHAI_VISION_ROADMAP.md) — fazlar **F0–F5**, her fazda bitirişe kilitlenen **prompt listesi**.
 
 ---
 

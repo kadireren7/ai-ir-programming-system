@@ -1,5 +1,7 @@
 # AI-native dil charter’ı (taslak)
 
+**Ürün yönü tek sayfa özeti:** [`TORQA_VISION_NORTH_STAR.md`](TORQA_VISION_NORTH_STAR.md) (kuzey yıldızı; unutulmaması gereken ana fikir).
+
 Bu belge, TORQA’nın **yapay zekâ için üretim ve doğrulama dili** hedefini çerçeveler; normatif teknik sözleşme değildir. Ayrıntılı IR sözleşmesi için bkz. [`CORE_SPEC.md`](CORE_SPEC.md).
 
 ## (a) Hedeflenmeyen şey: insan dillerini taklit etmek

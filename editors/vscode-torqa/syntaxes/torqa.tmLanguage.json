@@ -19,7 +19,7 @@
       "patterns": [
         {
           "name": "keyword.control.torqa",
-          "match": "\\b(?i)(module|intent|requires|ensures|flow|goal|input|require|forbid|transition|result|emit|validate|find|verify|create|by)\\b"
+          "match": "\\b(?i)(module|intent|requires|ensures|forbid|unless|flow|goal|input|require|transition|result|emit|validate|find|verify|create|by|locked|login_success|session)\\b"
         }
       ]
     },

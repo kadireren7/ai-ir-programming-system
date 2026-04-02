@@ -138,6 +138,22 @@ def ir_goal_python_projection(goal: IRGoal) -> str:
     return "\n".join(lines)
 
 
+def ir_goal_kotlin_projection(goal: IRGoal) -> str:
+    g = json.dumps(goal.goal)
+    lines = [
+        "// Auto-generated from AI core IR.",
+        "// Do not treat as primary source.",
+        "",
+        "package generated",
+        "",
+        "fun main() {",
+        f'    println("goal: " + {g})',
+        "}",
+        "",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def ir_goal_go_projection(goal: IRGoal) -> str:
     lines = [
         "// Auto-generated from AI core IR.",

@@ -1,13 +1,14 @@
 module auth.login
 
 intent user_login
-requires email, password
+requires username, password, ip_address
+forbid locked
 ensures session.created
 
 flow:
-  validate email
+  validate username
   validate password
-  find user by email
+  find user by username
   verify password
   create session
   emit login_success

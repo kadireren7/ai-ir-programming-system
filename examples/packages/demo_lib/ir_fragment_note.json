@@ -1,0 +1,5 @@
+{
+  "_comment": "Illustrative fragment only — not a standalone bundle. Real bundles wrap content under ir_goal.",
+  "shared_goal_name": "DemoLibPlaceholder",
+  "note": "Publish versioned IR packages as separate artifacts; reference them via library_refs on the envelope."
+}

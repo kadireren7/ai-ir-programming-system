@@ -26,6 +26,20 @@ def test_execution_result_includes_aem_codes_key():
     assert j["aem_codes"] == []
 
 
+def test_session_postcondition_passes_after_start_session():
+    raw = json.loads(
+        (REPO / "examples/core/valid_session_postcondition_flow.json").read_text(encoding="utf-8")
+    )
+    g = ir_goal_from_json(raw)
+    res, _plan = execute_ir_goal(
+        g,
+        IRExecutionContext({"username": "alice"}, {}),
+        default_ir_function_registry(),
+        default_ir_runtime_impls(),
+    )
+    assert res.success is True, res.errors
+
+
 def test_second_transition_wrong_from_state_fails_aem():
     raw = json.loads((REPO / "examples/core/valid_login_flow.json").read_text(encoding="utf-8"))
     g = ir_goal_from_json(raw)

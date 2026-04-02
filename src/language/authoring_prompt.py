@@ -7,7 +7,7 @@ Keeps the OpenAI system prompt aligned with ``default_ir_function_registry`` and
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from src.ir.canonical_ir import CANONICAL_IR_VERSION
 from src.semantics.ir_semantics import IRFunctionSignature, default_ir_function_registry
@@ -42,8 +42,15 @@ _MINIMAL_BUNDLE: Dict[str, Any] = {
 }
 
 
-def minimal_valid_bundle_json(*, indent: int = 2) -> str:
-    return json.dumps(_MINIMAL_BUNDLE, indent=indent)
+def minimal_valid_bundle_json(*, indent: Optional[int] = 2, sort_keys: bool = True) -> str:
+    if indent is None:
+        return json.dumps(
+            _MINIMAL_BUNDLE,
+            ensure_ascii=False,
+            sort_keys=sort_keys,
+            separators=(",", ":"),
+        )
+    return json.dumps(_MINIMAL_BUNDLE, indent=indent, ensure_ascii=False, sort_keys=sort_keys)
 
 
 def _registry_rows(reg: Dict[str, IRFunctionSignature]) -> List[Dict[str, Any]]:

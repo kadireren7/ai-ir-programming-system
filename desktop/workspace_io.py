@@ -1,10 +1,61 @@
-"""Shared: write IR flow scaffold into a user-chosen directory."""
+"""Shared: write IR flow scaffold or materialized projection tree into a user-chosen directory."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 from typing import Any, Dict
+
+
+def materialize_bundle_to_workspace(
+    workspace: str,
+    bundle: Dict[str, Any],
+    *,
+    out_subdir: str = "generated_out",
+    engine_mode: str = "python_only",
+) -> Dict[str, Any]:
+    """
+    Same behavior as ``torqa project --root <workspace> --source <bundle> --out <out_subdir>``:
+    validate, run orchestrator, write files under ``workspace/out_subdir``.
+    """
+    try:
+        root = Path(workspace).resolve()
+        if not root.is_dir():
+            return {"ok": False, "error": "Seçilen yol bir klasör değil."}
+        if not isinstance(bundle, dict):
+            return {"ok": False, "error": "IR paketi bir JSON nesnesi olmalı."}
+
+        from src.project_materialize import materialize_project
+
+        dest = root / out_subdir
+        ok, summary, written = materialize_project(bundle, dest, engine_mode=engine_mode)
+        diag = summary.get("diagnostics") or {}
+        if not diag.get("ok", False):
+            return {
+                "ok": False,
+                "error": "Doğrulama başarısız.",
+                "errors": summary.get("errors", []),
+                "diagnostics": diag,
+                "written_under": str(dest),
+            }
+        if not ok:
+            return {
+                "ok": False,
+                "error": "Tutarlılık hataları: " + "; ".join(str(e) for e in summary.get("errors", [])[:5]),
+                "written": written,
+                "written_under": str(dest),
+            }
+        from src.project_materialize import local_webapp_hint
+
+        return {
+            "ok": True,
+            "written_under": str(dest),
+            "written": written,
+            "file_count": len(written),
+            "local_webapp": local_webapp_hint(written, output_root=dest),
+        }
+    except OSError as ex:
+        return {"ok": False, "error": str(ex)}
 
 
 def write_flow_project(workspace: str, bundle: Dict[str, Any]) -> Dict[str, Any]:
@@ -41,3 +92,19 @@ def write_flow_project_json_str(workspace: str, ir_bundle_json: str) -> Dict[str
     except json.JSONDecodeError as ex:
         return {"ok": False, "error": f"JSON hatası: {ex}"}
     return write_flow_project(workspace, bundle)
+
+
+def materialize_bundle_json_str(
+    workspace: str,
+    ir_bundle_json: str,
+    *,
+    out_subdir: str = "generated_out",
+    engine_mode: str = "python_only",
+) -> Dict[str, Any]:
+    try:
+        bundle = json.loads(ir_bundle_json)
+    except json.JSONDecodeError as ex:
+        return {"ok": False, "error": f"JSON hatası: {ex}"}
+    return materialize_bundle_to_workspace(
+        workspace, bundle, out_subdir=out_subdir, engine_mode=engine_mode
+    )

@@ -190,6 +190,14 @@ def default_ir_runtime_impls() -> Dict[str, Any]:
         if ctx and isinstance(ctx, IRExecutionContext):
             ctx.world_state["session_user"] = username
 
+    def session_stored_for_user(username: str, ctx: Any = None) -> bool:
+        if ctx and isinstance(ctx, IRExecutionContext):
+            su = ctx.world_state.get("session_user")
+            if su is None:
+                return False
+            return str(su) == str(username)
+        return False
+
     return {
         "exists": lambda x: x is not None,
         "strings_equal": lambda a, b: str(a) == str(b),
@@ -200,6 +208,7 @@ def default_ir_runtime_impls() -> Dict[str, Any]:
         "log_successful_login": log_successful_login,
         "reset_failed_attempts": reset_failed_attempts,
         "start_session": start_session,
+        "session_stored_for_user": session_stored_for_user,
     }
 
 

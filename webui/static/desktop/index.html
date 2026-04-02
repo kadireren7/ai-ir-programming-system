@@ -22,7 +22,9 @@
 
       <section class="desk-card">
         <h2 class="desk-h2">Çalışma klasörü</h2>
-        <p class="desk-muted">Seçtiğiniz klasörün içine <code>torqa-flow</code> oluşturulur.</p>
+        <p class="desk-muted">
+          <code>torqa-flow</code> — IR yedeği · <code>generated_out</code> — <code>torqa project</code> çıktısı
+        </p>
         <button type="button" id="btn-folder" class="desk-btn desk-btn-primary desk-btn-block">Klasör seç…</button>
         <div id="workspace-path" class="desk-path mono" title="Seçilen klasör">Henüz seçilmedi</div>
       </section>
@@ -56,6 +58,7 @@
         <div class="desk-actions">
           <button type="button" id="btn-suggest" class="desk-btn desk-btn-accent">IR öner (AI)</button>
           <button type="button" id="btn-write" class="desk-btn desk-btn-secondary" disabled>Projeyi klasöre yaz</button>
+          <button type="button" id="btn-materialize" class="desk-btn desk-btn-secondary" disabled>Üretim ağacı yaz</button>
         </div>
 
         <p id="desk-message" class="desk-message" role="status"></p>

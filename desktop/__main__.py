@@ -4,6 +4,9 @@ TORQA Desktop: Cursor-style window, folder picker, prompt → IR → write proje
 Run: ``python -m desktop`` or ``torqa-desktop`` (``pip install -e .``).
 Embedded browser (optional): ``pip install -e ".[desktop-webview]"`` — may fail on Windows
 if ``pythonnet`` cannot build; then use ``python -m desktop --tk``.
+
+**Paths:** On Windows, ``filedialog`` returns drive paths like ``C:/Users/...``; materialize
+resolves with ``Path.resolve()`` and writes under ``generated_out`` (see ``docs/TORQA_NIHAI_VISION_ROADMAP.md`` F3.2).
 """
 
 from __future__ import annotations
@@ -71,6 +74,12 @@ class DesktopApi:
         from desktop.workspace_io import write_flow_project_json_str
 
         return write_flow_project_json_str(workspace, ir_bundle_json)
+
+    def materialize_project(self, workspace: str, ir_bundle_json: str) -> Dict[str, Any]:
+        """Validate IR and write projection tree under ``<workspace>/generated_out`` (``torqa project``)."""
+        from desktop.workspace_io import materialize_bundle_json_str
+
+        return materialize_bundle_json_str(workspace, ir_bundle_json, engine_mode="python_only")
 
 
 def _run_pywebview_desktop() -> None:

@@ -1,0 +1,27 @@
+{
+  "ir_goal": {
+    "goal": "NegativeUnknownBuiltin",
+    "inputs": [{ "name": "username", "type": "text" }],
+    "preconditions": [
+      {
+        "condition_id": "c_req_0001",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "not_in_registry_xyz",
+          "arguments": [{ "type": "identifier", "name": "username" }]
+        }
+      }
+    ],
+    "forbids": [],
+    "transitions": [],
+    "postconditions": [],
+    "result": "OK",
+    "metadata": {
+      "ir_version": "1.4",
+      "source": "python_prototype",
+      "canonical_language": "english",
+      "source_map": { "available": true, "prototype_only": true }
+    }
+  }
+}

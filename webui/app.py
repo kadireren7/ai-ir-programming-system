@@ -4,6 +4,7 @@ TORQA web console: load canonical IR examples, run verifier + orchestrator, prev
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import os
@@ -12,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -32,6 +33,7 @@ from src.ir.quality import build_ir_quality_report
 from src.orchestrator.pipeline_run import build_console_run_payload
 from src.projection.projection_strategy import ProjectionContext, explain_projection_strategy
 from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
+from src.project_materialize import build_zip_bytes, validate_bundle_dict
 from .middleware_rate_limit import RateLimitMiddleware
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +47,7 @@ except ImportError:
     pass
 
 EXAMPLES_DIR = REPO_ROOT / "examples" / "core"
+TQ_EXAMPLES_DIR = REPO_ROOT / "examples" / "torqa"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 _LOG = logging.getLogger("torqa.webui")
@@ -75,6 +78,10 @@ class RunRequest(BaseModel):
 class PatchRequest(BaseModel):
     ir_bundle: Dict[str, Any]
     mutations: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class TqCompileRequest(BaseModel):
+    source: str = Field(..., min_length=1, description="Raw .tq surface text")
 
 
 class AISuggestRequest(BaseModel):
@@ -167,7 +174,21 @@ def list_examples():
     )
     for p in paths:
         out.append({"name": p.name, "path": str(p.relative_to(REPO_ROOT)).replace("\\", "/")})
-    return {"examples": out}
+    tq_out: List[Dict[str, str]] = []
+    if TQ_EXAMPLES_DIR.is_dir():
+        for p in sorted(TQ_EXAMPLES_DIR.glob("*.tq")):
+            tq_out.append({"name": p.name, "path": str(p.relative_to(REPO_ROOT)).replace("\\", "/")})
+    return {"examples": out, "tq_examples": tq_out}
+
+
+@app.get("/api/examples/tq/{name}")
+def get_tq_example(name: str):
+    if "/" in name or "\\" in name or ".." in name:
+        raise HTTPException(400, "invalid name")
+    path = TQ_EXAMPLES_DIR / name
+    if not path.is_file() or path.suffix.lower() != ".tq":
+        raise HTTPException(404, "example not found")
+    return {"name": name, "source": path.read_text(encoding="utf-8")}
 
 
 @app.get("/api/examples/{name}")
@@ -179,6 +200,81 @@ def get_example(name: str):
         raise HTTPException(404, "example not found")
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+
+@app.post("/api/materialize-project-zip")
+def api_materialize_project_zip(body: RunRequest):
+    """
+    Zip of the generated artifact tree (no server-side path write).
+
+    See ``docs/WEBUI_SECURITY.md``.
+    """
+    rep = validate_bundle_dict(body.ir_bundle)
+    if not rep.get("ok"):
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "issues": rep.get("issues", []), "message": "Bundle failed validation"},
+        )
+    zip_bytes, meta = build_zip_bytes(body.ir_bundle, engine_mode=body.engine_mode)
+    if not meta.get("ok") or not zip_bytes:
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "meta": meta, "message": "Materialize or zip build failed"},
+        )
+    hint_payload = {
+        "written_count": len(meta.get("written", [])),
+        "paths_preview": (meta.get("written") or [])[:20],
+        "local_webapp": meta.get("local_webapp"),
+    }
+    meta_b64 = base64.urlsafe_b64encode(json.dumps(hint_payload, separators=(",", ":")).encode()).decode(
+        "ascii"
+    )
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": 'attachment; filename="torqa-generated.zip"',
+            "X-TORQA-Generated-Count": str(len(meta.get("written", []))),
+            "X-TORQA-Materialize-Meta": meta_b64,
+        },
+    )
+
+
+@app.post("/api/compile-tq")
+def api_compile_tq(body: TqCompileRequest):
+    from src.surface.parse_tq import TQParseError, parse_tq_source
+
+    try:
+        bundle = parse_tq_source(body.source)
+    except TQParseError as ex:
+        return {
+            "ok": False,
+            "code": ex.code,
+            "message": str(ex),
+            "ir_bundle": None,
+            "diagnostics": None,
+        }
+    try:
+        ir_goal = ir_goal_from_json(bundle)
+    except Exception as ex:
+        return {
+            "ok": False,
+            "code": "PX_TQ_IR_BUILD",
+            "message": str(ex),
+            "ir_bundle": bundle,
+            "diagnostics": None,
+        }
+    rep = build_full_diagnostic_report(
+        ir_goal,
+        bundle_envelope_errors=_bundle_envelope_errors(bundle),
+    )
+    return {
+        "ok": rep["ok"],
+        "code": None,
+        "message": None,
+        "ir_bundle": bundle,
+        "diagnostics": rep,
+    }
 
 
 @app.post("/api/diagnostics")

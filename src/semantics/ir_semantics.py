@@ -94,6 +94,13 @@ def default_ir_function_registry() -> Dict[str, IRFunctionSignature]:
             guarantees_after=[IRAfterGuaranteeSpec(0, "exists")],
         ),
         "strings_equal": IRFunctionSignature("strings_equal", [T, T], B),
+        # Post-login / .tq `ensures session.created`: true when world_state.session_user matches bound username.
+        "session_stored_for_user": IRFunctionSignature(
+            "session_stored_for_user",
+            [T],
+            B,
+            reads=["session_user"],
+        ),
     }
 
 

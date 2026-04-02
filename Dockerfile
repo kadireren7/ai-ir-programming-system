@@ -1,6 +1,11 @@
 # Web console only (Python stack). Rust bridge optional on host; see README for native Rust.
 FROM python:3.12-slim
 
+LABEL org.opencontainers.image.title="TORQA"
+LABEL org.opencontainers.image.description="TORQA semantic core — web console (FastAPI)"
+LABEL org.opencontainers.image.version="0.0.0"
+LABEL org.opencontainers.image.documentation="https://github.com/"
+
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1

@@ -21,7 +21,7 @@ Concrete contract for LLM outputs targeting this repository. Complements [`CORE_
 | Input types | Only: `text`, `number`, `boolean`, `void`, `unknown`. |
 | Expr node `type` | Only: `identifier`, `string_literal`, `number_literal`, `boolean_literal`, `call`, `binary`, `logical`. |
 | Operators | Binary: `==`, `!=`, `<`, `>`, `<=`, `>=`. Logical: `and`, `or`. |
-| Builtins | **Only** names returned by the current toolchain (`TORQA language` / registry snapshot). No synonyms. |
+| Builtins | **Only** names returned by the current toolchain (`TORQA language` / registry snapshot). No synonyms. Includes post-login predicate `session_stored_for_user(text)` (true when host/session store matches username after `start_session`). |
 
 ---
 

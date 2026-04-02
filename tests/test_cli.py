@@ -45,6 +45,25 @@ def test_cli_language():
         "wellformed",
         "policy",
     ]
+    names = {b["name"] for b in data["builtins"]}
+    assert "session_stored_for_user" in names
+
+
+def test_cli_language_minimal_json():
+    r = _run("language", "--minimal-json")
+    assert r.returncode == 0, r.stderr
+    data = json.loads(r.stdout)
+    assert data["ir_goal"]["goal"] == "MinimalDemoFlow"
+
+
+def test_cli_bundle_lint_ok():
+    p = REPO / "examples" / "core" / "valid_minimal_flow.json"
+    r = _run("bundle-lint", str(p))
+    assert r.returncode == 0, r.stderr
+    data = json.loads(r.stdout)
+    assert data["ok"] is True
+    assert data["issue_count"] == 0
+    assert "by_formal_phase" in data
 
 
 def test_cli_proposal_gate_minimal_ok():
@@ -78,13 +97,15 @@ def test_cli_guided_minimal():
 
 
 def test_cli_ai_suggest_resilient():
-    """Without a valid key or model, ai-suggest should fail with a structured code."""
+    """With no API key, ai-suggest fails with a structured code; with a key it may succeed."""
     r = _run("ai-suggest", "minimal login flow")
-    assert r.returncode == 1
     data = json.loads(r.stdout)
-    assert data.get("ok") is False
-    assert data.get("code") in (
-        "PX_AI_NO_KEY",
-        "PX_AI_MAX_RETRIES",
-        "PX_AI_HTTP",
-    )
+    if r.returncode == 0:
+        assert data.get("ok") is True
+    else:
+        assert data.get("ok") is False
+        assert data.get("code") in (
+            "PX_AI_NO_KEY",
+            "PX_AI_MAX_RETRIES",
+            "PX_AI_HTTP",
+        )

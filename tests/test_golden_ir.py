@@ -55,6 +55,14 @@ def test_demo_multi_surface_semantic_ok():
     assert rep["semantic_ok"] is True, rep["errors"]
 
 
+def test_valid_session_postcondition_semantic_ok():
+    raw = _load("valid_session_postcondition_flow.json")
+    g = ir_goal_from_json(raw)
+    assert not validate_ir(g)
+    rep = build_ir_semantic_report(g, default_ir_function_registry())
+    assert rep["semantic_ok"] is True, rep["errors"]
+
+
 def test_valid_start_session_semantic_ok():
     raw = _load("valid_start_session_flow.json")
     g = ir_goal_from_json(raw)

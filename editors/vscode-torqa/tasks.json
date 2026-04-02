@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "torqa: surface (compile .tq)",
+      "type": "shell",
+      "command": "torqa",
+      "args": ["surface", "${file}", "--out", "${fileDirname}/ir_bundle.json"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "torqa: project (materialize tree)",
+      "type": "shell",
+      "command": "torqa",
+      "args": [
+        "project",
+        "--root",
+        "${workspaceFolder}",
+        "--source",
+        "${file}",
+        "--out",
+        "generated_out",
+        "--engine-mode",
+        "python_only"
+      ],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "torqa: validate current JSON bundle",
+      "type": "shell",
+      "command": "torqa",
+      "args": ["validate", "${file}"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    }
+  ]
+}

@@ -50,10 +50,17 @@
   <div class="app-body">
     <aside class="sidebar" aria-label="Examples">
       <div class="side-card">
-        <h2 class="side-title">Examples</h2>
-        <p class="side-desc">Load a golden bundle into the editor</p>
+        <h2 class="side-title">Hazır örnekler <span class="side-title-en">/ Examples</span></h2>
+        <p class="side-desc">
+          Bunlar <strong>repodaki</strong> test/demo JSON’larıdır — bilgisayarındaki proje klasörü değil.
+          Seç → <strong>Load selected</strong> ile editöre gelir. Kendi dosyan için alttaki düğme veya JSON’u yapıştır.
+        </p>
+        <p class="side-desc side-desc-muted" lang="en">Golden bundles from the repo for quick tests, not your disk workspace.</p>
         <ul id="example-list" class="example-list"></ul>
-        <button type="button" id="btn-load-example" class="btn btn-primary btn-block">Load selected</button>
+        <button type="button" id="btn-load-example" class="btn btn-primary btn-block">Load selected · Seçileni yükle</button>
+        <input type="file" id="ir-file-input" accept=".json,application/json" hidden />
+        <button type="button" id="btn-open-ir-file" class="btn btn-secondary btn-block btn-mt">Bilgisayardan JSON aç · Open bundle file</button>
+        <p class="side-footnote">Tam klasör + prompt akışı: <code class="inline-code">python -m desktop --tk</code> veya PATH’e ekli <code class="inline-code">torqa-desktop --tk</code></p>
       </div>
     </aside>
 
@@ -64,7 +71,13 @@
             <h2 class="panel-title">IR bundle</h2>
             <p class="panel-sub">JSON envelope <code class="inline-code">{"ir_goal": { … }}</code></p>
           </div>
-          <div class="panel-head-actions">
+          <div class="panel-head-actions panel-head-actions-wrap">
+            <div class="editor-mode-toggle" role="group" aria-label="Editor surface">
+              <button type="button" id="btn-mode-ir" class="btn btn-ghost active">IR bundle</button>
+              <button type="button" id="btn-mode-tq" class="btn btn-ghost">TORQA (.tq)</button>
+            </div>
+            <button type="button" id="btn-load-tq-sample" class="btn btn-ghost" hidden>Load signin sample</button>
+            <button type="button" id="btn-compile-tq" class="btn btn-ghost" hidden>Compile .tq → IR</button>
             <button type="button" id="btn-format-ir" class="btn btn-ghost" title="Pretty-print JSON">Format</button>
           </div>
         </div>
@@ -89,10 +102,20 @@
             <div class="toolbar-buttons">
               <button type="button" id="btn-diagnostics" class="btn btn-secondary">Full diagnostics</button>
               <button type="button" id="btn-run" class="btn btn-primary">Run pipeline</button>
+              <button type="button" id="btn-download-zip" class="btn btn-secondary" title="No server path write — see docs/WEBUI_SECURITY.md">Download ZIP</button>
             </div>
           </div>
         </div>
       </section>
+
+      <div id="zip-demo-hint" class="zip-demo-hint" hidden>
+        <div class="zip-demo-hint-inner">
+          <h3 class="zip-demo-title">ZIP sonrası — localhost’ta site (Vite)</h3>
+          <p class="zip-demo-desc">Arşivi bir klasöre çıkarın, sonra terminalde (Node.js kurulu olmalı):</p>
+          <pre id="zip-demo-commands" class="zip-demo-pre mono"></pre>
+          <p class="zip-demo-desc">Tarayıcı: <a id="zip-demo-url" href="#" target="_blank" rel="noopener">—</a> · Dosya sayısı: <span id="zip-demo-count">0</span></p>
+        </div>
+      </div>
 
       <details class="accordion" id="accordion-advanced">
         <summary class="accordion-summary">

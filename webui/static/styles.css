@@ -245,9 +245,36 @@ body.app {
 }
 
 .side-desc {
-  margin: 0.35rem 0 1rem;
+  margin: 0.35rem 0 0.65rem;
   font-size: 0.8125rem;
   color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.side-desc-muted {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0 0 0.85rem;
+  line-height: 1.4;
+}
+
+.side-title-en {
+  font-weight: 500;
+  color: var(--text-dim);
+  font-size: 0.85em;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.btn-mt {
+  margin-top: 0.5rem;
+}
+
+.side-footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  line-height: 1.4;
 }
 
 .example-list {
@@ -705,6 +732,49 @@ body.app {
 
 .out.active {
   display: block;
+}
+
+/* ZIP → localhost demo hint */
+.zip-demo-hint {
+  margin: 0 1.5rem 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(52, 211, 153, 0.06));
+}
+
+.zip-demo-hint-inner {
+  max-width: 720px;
+}
+
+.zip-demo-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.zip-demo-desc {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.zip-demo-pre {
+  margin: 0 0 0.75rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--ok);
+  overflow-x: auto;
+}
+
+.zip-demo-hint a {
+  color: var(--accent-hover);
 }
 
 /* Footer */

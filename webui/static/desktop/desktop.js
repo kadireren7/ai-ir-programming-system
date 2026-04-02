@@ -8,6 +8,7 @@
   const btnFolder = $("btn-folder");
   const btnSuggest = $("btn-suggest");
   const btnWrite = $("btn-write");
+  const btnMaterialize = $("btn-materialize");
   const msgEl = $("desk-message");
   const versionEl = $("desk-version");
 
@@ -77,6 +78,7 @@
         workspacePathEl.textContent = p;
         workspacePathEl.classList.add("mono");
         btnWrite.disabled = !lastBundle;
+        btnMaterialize.disabled = !lastBundle;
       }
     } catch (e) {
       setMessage(String(e), "err");
@@ -88,6 +90,7 @@
     bundlePreview.value = "";
     lastBundle = null;
     btnWrite.disabled = true;
+    btnMaterialize.disabled = true;
     const prompt = (promptInput.value || "").trim();
     if (!prompt) {
       setMessage("Lütfen bir prompt yazın.", "err");
@@ -104,8 +107,12 @@
       if (data.ok && data.ir_bundle) {
         lastBundle = data.ir_bundle;
         bundlePreview.value = JSON.stringify(data.ir_bundle, null, 2);
-        setMessage("IR üretildi. Klasör seçtiyseniz «Projeyi klasöre yaz» ile kaydedin.", "ok");
+        setMessage(
+          "IR üretildi. Klasör seçtiyseniz «Projeyi klasöre yaz» veya «Üretim ağacı yaz».",
+          "ok"
+        );
         btnWrite.disabled = !workspace;
+        btnMaterialize.disabled = !workspace;
       } else {
         const issues = (data.issues || [])
           .map((i) => i.message || i.code || JSON.stringify(i))
@@ -144,6 +151,44 @@
         setMessage("Kaydedildi: " + (res.dir || ""), "ok");
       } else {
         setMessage(res.error || "Yazma hatası", "err");
+      }
+    } catch (e) {
+      setMessage(String(e), "err");
+    }
+  });
+
+  btnMaterialize.addEventListener("click", async () => {
+    setMessage("");
+    if (!hasPyWebview()) {
+      setMessage("Yazma için masaüstü uygulaması gerekir.", "err");
+      return;
+    }
+    if (!workspace) {
+      setMessage("Önce klasör seçin.", "err");
+      return;
+    }
+    let bundle = lastBundle;
+    try {
+      const raw = (bundlePreview.value || "").trim();
+      if (raw) bundle = JSON.parse(raw);
+    } catch (e) {
+      setMessage("Önizlemede geçerli JSON yok.", "err");
+      return;
+    }
+    if (!bundle || typeof bundle !== "object") {
+      setMessage("Önce geçerli bir IR üretin.", "err");
+      return;
+    }
+    try {
+      const jsonStr = JSON.stringify(bundle);
+      const res = await window.pywebview.api.materialize_project(workspace, jsonStr);
+      if (res.ok) {
+        setMessage(
+          "Üretim ağacı: " + (res.written_under || "") + " (" + (res.file_count || 0) + " dosya)",
+          "ok"
+        );
+      } else {
+        setMessage(res.error || "Materialize hatası", "err");
       }
     } catch (e) {
       setMessage(String(e), "err");

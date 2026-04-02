@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "torqa"
-version = "0.0.0"
+version = "1.0.0"
 description = "TORQA: AI-native core language — semantic-first, validation-oriented, projection-ready"
 readme = "README.md"
 license = { text = "MIT" }
@@ -17,6 +17,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Placeholder for npm/vite-adjacent tooling; core tests do not require Node.
+preview-web = []
 dev = [
     "pytest>=8.0.0",
     "httpx>=0.27.0",
@@ -37,7 +39,7 @@ torqa-desktop = "desktop.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*", "webui*", "desktop*"]
+include = ["src*", "webui*", "desktop*", "compat*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

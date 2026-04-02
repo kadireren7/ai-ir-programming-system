@@ -109,6 +109,18 @@ pub fn default_reference_runtime() -> RuntimeMap {
             Value::Null
         }),
     );
+    m.insert(
+        "session_stored_for_user".to_string(),
+        Box::new(|args, ctx| {
+            let u = args.get(0).cloned().unwrap_or(Value::Null);
+            let su = ctx
+                .world_state
+                .get("session_user")
+                .cloned()
+                .unwrap_or(Value::Null);
+            json!(!su.is_null() && py_str(&u) == py_str(&su))
+        }),
+    );
     m
 }
 

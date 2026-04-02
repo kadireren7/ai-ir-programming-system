@@ -12,7 +12,7 @@ from tkinter import font as tkfont
 
 from src.ai.adapter import suggest_ir_bundle_from_prompt
 
-from desktop.workspace_io import write_flow_project
+from desktop.workspace_io import materialize_bundle_to_workspace, write_flow_project
 
 
 def run_tk_desktop() -> None:
@@ -145,7 +145,9 @@ def run_tk_desktop() -> None:
             out = json.dumps(res["ir_bundle"], indent=2, ensure_ascii=False)
             json_box.delete("1.0", tk.END)
             json_box.insert(tk.END, out)
-            status_var.set("IR üretildi. «Projeyi klasöre yaz» ile kaydedin.")
+            status_var.set(
+                "IR üretildi. Web dosyaları için «Üretim ağacı yaz» — yalnızca JSON yedek için «Projeyi klasöre yaz»."
+            )
         else:
             last_bundle[0] = res.get("ir_bundle")
             issues = res.get("issues") or []
@@ -170,6 +172,39 @@ def run_tk_desktop() -> None:
             messagebox.showinfo("Tamam", "Dosyalar yazıldı:\n" + r.get("dir", ""))
         else:
             messagebox.showerror("Hata", r.get("error", "Yazılamadı"))
+
+    def do_materialize() -> None:
+        """``torqa project`` ile aynı: doğrula ve ``generated_out`` altına üretim ağacı yaz."""
+        if not workspace[0]:
+            messagebox.showwarning("Klasör", "Önce klasör seçin.")
+            return
+        if not last_bundle[0]:
+            messagebox.showwarning("IR", "Önce geçerli bir IR üretin (veya JSON yapıştırın).")
+            return
+        try:
+            raw = json_box.get("1.0", tk.END).strip()
+            bundle = json.loads(raw) if raw else last_bundle[0]
+        except json.JSONDecodeError as ex:
+            messagebox.showerror("JSON", f"Geçersiz JSON: {ex}")
+            return
+        r = materialize_bundle_to_workspace(workspace[0], bundle, engine_mode="python_only")
+        if r.get("ok"):
+            n = r.get("file_count", 0)
+            status_var.set(f"Üretim ağacı yazıldı ({n} dosya): {r.get('written_under', '')}")
+            lines = [
+                f"Klasör: {r.get('written_under', '')}",
+                f"Dosya sayısı: {n}",
+            ]
+            hint = r.get("local_webapp")
+            if hint:
+                lines.append("")
+                lines.append("Web sitesi için terminal (ZIP gerekmez — dosyalar yazıldı):")
+                lines.append(hint.get("commands_windows_cmd") or hint.get("commands_posix", ""))
+                lines.append(f"Tarayıcı: {hint.get('default_dev_url', '')}")
+            messagebox.showinfo("Tamam", "\n".join(lines))
+        else:
+            msg = r.get("error", "Yazılamadı")
+            messagebox.showerror("Hata", msg)
 
     btn_row = tk.Frame(main, bg="#1e1e1e")
     btn_row.pack(fill=tk.X, padx=16, pady=8)
@@ -199,6 +234,19 @@ def run_tk_desktop() -> None:
         padx=16,
         pady=6,
     ).pack(side=tk.LEFT)
+
+    tk.Button(
+        btn_row,
+        text="Üretim ağacı yaz (torqa project)",
+        command=do_materialize,
+        bg="#3c3c3c",
+        fg="#cccccc",
+        activebackground="#505050",
+        activeforeground="#cccccc",
+        relief=tk.FLAT,
+        padx=16,
+        pady=6,
+    ).pack(side=tk.LEFT, padx=(8, 0))
 
     tk.Label(
         main,

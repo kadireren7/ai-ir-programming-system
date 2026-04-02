@@ -27,7 +27,7 @@ This file summarizes what is **implemented** versus **roadmap** for the current 
 - **Web UI**: rate limiting, Monaco, `/api/quality`, `/api/explain`, `/api/strategy`, `/api/preview-patch`, `/api/system-health`.
 - **Platform reports**: `build_ir_quality_report`, `explain_ir_goal`, `explain_projection_strategy`, `build_generation_quality_report`, `build_patch_preview_report`, `build_system_health_report`, `build_engine_parity_report`, `build_semantic_fix_suggestions`.
 - **Rust bridge timeout**: `TORQA_RUST_TIMEOUT_SEC` (default 120s).
-- **Docs index**: `docs/ARCHITECTURE_STATUS.md`, `docs/WEBUI_AND_CLI_SURFACES.md`, `STATUS.md`, `ROADMAP.md`, `docs/UPGRADE_REPORT.md`.
+- **Docs index**: `docs/DOC_MAP.md`, `docs/ARCHITECTURE_STATUS.md`, `docs/WEBUI_AND_CLI_SURFACES.md`, `STATUS.md`, `ROADMAP.md`. (Historical upgrade list: `docs/archive/precursor_and_plans/UPGRADE_REPORT.md`.)
 
 ## Not claimed as complete
 

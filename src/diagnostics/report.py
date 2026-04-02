@@ -11,6 +11,8 @@ from src.ir.canonical_ir import (
 )
 from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 
+from src.diagnostics.user_hints import augment_issue
+
 
 def build_full_diagnostic_report(
     ir_goal: IRGoal,
@@ -46,6 +48,9 @@ def build_full_diagnostic_report(
         and len(determinism) == 0
         and len(sem_err) == 0
     )
+
+    issues = [augment_issue(i) for i in issues]
+    warnings = [augment_issue(i) for i in warnings]
 
     return {
         "ok": ok,

@@ -18,5 +18,6 @@ An empty list means checkpoint is ready for human-reviewed commit/push.
 
 - The system does not push automatically.
 - Push remains human-approved.
-- `checkpoint_push_readiness.md` summarizes current recommendation:
+- A **generated** `checkpoint_push_readiness.md` in the **current working directory** (from internal tooling) summarizes the current recommendation when applicable.
   - `github_push_recommended = true` only when the gate and readiness checks pass.
+- A **historical** repo snapshot lived at `docs/checkpoint_push_readiness.md`; it is archived under [`archive/precursor_and_plans/checkpoint_push_readiness.md`](archive/precursor_and_plans/checkpoint_push_readiness.md). Live policy: [`CHECKPOINT_POLICY.md`](CHECKPOINT_POLICY.md).

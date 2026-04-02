@@ -3,7 +3,7 @@
 ## Canonical code layout
 
 - **Libraries and pipelines** live under `src/`. Import from the `src.*` package (e.g. `from src.ir.canonical_ir import IRGoal`).
-- **Root-level `*.py` files** (e.g. `system_orchestrator.py`) are **thin shims** that re-export `src` modules for backward compatibility. New code should not add business logic there.
+- **Legacy shims** live under `compat/` (e.g. `compat/system_orchestrator.py`). They re-export `src.*` for old import paths. New code must use `src.*` only; do not add business logic under `compat/`. CLI: `python -m compat.torqa_cli` or installed `torqa`; Kural tooling: `python -m compat.kural_parser`.
 
 ## Running checks
 

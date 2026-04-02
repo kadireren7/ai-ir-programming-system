@@ -1,0 +1,11 @@
+{
+  "name": "@torqa/types-stub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo placeholder for future TypeScript types / tooling aligned with TORQA IR (same schema as Python core).",
+  "license": "MIT",
+  "scripts": {
+    "where-schema": "node -e \"const p=require('path');console.log(p.resolve(__dirname,'..','..','..','spec','IR_BUNDLE.schema.json'))\""
+  },
+  "keywords": ["torqa", "ir", "json-schema"]
+}

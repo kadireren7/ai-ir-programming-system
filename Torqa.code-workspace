@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "name": "TORQA",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "window.title": "${rootName} — TORQA"
+  }
+}

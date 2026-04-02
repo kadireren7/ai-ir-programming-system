@@ -1,0 +1,34 @@
+{
+  "ir_goal": {
+    "goal": "ConsumerWithLibRef",
+    "inputs": [{ "name": "username", "type": "text" }],
+    "preconditions": [
+      {
+        "condition_id": "c_req_0001",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "exists",
+          "arguments": [{ "type": "identifier", "name": "username" }]
+        }
+      }
+    ],
+    "forbids": [],
+    "transitions": [],
+    "postconditions": [],
+    "result": "OK",
+    "metadata": {
+      "ir_version": "1.4",
+      "source": "python_prototype",
+      "canonical_language": "english",
+      "source_map": { "available": true, "prototype_only": true }
+    }
+  },
+  "library_refs": [
+    {
+      "name": "torqa-demo-lib",
+      "version": "0.0.1",
+      "fingerprint": "demo01"
+    }
+  ]
+}

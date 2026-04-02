@@ -1,7 +1,7 @@
 """
 Line-oriented `.pxir` subset → IR bundle envelope (``ir_goal`` only).
 
-Transitional surface; canonical textual artifact is **`.tq`** (see `examples/torqa/`).
+Transitional surface; see also **`.tq`** in `src/surface/parse_tq.py` and `examples/torqa/`.
 This is not a full grammar; it is a **reference surface** for tooling and demos.
 """
 

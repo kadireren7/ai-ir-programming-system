@@ -1,3 +1,4 @@
+import base64
 import json
 from pathlib import Path
 
@@ -37,6 +38,33 @@ def test_patch_add_input(client):
     body = r.json()
     names = {i["name"] for i in body["ir_bundle"]["ir_goal"]["inputs"]}
     assert "email" in names
+
+
+def test_materialize_project_zip_ok(client):
+    repo = Path(__file__).resolve().parents[1]
+    bundle = json.loads((repo / "examples" / "core" / "valid_login_flow.json").read_text(encoding="utf-8"))
+    r = client.post(
+        "/api/materialize-project-zip",
+        json={"ir_bundle": bundle, "engine_mode": "python_only"},
+    )
+    assert r.status_code == 200
+    assert r.headers.get("content-type", "").startswith("application/zip")
+    assert r.content[:2] == b"PK"
+    meta_b64 = r.headers.get("x-torqa-materialize-meta")
+    assert meta_b64
+    meta = json.loads(base64.urlsafe_b64decode(meta_b64.encode()).decode())
+    assert meta.get("local_webapp")
+    assert meta["local_webapp"].get("default_dev_url")
+
+
+def test_materialize_project_zip_invalid_bundle(client):
+    r = client.post(
+        "/api/materialize-project-zip",
+        json={"ir_bundle": {"ir_goal": {"goal": ""}}, "engine_mode": "python_only"},
+    )
+    assert r.status_code == 400
+    body = r.json()
+    assert body.get("ok") is False
 
 
 def test_ai_suggest_structured_response(client):

@@ -23,3 +23,4 @@ def test_full_report_flags_duplicate_example():
     assert PX_IR_CONDITION_ID_COLLISION in codes
     collision = next(i for i in rep["issues"] if i["code"] == PX_IR_CONDITION_ID_COLLISION)
     assert collision.get("formal_phase") == "wellformed"
+    assert "hint" in collision and "FORMAL_CORE" in collision.get("doc", "")
