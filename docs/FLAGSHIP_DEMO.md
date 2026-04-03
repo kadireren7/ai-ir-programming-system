@@ -45,8 +45,8 @@ From the **repository root** after `pip install -e .`, run **`torqa demo` first*
 | **End-to-end build** | `torqa build examples/benchmark_flagship/app.tq` |
 | **Gate proof report** | `torqa-gate-proof` |
 | **Compression bench** (regenerate baseline) | `torqa-compression-bench examples/benchmark_flagship --repo-root . --write examples/benchmark_flagship/compression_baseline_report.json` |
-| **Web** | `torqa-console` → **`/`** product site, **`/console`** IR lab (default [http://127.0.0.1:8000/](http://127.0.0.1:8000/)) |
-| **Desktop** | **`torqa-desktop`** (official Electron) · legacy: `torqa-desktop-legacy` / `python -m desktop_legacy --tk` |
+| **Web** | `torqa-console` → **`/`** marketing site only; **`/console`** redirects to **`/`** ([http://127.0.0.1:8000/](http://127.0.0.1:8000/)) |
+| **Desktop** | **`torqa-desktop`** (official Electron) |
 | **CI-style sanity** | `torqa demo verify` |
 
 If `torqa` is not on `PATH`: use `python -m torqa …` (recommended) or `python -m src.cli.main …` — same entrypoint as the `torqa` script.
@@ -76,11 +76,11 @@ If `torqa` is not on `PATH`: use `python -m torqa …` (recommended) or `python 
 ```bash
 torqa-console
 # or
-python -m webui
+python -m website.server
 ```
 
 - **`/`** — Product website preview (hero, proof sections, docs links). See [UI_SURFACE_RULES.md](UI_SURFACE_RULES.md).
-- **`/console`** — Browser IR lab: **sidebar · Flagship demo**, Monaco, diagnostics, ZIP. **P32/P33** summaries load from `/api/demo/*` (see [DEMO_SURFACES.md](DEMO_SURFACES.md)).
+- **`/console`** — Retired; redirects to **`/`**. Use **CLI** or **TORQA Desktop** for IR workflows. **`/api/demo/*`** remains for local benchmark/gate JSON when the server runs.
 
 ---
 
@@ -90,7 +90,7 @@ python -m webui
 torqa-desktop
 ```
 
-Official app: Electron under `desktop/` (see [desktop/README.md](../desktop/README.md); run `npm install` in `desktop/` once). Legacy Tk / webview: `torqa-desktop-legacy` or `python -m desktop_legacy --tk`. Browser IDE: `torqa-console` → `/desktop`.
+Official app: Electron under `desktop/` (see [desktop/README.md](../desktop/README.md); run `npm install` in `desktop/` once). **`GET /desktop`** on `torqa-console` is a short CTA page for the native app, not a second IDE.
 
 ---
 

@@ -1,18 +1,16 @@
-# UI surface rules (P36)
+# UI surface rules (P36 + P73)
 
-TORQA ships **two intentional user-facing surfaces** that share **brand** but **not** layout language. They must never collapse into one stretched UI.
+TORQA ships **distinct** surfaces that share **brand** but **not** layout language. After **P73** there is **one** official product website, **one** official native desktop, and **no** legacy Python UI.
 
-## Website (`/` — torqa.dev-style product site)
+## Website (`/` — product site)
 
-**Purpose:** Product story, credibility, discoverability, proof (compression + validation gate), paths to docs and install, entry to the **browser console** and awareness of the **desktop app**.
+**Purpose:** Product story, credibility, discoverability, proof (compression + validation gate), and **native desktop** entry — **no** browser IR lab (`/console` redirects to `/`); developer detail lives in the repo + CLI.
 
-**Must feel like:** A modern software **marketing / docs** site — spacious sections, clear hierarchy, hero + proof blocks, **not** an IDE and **not** a dense tool.
+**Must feel like:** A modern **marketing / docs** site — clear hierarchy, hero + proof blocks, **not** an IDE and **not** internal command dumps on the homepage.
 
-**Routes:** `GET /` serves `webui/static/site/index.html` (local preview). Production hostname target: **torqa.dev**.
+**Routes:** `GET /` serves `website/dist/site/index.html`. **Source:** [`website/`](../website/) — `npm run build` → `website/dist/site/`. FastAPI lives in [`website/server/`](../website/server/). See [P72_WEBSITE_OFFICIAL.md](P72_WEBSITE_OFFICIAL.md), [P73_PRODUCT_SURFACES.md](P73_PRODUCT_SURFACES.md).
 
-**Source (P72):** Official site is the React + Vite app in [`website/`](../website/); run `npm run build` there to refresh `webui/static/site/` (served at `GET /`). See [P72_WEBSITE_OFFICIAL.md](P72_WEBSITE_OFFICIAL.md).
-
-**Theme:** Dark and light modes; default follows **`prefers-color-scheme`** until the user toggles (stored in `localStorage`).
+**Theme:** Dark and light; default follows **`prefers-color-scheme`** until the user toggles (`localStorage`).
 
 ## Official native desktop (`torqa-desktop` → `desktop/` Electron)
 
@@ -20,52 +18,39 @@ TORQA ships **two intentional user-facing surfaces** that share **brand** but **
 
 **Source:** [`desktop/`](../desktop/) (Vite + Electron). **Not** the marketing site and **not** the IR lab.
 
-## Browser desktop route (`GET /desktop`)
+## `GET /desktop` (native app pointer — P73)
 
-**Purpose:** **Authoring in the browser** when `torqa-console` is running — embedded **web** IDE (Monaco, APIs).
+**Purpose:** Short static page that points users to **`torqa-desktop`** and back to **`/`**. **Not** a second IDE.
 
-**Must feel like:** A **code editor / IDE** — explorer, editor, Output/Diagnostics, tooling for benchmark + gate. **Not** a landing page.
+## `GET /console` (removed)
 
-**Theme:** **Dark-first**; **light mode** via `localStorage`.
-
-## Legacy Python desktop (`desktop_legacy/`)
-
-**Purpose:** Tk or pywebview fallback; IR JSON workflow + `workspace_io`. See [`desktop_legacy/README.md`](../desktop_legacy/README.md) and [`P71_DESKTOP_OFFICIAL.md`](P71_DESKTOP_OFFICIAL.md).
-
-## Web console (`/console`)
-
-**Purpose:** Full **IR lab** in the browser (Monaco, examples, pipeline, ZIP). This is **not** the public homepage; it is the **developer console** linked from the site.
-
-**Theme:** Dark default; light mode toggle with `localStorage`.
+**Purpose:** **301 redirect to `/`.** The browser IR lab was retired so the web surface is **marketing-only**; use **CLI** and **TORQA Desktop** for tooling.
 
 ## Shared brand traits
 
 - **Logo mark:** `TQ` gradient tile (blue → indigo).
-- **Typography:** Inter + JetBrains Mono for code.
-- **Accent:** Blue primary (`--tq-brand` in `webui/static/shared/torqa-tokens.css`).
-- **Semantic colors:** green OK / red error (adjusted per theme).
+- **Typography:** Product site uses Plus Jakarta Sans (+ DM Sans fallback); optional `benchmark_panel.js` in `website/static/shared/`.
+- **Accent:** Blue primary.
+- **Semantic colors:** green OK / red error (per theme).
 
 ## Intentional differences
 
-| Dimension | Website | Desktop |
-|----------|---------|---------|
+| Dimension | Website | Native desktop |
+|----------|---------|----------------|
 | Density | Airy, sectioned | Compact, panel-based |
 | Primary job | Understand + trust + navigate | Edit + build + inspect |
 | Navigation | Anchor sections + CTAs | Explorer + tabs + panels |
-| Proof blocks | Narrative + links to CLI paths | Tooling pre blocks + chip status |
-
-## Demo readiness (both)
-
-- **Flagship**, **compression**, and **gate** appear on the **website** as **product proof** (copy + commands).
-- On **desktop**, the same stories appear as **workflow tooling** (preformatted metrics + gate summary + flagship load).
+| Proof blocks | Narrative + optional live benchmark API | Tooling output + diagnostics |
 
 ## Files (reference)
 
-| Surface | HTML | Styles |
+| Surface | HTML | Notes |
 |---------|------|--------|
-| Website | `webui/static/site/index.html` | `webui/static/site/site.css` |
-| Web console | `webui/static/console/index.html` | `webui/static/styles.css` |
-| Desktop (webview) | `webui/static/desktop/index.html` | `webui/static/desktop/desktop.css` |
-| Tokens | — | `webui/static/shared/torqa-tokens.css` |
+| Website | `website/dist/site/index.html` | Vite build from `website/` |
+| `/console` | — | Redirect to `/` |
+| `/desktop` | `website/static/desktop/index.html` | Pointer page |
+| Shared | `website/static/shared/` | `benchmark_panel.js`, tokens |
 
-See also: [DEMO_SURFACES.md](DEMO_SURFACES.md), [FLAGSHIP_DEMO.md](FLAGSHIP_DEMO.md).
+**Core helpers:** `src/workspace_bundle_io.py` — materialize / flow scaffold (tests + tooling; not a UI).
+
+See also: [DEMO_SURFACES.md](DEMO_SURFACES.md), [FLAGSHIP_DEMO.md](FLAGSHIP_DEMO.md), [P73_PRODUCT_SURFACES.md](P73_PRODUCT_SURFACES.md).

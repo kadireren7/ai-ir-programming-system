@@ -25,8 +25,8 @@ HELP_TEXT = """TORQA public flagship demo - first-trial happy path (repo root)
     3) torqa build examples/benchmark_flagship/app.tq
        -> materialized tree under generated_out/ (see docs/FLAGSHIP_DEMO.md)
     4) torqa-console
-       -> http://127.0.0.1:8000/ (product site, /console IR lab, /desktop editor shell)
-       (fallback if PATH: python -m webui)
+       -> http://127.0.0.1:8000/ (marketing site; /desktop points to native app; /console redirects here)
+       (fallback if PATH: python -m website.server)
     5) Inspect proof: examples/benchmark_flagship/compression_baseline_report.json
        torqa demo benchmark              (human summary of that baseline — no server)
        torqa-gate-proof
@@ -43,7 +43,6 @@ HELP_TEXT = """TORQA public flagship demo - first-trial happy path (repo root)
   Official desktop (Electron — torqa CLI only, no duplicated validation):
     torqa-desktop
     (needs: cd desktop && npm install; first run may npm run build)
-    Legacy Python/Tk or pywebview: torqa-desktop-legacy  /  python -m desktop_legacy --tk
 
   Legacy alias: torqa-flagship (same help text and verify)
   Trial limits + expectations: docs/TRIAL_READINESS.md

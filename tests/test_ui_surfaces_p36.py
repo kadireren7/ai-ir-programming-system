@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 pytest.importorskip("fastapi")
 
-from webui.app import app
+from website.server.app import app
 
 
 @pytest.fixture
@@ -29,13 +29,10 @@ def test_website_has_demo_and_docs_entrypoints(client):
     assert b"site-desktop-cta" in c
 
 
-def test_desktop_has_editor_shell_and_theme(client):
+def test_desktop_is_native_cta_not_second_ide_p73(client):
     r = client.get("/desktop")
     assert r.status_code == 200
     c = r.content
-    assert b"data-torqa-surface=\"desktop-editor\"" in c
-    assert b"data-torqa-desktop-shell" in c
-    assert b"ide-theme-toggle" in c
-    assert b"Explorer" in c
-    assert b"desk-diagnostics-pre" in c
-    assert b"btn-materialize" in c
+    assert b"data-torqa-surface=\"desktop-native-cta\"" in c
+    assert b"p73-desktop-unified" in c
+    assert b"Back to site" in c

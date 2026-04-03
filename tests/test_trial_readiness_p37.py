@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from src.benchmarks.compression_report import public_benchmark_report, run_compression_benchmark
 from src.benchmarks.flagship_demo_cli import HELP_TEXT, verify
 from src.benchmarks.gate_proof import run_gate_proof_manifest
-from webui.app import app
+from website.server.app import app
 
 REPO = Path(__file__).resolve().parents[1]
 TRIAL_DOC = REPO / "docs" / "TRIAL_READINESS.md"
@@ -32,7 +32,7 @@ def test_trial_readiness_doc_exists_and_references_canonical_commands() -> None:
     assert "torqa-gate-proof" in text
     assert "torqa-console" in text
     assert "torqa-desktop" in text
-    assert "torqa-desktop-legacy" in text
+    assert "torqa-desktop-legacy" not in text
     assert "trial_ready/README.md" in text
 
 
@@ -60,13 +60,13 @@ def test_website_has_start_here_and_what_is_torqa() -> None:
     assert b"TRIAL_READINESS.md" in c
 
 
-def test_desktop_has_trial_welcome_and_minimal_sample_button() -> None:
+def test_desktop_points_to_native_app_p73() -> None:
     client = TestClient(app)
     r = client.get("/desktop")
     assert r.status_code == 200
     c = r.content
-    assert b"desk-trial-welcome" in c
-    assert b"btn-desk-minimal-sample" in c
+    assert b"p73-desktop-unified" in c
+    assert b"native" in c.lower()
 
 
 def test_examples_api_serves_minimal_flow_for_desktop_template() -> None:

@@ -2,7 +2,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from desktop_legacy.workspace_io import write_flow_project
+from src.workspace_bundle_io import write_flow_project
 
 
 def test_write_flow_project_creates_bundle():

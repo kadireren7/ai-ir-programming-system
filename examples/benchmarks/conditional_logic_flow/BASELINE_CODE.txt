@@ -1,0 +1,32 @@
+// Baseline (non-TORQA): branch-ready flow skeleton (fixed text).
+
+export type BranchyInput = {
+  username: string;
+  password: string;
+  region: string;
+  plan_tier: string;
+};
+
+const ALLOWED_REGIONS = ["eu", "us", "apac"] as const;
+
+export async function runBranchyFlow(input: BranchyInput): Promise<"Routed"> {
+  await login(input.username, input.password);
+  if (!input.region?.trim()) throw new Error("region required");
+  if (!input.plan_tier?.trim()) throw new Error("plan_tier required");
+  if (!ALLOWED_REGIONS.includes(input.region as (typeof ALLOWED_REGIONS)[number])) {
+    throw new Error("unsupported region");
+  }
+  const tier = input.plan_tier.toLowerCase();
+  if (!["free", "pro", "enterprise"].includes(tier)) throw new Error("bad plan_tier");
+  return "Routed";
+}
+
+async function login(username: string, password: string): Promise<void> {
+  if (!username?.trim() || !password) throw new Error("auth required");
+  const ok = await verifyPassword(username, password);
+  if (!ok) throw new Error("unauthorized");
+}
+
+async function verifyPassword(username: string, password: string): Promise<boolean> {
+  return password.length >= 8;
+}

@@ -9,6 +9,12 @@ IR interchange versioning is separate from package semver — see [`docs/IR_VERS
 
 ## [Unreleased]
 
+### Changed
+
+- **Website package consolidation:** Removed the top-level **`webui/`** tree. The marketing bundle builds to **`website/dist/site/`**; FastAPI + `torqa-console` live in **`website/server/`** (`python -m website.server`). Docker and docs updated.
+- **P73 (one website, one desktop):** Removed **`desktop_legacy/`** and **`torqa-desktop-legacy`**. Workspace materialize helpers moved to [`src/workspace_bundle_io.py`](src/workspace_bundle_io.py). **`GET /desktop`** is a **native-desktop pointer** only (removed browser IDE under the old web UI). **Electron** [`desktop/`](desktop/) UX: welcome flow when no folder, clearer first-run steps, less path noise in chrome. **Product site** [`website/`](website/) copy: fewer raw commands/paths on the homepage. Docs: [`docs/P73_PRODUCT_SURFACES.md`](docs/P73_PRODUCT_SURFACES.md); README, trial/quickstart, surface rules, and tests updated.
+- **Marketing-only web:** Removed the browser **IR console**. **`GET /console`** **301 → `/`**. The public site is **premium marketing copy** only (no command cheatsheets); tooling is **CLI + TORQA Desktop**. [`website/`](website/) visual refresh (Plus Jakarta Sans, refined hero and cards).
+
 ### Added
 
 - **P72 (official website):** Single **official product website** source at [`website/`](website/) (renamed from `product-site/`); build still outputs to `webui/static/site/` for `GET /`. [`webui/`](webui/) remains the **host** for `/`, `/console`, `/desktop`, and APIs — not a duplicate marketing site. Role table: [`docs/P72_WEBSITE_OFFICIAL.md`](docs/P72_WEBSITE_OFFICIAL.md). [`docs/DOC_MAP.md`](docs/DOC_MAP.md), [`docs/UI_SURFACE_RULES.md`](docs/UI_SURFACE_RULES.md), [`docs/SURFACE_CLASSIFICATION.md`](docs/SURFACE_CLASSIFICATION.md) updated.

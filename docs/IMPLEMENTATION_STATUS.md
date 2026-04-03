@@ -9,7 +9,7 @@ This file summarizes what is **implemented** versus **roadmap** for the current 
 - **Orchestrator**: projection planning, artifact generation, V4 maintenance pass (`SystemOrchestrator.run_v4`).
 - **Projections**: Vite/React website skeleton from IR; **non-website targets** emit **IR-derived** Rust, Python, SQL, TypeScript, Go, and C++ text (not empty TODO stubs).
 - **Golden examples** under `examples/core/` validated by **pytest** and **JSON Schema** (`spec/IR_BUNDLE.schema.json`).
-- **Web console** (`webui/`): load examples, edit JSON, run validation / engine / orchestrator, preview artifacts.
+- **Site host** (`website/server/`): marketing `GET /`, JSON APIs (examples, compile-tq, materialize zip, etc.); no browser IR console.
 - **CI** (`.github/workflows/ci.yml`): Python tests + Rust tests on Ubuntu.
 
 ## Partial / transitional

@@ -14,7 +14,7 @@ This page is the short **“what to expect on a first trial”** contract. It do
 - **Sanity check:** `torqa demo verify` — flagship files, gate expectations, compression baseline shape, fresh benchmark run (same as `torqa-flagship verify`).
 - **Compression story:** checked-in [`examples/benchmark_flagship/compression_baseline_report.json`](../examples/benchmark_flagship/compression_baseline_report.json); regenerate with `torqa-compression-bench examples/benchmark_flagship --repo-root .` (optional `--write` to that path).
 - **Gate proof:** `torqa-gate-proof` — manifest under [`examples/benchmark_flagship/gate_invalid/`](../examples/benchmark_flagship/gate_invalid/).
-- **Surfaces:** `torqa-console` → product site at `/`, IR lab at `/console`, browser IDE at `/desktop`. **Official native desktop:** `torqa-desktop` (Electron under `desktop/`; needs `npm install` there). **Legacy:** `torqa-desktop-legacy` / `python -m desktop_legacy --tk`.
+- **Surfaces:** `torqa-console` → **marketing site** at `/` only; **`/console`** redirects to `/` (no browser lab). **`/desktop`** is a **native-desktop pointer**; use **`torqa-desktop`** for authoring. **Official desktop:** `torqa-desktop` (Electron under `desktop/`; needs `npm install` there).
 
 ---
 
@@ -33,7 +33,7 @@ This page is the short **“what to expect on a first trial”** contract. It do
 3. **`torqa demo verify`** — sanity-check flagship assets, gate expectations, and compression baseline.
 4. **`torqa build examples/benchmark_flagship/app.tq`** — materialize the tree (default `generated_out/`).
 5. Open `generated_out/generated/webapp/`, run `npm install` then `npm run dev` (see [`DEMO_LOCALHOST.md`](DEMO_LOCALHOST.md)).
-6. **`torqa-console`** — product site at `/`, IR lab at `/console`, desktop UI at `/desktop`; skim baseline JSON and `torqa-gate-proof` when you want proof detail.
+6. **`torqa-console`** — marketing site at `/` (APIs still available for local preview). Open **`torqa-desktop`** for the native shell. Skim baseline JSON and `torqa-gate-proof` when you want proof detail.
 
 ---
 

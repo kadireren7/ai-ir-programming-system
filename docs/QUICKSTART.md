@@ -44,7 +44,7 @@ Exit code `0` and `"ok": true` in JSON means the IR bundle shape checks passed.
 | First **.tq** edits | Start from [`examples/torqa/templates/`](../examples/torqa/templates/) (`minimal.tq`, `session_only.tq`, `guarded_session.tq`, `login_flow.tq`, …); see [templates README](../examples/torqa/templates/README.md) |
 | Guided **workspace** | [`examples/workspace_minimal/README.md`](../examples/workspace_minimal/README.md) |
 | First **IR package** flow | [USING_PACKAGES.md](USING_PACKAGES.md) + [`examples/package_demo/`](../examples/package_demo/) |
-| Native **desktop** (`.tq` editor, `torqa` CLI) | `torqa-desktop` after `cd desktop && npm install` — [desktop/README.md](../desktop/README.md) · legacy: `torqa-desktop-legacy` |
+| Native **desktop** (`.tq` editor, `torqa` CLI) | `torqa-desktop` after `cd desktop && npm install` — [desktop/README.md](../desktop/README.md) |
 | Full doc index | [DOC_MAP.md](DOC_MAP.md) |
 
 ## If `torqa` is not found

@@ -11,7 +11,7 @@ Amaç: IR veya `.tq` ile **üretilen Vite/React ağacını** (`generated/webapp`
    pip install -e .
    torqa-console
    ```
-   veya: `uvicorn webui.app:app --reload --host 127.0.0.1 --port 8000`
+   veya: `uvicorn website.server.app:app --reload --host 127.0.0.1 --port 8000`
 
 2. Tarayıcıda `http://127.0.0.1:8000` açın.
 
@@ -53,26 +53,24 @@ npm run dev
 
 ## Yol C — Masaüstü (klasör seçimi burada)
 
-Web konsolu **tarayıcı güvenliği** yüzünden bilgisayarındaki rastgele klasörü “açamaz”; bu yüzden **Cursor gibi klasör + üretim** için masaüstü kabuğu kullanılır.
+Web konsolu **tarayıcı güvenliği** yüzünden bilgisayarındaki rastgele klasörü “açamaz”; bu yüzden **klasör + `.tq` + üretim** için **TORQA Desktop** (Electron) kullanılır.
 
-**Çalıştırma (PATH sorunu varsa tam bunu yazın):**
+**Çalıştırma (bir kez `npm install` `desktop/` içinde):**
 
 ```powershell
 cd C:\Users\kadir\Desktop\Project-X
-python -m desktop_legacy --tk
+torqa-desktop
 ```
 
-`torqa-desktop-legacy` PATH’teyse: `torqa-desktop-legacy --tk`
+PATH’te yoksa: `python -m pip install -e .` sonrası `Scripts` yolunu kullanın veya `desktop` klasöründe `npm run dev`.
 
-**pywebview** (gömülü pencere + web arayüzü): Linux/macOS’ta `pip install -e ".[desktop-webview]"` sonra `python -m desktop_legacy`. Windows’ta bu extra `pywebview` kurmaz (kaynak `pythonnet` derlemesini önlemek için); Windows’ta pratik çözüm **`python -m desktop_legacy --tk`**. Gömülü pencere şartsa: önce `pip install pythonnet --only-binary :all:` (teker yoksa bu adım da başarısız olabilir), sonra `pip install pywebview`.
+1. **Open folder** ile çalışma klasörünü seçin.
 
-1. Çalışma klasörü seçin.
+2. İsterseniz **Quick demo** ile örnek `.tq` yükleyin; **Validate** / **Build** çıktısı panelde görünür.
 
-2. IR üretin (AI veya JSON yapıştırma).
+3. Üretim ağacı `torqa_generated_out/` (veya CLI ile belirttiğiniz çıktı) altına yazılır; web önizlemesi için terminalde:
 
-3. **«Üretim ağacı yaz (torqa project)»** — dosyalar `…/generated_out` altına yazılır.
-
-4. Başarı penceresinde **Windows terminal komutları** gösterilir; aynı komutları kendiniz çalıştırın:
+4. Başarı sonrası **terminal komutları** (örnek):
    ```cmd
    cd YOL\generated_out\generated\webapp
    npm install
@@ -91,8 +89,8 @@ Web API sunucuda keyfi diske yazmaz; yalnızca ZIP döner. Ayrıntı: [`WEBUI_SE
 
 | Sorun | Ne yapın |
 |--------|-----------|
-| Windows’ta `torqa-console` tanınmıyor | `pip` uyarısı: `.exe` dosyaları `...\Python\...\Scripts` altında ama **PATH’te değil**. **Hızlı çözüm:** proje kökünde `python -m webui` (aynı konsol). **Kalıcı:** PATH’e o `Scripts` klasörünü ekleyin veya tam yol: `& "C:\Users\<siz>\AppData\Local\Python\pythoncore-3.14-64\Scripts\torqa-console.exe"`. |
-| `torqa` / `torqa-desktop` aynı sebep | `python -m torqa --help` veya `python -m src.cli.main --help` · masaüstü: `python -m desktop_legacy --tk` (kurulum kökünden). |
+| Windows’ta `torqa-console` tanınmıyor | `pip` uyarısı: `.exe` dosyaları `...\Python\...\Scripts` altında ama **PATH’te değil**. **Hızlı çözüm:** proje kökünde `python -m website.server` (aynı konsol). **Kalıcı:** PATH’e o `Scripts` klasörünü ekleyin veya tam yol: `& "C:\Users\<siz>\AppData\Local\Python\pythoncore-3.14-64\Scripts\torqa-console.exe"`. |
+| `torqa` / `torqa-desktop` aynı sebep | `python -m torqa --help` veya `python -m src.cli.main --help` · site: `python -m website.server` · masaüstü: `cd desktop && npm run start` veya `torqa-desktop` (kurulum kökünden). |
 | `npm` yok | [Node.js LTS](https://nodejs.org/) kurun. |
 | ZIP’te `generated/webapp` yok | Daha zengin bir IR örneği kullanın (`valid_login_flow.json`). |
 | Port meşgul | Vite başka port önerir; çıktıyı okuyun. |

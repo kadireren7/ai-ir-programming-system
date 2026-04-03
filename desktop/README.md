@@ -11,10 +11,14 @@ Native **Electron + React** shell for `.tq` projects. **All validation, IR, buil
 
 ## Install & run
 
+**Önemli:** Arayüzü **tarayıcıda** açmayın (`http://localhost:…`). Orada `torqaShell` yoktur; klasör/dosya açma çalışmaz. Her zaman **Electron penceresini** kullanın (adres çubuğu olmayan uygulama penceresi).
+
+**Electron penceresinde bile “torqaShell yok” görürseniz:** `desktop/package.json` içinde `"type":"module"` varken eski derleme `preload.mjs` + CJS karışımı preload’ı kırıyordu; düzeltme `preload.cjs` kullanıyor. Mutlaka `npm run build` yeniden çalıştırın; `dist-electron/preload.cjs` oluşmalı (eski `preload.mjs` silinebilir).
+
 ```bash
 cd desktop
 npm install
-npm run dev          # development (Vite + Electron)
+npm run dev          # Vite + Electron — açılan MASAÜSTÜ penceresini kullanın
 ```
 
 **From the repo root (after `npm install` in `desktop/` once):**
@@ -33,13 +37,18 @@ npm run build
 npm start
 ```
 
+## Tests (P74)
+
+```bash
+cd desktop
+npm run test
+```
+
+Python CLI shapes the UI relies on are also checked in-repo: `pytest tests/test_desktop_torqa_contract.py`.
+
 ## First-run samples
 
 With a folder open: **Quick demo (sample + validate)**, **Load minimal sample**, or **Load flagship sample** — copies repo examples into `<workspace>/torqa_samples/` and opens the `.tq` file (core-only checks).
-
-## Legacy fallback
-
-Python Tk / pywebview: **`torqa-desktop-legacy`** or **`python -m desktop_legacy --tk`** — see [`../desktop_legacy/README.md`](../desktop_legacy/README.md).
 
 ## Security
 

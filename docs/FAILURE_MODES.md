@@ -8,7 +8,7 @@ This page lists **expected** ways TORQA can fail or reject work — by design or
 
 | Symptom | Typical cause | What to do |
 |--------|----------------|------------|
-| `torqa` / `torqa-console` / `torqa-desktop` not found (Windows) | Console scripts live under Python’s `Scripts` folder, not on `PATH` | From repo root: `python -m torqa …`, `python -m webui`, `python -m desktop_legacy --tk` — see [QUICKSTART.md](QUICKSTART.md), [DEMO_LOCALHOST.md](DEMO_LOCALHOST.md) |
+| `torqa` / `torqa-console` / `torqa-desktop` not found (Windows) | Console scripts live under Python’s `Scripts` folder, not on `PATH` | From repo root: `python -m torqa …`, `python -m website.server`; desktop: `cd desktop && npm run dev` or add `Scripts` to `PATH` — see [QUICKSTART.md](QUICKSTART.md), [DEMO_LOCALHOST.md](DEMO_LOCALHOST.md) |
 | `unrecognized arguments: --json` after a subcommand | Global `--json` must come **before** the subcommand | Use `torqa --json surface FILE.tq`, not `torqa surface FILE.tq --json` — see [WEBUI_AND_CLI_SURFACES.md](WEBUI_AND_CLI_SURFACES.md), [MAINTAINER_VERIFY.md](MAINTAINER_VERIFY.md) |
 | `torqa validate` fails on a `.tq` file | `validate` / `diagnostics` accept **IR bundle `.json` only** | Use `torqa surface …` or `torqa build` / `torqa project` for `.tq`; or compile in the web console first |
 | Non-zero exit from `torqa build` / `project` | Parse, envelope, IR shape, semantics, or materialize stage failed | Run `torqa --json project …` and inspect `pipeline_stages` / diagnostics; fix IR or surface, then retry — [VALIDATION_GATE.md](VALIDATION_GATE.md) |
@@ -39,7 +39,7 @@ After JSON exists (from surface compile or hand-authored):
 - **Handoff (`PX_HANDOFF`):** ASCII / operator constraints on IR text.
 - **Semantic (`PX_SEM_*`):** unknown functions/effects, arity/types, undefined identifiers, forbid/guarantee/transition issues.
 
-Full diagnostics: `torqa validate bundle.json` or **Full diagnostics** in `/console`. Reports use formal **phases** (e.g. structural, semantic) — see [VALIDATION_GATE.md](VALIDATION_GATE.md).
+Full diagnostics: `torqa validate bundle.json` (or equivalent CLI paths). Reports use formal **phases** (e.g. structural, semantic) — see [VALIDATION_GATE.md](VALIDATION_GATE.md).
 
 ---
 
@@ -71,7 +71,7 @@ Local preview only: do not expose the dev server to untrusted networks without h
 
 | Symptom | Typical cause |
 |---------|----------------|
-| No embedded window on Windows | `pywebview` / `pythonnet` not installed or not supported for your Python — use `python -m desktop_legacy --tk` — [DEMO_LOCALHOST.md](DEMO_LOCALHOST.md), `pyproject.toml` optional deps |
+| Electron desktop won’t start | Run `npm install` in `desktop/`; ensure Node 20+ — [desktop/README.md](../desktop/README.md) |
 | Folder pick / disk write unavailable in browser | PyWebview **API** not present; use native desktop or Tk for workspace selection |
 
 ---

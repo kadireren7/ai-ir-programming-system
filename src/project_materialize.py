@@ -11,7 +11,7 @@ validation fails.
 applies the same ordering so the same validated bundle always yields the same relative paths and
 file bytes (see ``compute_projection_output_digest``).
 
-Shared by ``torqa project`` and tooling (webui zip, desktop). See docs/PACKAGE_SPLIT.md.
+Shared by ``torqa project`` and tooling (HTTP zip API, desktop). See docs/PACKAGE_SPLIT.md.
 """
 
 from __future__ import annotations

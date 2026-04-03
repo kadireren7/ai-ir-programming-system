@@ -1,0 +1,134 @@
+{
+  "estimator_id": "utf8_bytes_div_4_v1",
+  "estimator_method_en": "Token count := ceil_utf8_bytes(text) / 4 using integer arithmetic (n+3)//4; empty string -> 0; non-empty -> max(1, (utf8_byte_len + 3) // 4).",
+  "manifest_relative": "examples/benchmarks/token_proof/manifest.json",
+  "notes": [
+    "compression_ratio_prompt_per_torqa = prompt_tokens / max(1, torqa_tokens).",
+    "compression_ratio_combined_per_torqa = (prompt_tokens + baseline_code_tokens) / max(1, torqa_tokens).",
+    "average_prompt_token_reduction_percent_vs_torqa = mean over passing scenarios of (prompt_tokens - torqa_tokens) / prompt_tokens * 100.",
+    "baseline_code_tokens: fixed BASELINE_CODE.txt per scenario (approximate non-TORQA implementation).",
+    "ir_to_torqa_ratio > 1 means canonical IR JSON is larger than the .tq surface (expected); NL→TQ compression is the headline claim.",
+    "Failed scenarios are listed with errors; they are excluded from summary averages."
+  ],
+  "scenarios": [
+    {
+      "category": "simple form flow",
+      "compression_ratio_combined_per_torqa": 9.653846,
+      "compression_ratio_prompt_per_torqa": 4.288462,
+      "errors": [],
+      "id": "simple_form_flow",
+      "ir_to_torqa_ratio": 5.673077,
+      "ok": true,
+      "relative_dir": "examples/benchmarks/simple_form_flow",
+      "sources": {
+        "app_tq": "examples/benchmarks/simple_form_flow/app.tq",
+        "baseline_code": "examples/benchmarks/simple_form_flow/BASELINE_CODE.txt",
+        "task_md": "examples/benchmarks/simple_form_flow/TASK.md"
+      },
+      "token_counts": {
+        "baseline_code_tokens": 279,
+        "combined_nl_and_code_tokens": 502,
+        "ir_tokens": 295,
+        "prompt_tokens": 223,
+        "torqa_tokens": 52
+      }
+    },
+    {
+      "category": "approval workflow",
+      "compression_ratio_combined_per_torqa": 9.309091,
+      "compression_ratio_prompt_per_torqa": 3.8,
+      "errors": [],
+      "id": "approval_workflow",
+      "ir_to_torqa_ratio": 5.436364,
+      "ok": true,
+      "relative_dir": "examples/benchmarks/approval_workflow",
+      "sources": {
+        "app_tq": "examples/benchmarks/approval_workflow/app.tq",
+        "baseline_code": "examples/benchmarks/approval_workflow/BASELINE_CODE.txt",
+        "task_md": "examples/benchmarks/approval_workflow/TASK.md"
+      },
+      "token_counts": {
+        "baseline_code_tokens": 303,
+        "combined_nl_and_code_tokens": 512,
+        "ir_tokens": 299,
+        "prompt_tokens": 209,
+        "torqa_tokens": 55
+      }
+    },
+    {
+      "category": "data transformation",
+      "compression_ratio_combined_per_torqa": 8.472727,
+      "compression_ratio_prompt_per_torqa": 3.4,
+      "errors": [],
+      "id": "data_transform_pipeline",
+      "ir_to_torqa_ratio": 5.418182,
+      "ok": true,
+      "relative_dir": "examples/benchmarks/data_transform_pipeline",
+      "sources": {
+        "app_tq": "examples/benchmarks/data_transform_pipeline/app.tq",
+        "baseline_code": "examples/benchmarks/data_transform_pipeline/BASELINE_CODE.txt",
+        "task_md": "examples/benchmarks/data_transform_pipeline/TASK.md"
+      },
+      "token_counts": {
+        "baseline_code_tokens": 279,
+        "combined_nl_and_code_tokens": 466,
+        "ir_tokens": 298,
+        "prompt_tokens": 187,
+        "torqa_tokens": 55
+      }
+    },
+    {
+      "category": "multi-step logic",
+      "compression_ratio_combined_per_torqa": 8.923077,
+      "compression_ratio_prompt_per_torqa": 3.384615,
+      "errors": [],
+      "id": "conditional_logic_flow",
+      "ir_to_torqa_ratio": 6.5,
+      "ok": true,
+      "relative_dir": "examples/benchmarks/conditional_logic_flow",
+      "sources": {
+        "app_tq": "examples/benchmarks/conditional_logic_flow/app.tq",
+        "baseline_code": "examples/benchmarks/conditional_logic_flow/BASELINE_CODE.txt",
+        "task_md": "examples/benchmarks/conditional_logic_flow/TASK.md"
+      },
+      "token_counts": {
+        "baseline_code_tokens": 288,
+        "combined_nl_and_code_tokens": 464,
+        "ir_tokens": 338,
+        "prompt_tokens": 176,
+        "torqa_tokens": 52
+      }
+    },
+    {
+      "category": "small automation",
+      "compression_ratio_combined_per_torqa": 8.103448,
+      "compression_ratio_prompt_per_torqa": 3.0,
+      "errors": [],
+      "id": "multi_step_automation",
+      "ir_to_torqa_ratio": 4.396552,
+      "ok": true,
+      "relative_dir": "examples/benchmarks/multi_step_automation",
+      "sources": {
+        "app_tq": "examples/benchmarks/multi_step_automation/app.tq",
+        "baseline_code": "examples/benchmarks/multi_step_automation/BASELINE_CODE.txt",
+        "task_md": "examples/benchmarks/multi_step_automation/TASK.md"
+      },
+      "token_counts": {
+        "baseline_code_tokens": 296,
+        "combined_nl_and_code_tokens": 470,
+        "ir_tokens": 255,
+        "prompt_tokens": 174,
+        "torqa_tokens": 58
+      }
+    }
+  ],
+  "schema_version": 1,
+  "summary": {
+    "average_compression_ratio_combined_nl_code_per_torqa": 8.892438,
+    "average_compression_ratio_prompt_per_torqa": 3.574615,
+    "average_prompt_token_reduction_percent_vs_torqa": 71.615054,
+    "failed_count": 0,
+    "passed_count": 5,
+    "scenario_count": 5
+  }
+}

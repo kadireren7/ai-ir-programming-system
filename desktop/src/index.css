@@ -450,6 +450,38 @@ body {
   line-height: 1.6;
 }
 
+.welcome-stack {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.welcome-title {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
+
+.welcome-steps {
+  margin: 0 0 20px;
+  padding-left: 1.25rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.welcome-steps li {
+  margin-bottom: 10px;
+}
+
+.welcome-cta {
+  display: block;
+  margin: 0 auto;
+  padding: 10px 22px;
+  font-size: 14px;
+}
+
 .written-list {
   list-style: none;
   padding: 0;

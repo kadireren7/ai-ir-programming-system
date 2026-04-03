@@ -1,14 +1,14 @@
 # Web UI and CLI surfaces
 
-## Web (`webui/app.py`)
+## Web (`website/server/app.py`)
 
-Run locally: `torqa-console`, `python -m webui`, or `uvicorn webui.app:app`. Flagship demo path: `torqa demo` ([`docs/FLAGSHIP_DEMO.md`](FLAGSHIP_DEMO.md)). **P72:** `GET /` = **official** product website (built from [`website/`](../website/)) · `GET /console` = IR lab · `GET /desktop` = browser IDE ([`docs/UI_SURFACE_RULES.md`](UI_SURFACE_RULES.md), [`P72_WEBSITE_OFFICIAL.md`](P72_WEBSITE_OFFICIAL.md)).
+Run locally: `torqa-console`, `python -m website.server`, or `uvicorn website.server.app:app`. Flagship demo path: `torqa demo` ([`docs/FLAGSHIP_DEMO.md`](FLAGSHIP_DEMO.md)). **`GET /`** = marketing website ([`website/`](../website/)) · **`GET /console`** → **`/`** · **`GET /desktop`** = desktop pointer ([`docs/P73_PRODUCT_SURFACES.md`](P73_PRODUCT_SURFACES.md), [`docs/UI_SURFACE_RULES.md`](UI_SURFACE_RULES.md)).
 
 | Page | Purpose |
 |------|---------|
-| `GET /` | **Official** marketing / product site — source [`website/`](../website/), output `webui/static/site/` |
-| `GET /console` | Browser IR console — Monaco lab (`webui/static/console/`) |
-| `GET /desktop` | Browser IDE shell (`webui/static/desktop/`) |
+| `GET /` | **Official** marketing site — source [`website/`](../website/), build output `website/dist/site/` |
+| `GET /console` | Permanent redirect to `/` |
+| `GET /desktop` | Native desktop pointer (`website/static/desktop/index.html`) |
 
 | Endpoint | Purpose |
 |----------|---------|

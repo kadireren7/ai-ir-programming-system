@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TORQA Desktop</title>
+    <style>
+      :root {
+        --bg: #0f1419;
+        --fg: #e7ecf1;
+        --muted: #8b98a5;
+        --accent: #6ea8ff;
+        --card: #1a2332;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      main {
+        max-width: 480px;
+        background: var(--card);
+        border-radius: 16px;
+        padding: 32px 36px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      h1 {
+        margin: 0 0 14px;
+        font-size: 1.4rem;
+        font-weight: 600;
+      }
+      p,
+      li {
+        margin: 0 0 12px;
+        line-height: 1.55;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      ul {
+        margin: 0 0 18px;
+        padding-left: 1.2rem;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      a.btn {
+        display: inline-block;
+        padding: 12px 20px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      a.primary {
+        background: var(--accent);
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body data-torqa-surface="desktop-native-cta">
+    <main id="p73-desktop-unified">
+      <h1>TORQA Desktop</h1>
+      <p>
+        Authoring runs in the native app: pick a folder, explore samples, validate and build with clear feedback. This
+        page is only a pointer — the product site is on the home URL.
+      </p>
+      <ul>
+        <li>Install desktop dependencies from the repository once.</li>
+        <li>Launch the desktop from the same environment where TORQA is installed.</li>
+        <li>Use the guided first-run flow to open a sample workspace.</li>
+      </ul>
+      <div class="actions">
+        <a class="btn primary" href="/">Back to site</a>
+      </div>
+    </main>
+  </body>
+</html>

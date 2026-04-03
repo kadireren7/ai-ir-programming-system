@@ -7,7 +7,7 @@ export type TorqaRequest =
       outDir?: string;
       engineMode?: "python_only" | "rust_preferred" | "rust_only";
     }
-  | { kind: "benchmark" };
+  | { kind: "benchmark"; workspaceRoot?: string; relativePath?: string };
 
 export type TorqaRunResult = {
   exitCode: number;

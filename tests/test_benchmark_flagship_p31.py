@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from desktop_legacy.workspace_io import materialize_bundle_to_workspace
+from src.workspace_bundle_io import materialize_bundle_to_workspace
 from src.project_materialize import materialize_project, parse_stage, validate_stage
 
 REPO = Path(__file__).resolve().parents[1]

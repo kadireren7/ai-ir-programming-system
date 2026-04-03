@@ -9,7 +9,7 @@ Aşağıdaki **M1–M3** maddelerinin çoğu koda yansıdı; yeni iş öncesi bu
 | Alan | Ne var | Ana girdi noktaları |
 |------|--------|----------------------|
 | **CLI** | `language --minimal-json`, `bundle-lint`, `surface` (.tq/.pxir) | `src/cli/main.py`, `README.md` Quickstart |
-| **Web** | IR / `.tq` modu, örnek yükleme, derleme | `GET /api/examples/tq/{name}`, `POST /api/compile-tq`, `GET /api/examples` → `tq_examples` — `webui/app.py`, `webui/static/*` |
+| **Web** | IR / `.tq` modu, örnek yükleme, derleme | `GET /api/examples/tq/{name}`, `POST /api/compile-tq`, `GET /api/examples` → `tq_examples` — `website/server/app.py`, `website/static/*` |
 | **.tq** | `ensures session.created` → `postcondition` (`session_stored_for_user`); `forbid locked` eş anlamlıları; `unless` → `PX_TQ_UNLESS_UNSUPPORTED` | `src/surface/parse_tq.py`, `tests/test_surface_tq.py` |
 | **Builtin** | `session_stored_for_user(text)` | `src/semantics/ir_semantics.py`, `src/execution/ir_execution.py`, `rust-core/src/execution/evaluator.rs`, `examples/core/valid_session_postcondition_flow.json` |
 | **Kotlin stub** | `generated/kotlin/Main.kt` yolu | `tests/test_kotlin_stub.py`, `artifact_builder` / orchestrator kancaları |
@@ -94,7 +94,7 @@ Add CLI subcommand that prints minimal_valid_bundle_json and registry table (reu
 **M2.4 — Web konsolda .tq sekmesi veya örnek**
 
 ```text
-In webui, add a visible UX element: either a second Monaco tab "TORQA (.tq)" with sample from examples/torqa/signin_flow.tq, or a dropdown example that loads .tq and compiles via new internal API wrapping parse_tq_source. Must fail gracefully with PX_TQ_* display. Add/adjust tests/test_webui*.py if HTTP surface changes.
+In the site/API host (`website/server`), add a visible UX element: either a second Monaco tab "TORQA (.tq)" with sample from examples/torqa/signin_flow.tq, or a dropdown example that loads .tq and compiles via new internal API wrapping parse_tq_source. Must fail gracefully with PX_TQ_* display. Add/adjust tests/test_webui*.py if HTTP surface changes.
 ```
 
 **M2.5 — Tanılama mesajları (kullanıcıya görünür)**

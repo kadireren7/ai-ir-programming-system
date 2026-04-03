@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import type { TorqaRequest } from "./torqaTypes";
 import { resolvePythonExe, resolveRepoRoot } from "./paths";
@@ -50,12 +51,48 @@ function runProcess(
   });
 }
 
+/** P31-style directory: can run ``torqa-compression-bench`` (via ``src.benchmarks.cli``). */
+function isCompressionBenchDir(dir: string): boolean {
+  return (
+    fs.existsSync(path.join(dir, "BENCHMARK_TASK.md")) &&
+    fs.existsSync(path.join(dir, "expected_output_summary.json")) &&
+    fs.existsSync(path.join(dir, "app.tq"))
+  );
+}
+
 export async function runTorqa(req: TorqaRequest): Promise<TorqaRunResult> {
   const repoRoot = resolveRepoRoot();
   const pythonExe = resolvePythonExe();
   const mod = ["-m", "torqa"];
 
   if (req.kind === "benchmark") {
+    if (req.workspaceRoot && req.relativePath) {
+      const ws = path.resolve(req.workspaceRoot);
+      const rel = req.relativePath.split("/").join(path.sep);
+      const filePath = path.join(ws, rel);
+      try {
+        fsSafe.assertUnderWorkspace(ws, filePath);
+      } catch (e) {
+        return {
+          exitCode: 1,
+          stdout: "",
+          stderr: `Benchmark: invalid path — ${String(e)}`,
+        };
+      }
+      const parent = path.dirname(filePath);
+      if (isCompressionBenchDir(parent)) {
+        const benchDir = path.resolve(parent);
+        const args = [
+          "-c",
+          "import sys; from src.benchmarks.cli import main; raise SystemExit(main(sys.argv[1:]))",
+          benchDir,
+          "--repo-root",
+          repoRoot,
+          "--no-generated",
+        ];
+        return runProcess(repoRoot, pythonExe, args);
+      }
+    }
     const args = [...mod, "--json", "demo", "benchmark"];
     return runProcess(repoRoot, pythonExe, args);
   }

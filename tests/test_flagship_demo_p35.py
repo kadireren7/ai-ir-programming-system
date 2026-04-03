@@ -14,7 +14,7 @@ pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient
 
 from src.benchmarks.flagship_demo_cli import HELP_TEXT, demo_benchmark, verify
-from webui.app import app
+from website.server.app import app
 
 REPO = Path(__file__).resolve().parents[1]
 FLAGSHIP = REPO / "examples" / "benchmark_flagship"
@@ -50,7 +50,7 @@ def test_torqa_flagship_help_lists_core_commands() -> None:
     assert "torqa-compression-bench" in HELP_TEXT
     assert "torqa-console" in HELP_TEXT
     assert "torqa-desktop" in HELP_TEXT
-    assert "desktop_legacy" in HELP_TEXT
+    assert "desktop_legacy" not in HELP_TEXT
     assert "docs/TRIAL_READINESS.md" in HELP_TEXT
     assert "torqa demo verify" in HELP_TEXT
 
@@ -81,10 +81,9 @@ def test_webui_flagship_demo_api_and_markup() -> None:
     r = client.get("/api/demo/flagship-tq")
     assert r.status_code == 200
     assert "flow:" in r.json().get("source", "")
-    r2 = client.get("/console")
-    assert r2.status_code == 200
-    assert b"btn-demo-flagship-tq" in r2.content
-    assert b"validation-banner" in r2.content
+    r2 = client.get("/console", follow_redirects=False)
+    assert r2.status_code == 301
+    assert r2.headers.get("location") == "/"
     r3 = client.get("/desktop")
     assert r3.status_code == 200
-    assert b"btn-desk-flagship" in r3.content
+    assert b"p73-desktop-unified" in r3.content

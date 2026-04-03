@@ -49,9 +49,9 @@ function BenchmarkLive() {
         const d = (await r.json()) as { ok?: boolean; report?: { metrics?: BenchMetrics } };
         if (cancelled) return;
         if (d.ok && d.report?.metrics) setMetrics(d.report.metrics);
-        else setErr("Run torqa-console to load live metrics, or see the JSON in the repo.");
+        else setErr("Live figures appear when you preview this site through the local TORQA server.");
       } catch {
-        if (!cancelled) setErr("Could not reach the API (open this site via torqa-console).");
+        if (!cancelled) setErr("Connect via the local server to load live benchmark figures.");
       }
     })();
     return () => {
@@ -73,26 +73,26 @@ function BenchmarkLive() {
 
   return (
     <div className="p70-bm-live">
-      <h3 style={{ margin: "0 0 8px", fontSize: "1.05rem" }}>Flagship baseline</h3>
-      <p className="p70-sub" style={{ marginBottom: 0 }}>
-        NL task vs <span className="p70-code">.tq</span> surface — same intent, measured token scale (deterministic
-        estimate). From <span className="p70-code">/api/demo/benchmark-report</span> when the console is running.
+      <h3 className="p70-bm-title">Compression at a glance</h3>
+      <p className="p70-bm-lead">
+        Flagship intent expressed as a long natural-language brief versus the same intent in a compact Torqa surface —
+        estimated token scale, deterministic benchmark.
       </p>
-      {err && !metrics ? <p style={{ color: "var(--muted)" }}>{err}</p> : null}
+      {err && !metrics ? <p className="p70-bm-note">{err}</p> : null}
       {metrics && task > 0 && tq > 0 ? (
         <>
           {ratio != null ? <div className="p70-bm-ratio">{ratio.toFixed(2)}×</div> : null}
-          <p style={{ margin: "0 0 8px", fontSize: "14px", color: "var(--muted)" }}>NL / .tq compression</p>
+          <p className="p70-bm-caption">Natural language vs Torqa surface</p>
           <div className="p70-bm-bars">
             <div className="p70-bm-row">
-              <span>NL task</span>
+              <span>NL brief</span>
               <div className="p70-bm-track">
                 <div className="p70-bm-fill p70-bm-fill-nl" style={{ width: `${nlPct}%` }} />
               </div>
               <span>{Math.round(task)}</span>
             </div>
             <div className="p70-bm-row">
-              <span>.tq</span>
+              <span>Torqa</span>
               <div className="p70-bm-track">
                 <div className="p70-bm-fill p70-bm-fill-tq" style={{ width: `${tqPct}%` }} />
               </div>
@@ -101,56 +101,41 @@ function BenchmarkLive() {
           </div>
         </>
       ) : metrics ? (
-        <p style={{ color: "var(--muted)" }}>Incomplete metrics in fixture.</p>
+        <p className="p70-bm-note">Figures incomplete.</p>
       ) : !err ? (
-        <p style={{ color: "var(--muted)" }}>Loading…</p>
+        <p className="p70-bm-note">Loading…</p>
       ) : null}
-      <p style={{ margin: "16px 0 0", fontSize: "13px", color: "var(--muted)" }}>
-        CLI: <span className="p70-code">torqa demo benchmark</span> ·{" "}
-        <span className="p70-code">docs/BENCHMARK_COMPRESSION.md</span>
-      </p>
     </div>
   );
 }
-
-const NL_SNIPPET = `Build a login flow: email + password form, validate input,
-show error states, on success route to a minimal dashboard
-with a welcome line and sign-out. Use React + Vite.`;
-
-const TQ_SNIPPET = `intent "Login + dashboard shell"
-requires email, password
-result "SessionActive"
-
-flow:
-  when credentials_valid then show_dashboard
-  when credentials_invalid then show_error`;
 
 export default function App() {
   const { theme, toggle } = useTheme();
 
   return (
     <>
+      <div className="p70-bg-grid" aria-hidden="true" />
       <header className="p70-header">
         <div className="p70-header-inner">
           <a className="p70-logo" href="#hero">
             <span className="p70-logo-mark">TQ</span>
-            <span>TORQA</span>
+            <span className="p70-logo-text">TORQA</span>
           </a>
           <nav className="p70-nav" aria-label="Primary">
-            <a href="#solve">Problems</a>
-            <a href="#ideas">Ideas</a>
-            <a href="#demo">Demo</a>
-            <a href="#benchmark">Benchmark</a>
-            <a href="#how">How it works</a>
-            <a href="#start">Get started</a>
+            <a href="#solve">Why</a>
+            <a href="#ideas">Pillars</a>
+            <a href="#demo">Journey</a>
+            <a href="#benchmark">Proof</a>
+            <a href="#how">Flow</a>
+            <a href="#start">Developers</a>
             <a href="#desktop">Desktop</a>
           </nav>
           <div className="p70-header-cta">
-            <button type="button" className="p70-btn" onClick={toggle} aria-label="Toggle color theme">
+            <button type="button" className="p70-btn p70-btn-ghost" onClick={toggle} aria-label="Toggle color theme">
               {theme === "dark" ? "Light" : "Dark"}
             </button>
-            <a className="p70-btn p70-btn-primary" href="/console">
-              Open web console
+            <a className="p70-btn p70-btn-primary" href="#desktop">
+              Get the app
             </a>
           </div>
         </div>
@@ -158,26 +143,25 @@ export default function App() {
 
       <main>
         <section className="p70-hero" id="hero">
-          <div className="p70-wrap">
-            <p className="p70-kicker">Semantic-first specification</p>
-            <h1>Describe intent once. Validate it. Project everywhere.</h1>
+          <div className="p70-hero-glow" aria-hidden="true" />
+          <div className="p70-wrap p70-hero-inner">
+            <p className="p70-kicker">Specification that survives contact with reality</p>
+            <h1>Intent you can trust. Validation before anything ships.</h1>
             <p className="p70-tagline">
-              Same software intent, fewer tokens, validated before execution.
+              TORQA turns durable software intent into a tight, checkable form — then projects it to web, data, and code
+              surfaces without guessing.
             </p>
             <p className="p70-lead">
-              <strong>TORQA</strong> is a compact surface and canonical IR for flows and guards — not a code editor
-              and not a hosted IDE. You write checkable specs; the toolchain rejects bad intent before materializing web,
-              SQL, and stubs.
+              Built for teams who want <strong>semantic compression</strong> (say more with less), a <strong>hard gate</strong>{" "}
+              that rejects bad specs early, and <strong>one source of truth</strong> that stays aligned across tools and AI
+              assistance.
             </p>
             <div className="p70-hero-cta">
-              <a className="p70-btn p70-btn-primary" href="#start">
-                Get started
+              <a className="p70-btn p70-btn-primary p70-btn-lg" href="#start">
+                Start building
               </a>
-              <a className="p70-btn" href="/console">
-                Try the IR lab
-              </a>
-              <a className="p70-btn" href="#demo">
-                See the demo path
+              <a className="p70-btn p70-btn-lg" href="#demo">
+                See the journey
               </a>
             </div>
           </div>
@@ -185,53 +169,62 @@ export default function App() {
 
         <section className="p70-section" id="solve">
           <div className="p70-wrap">
-            <h2>What it solves</h2>
+            <h2>Problems TORQA was built for</h2>
             <p className="p70-sub">
-              AI-assisted coding often burns tokens on long, fragile prompts and ships unverified structure. TORQA
-              tightens the loop.
+              Most delivery pain is not “more code” — it is unclear intent, unmeasured prompts, and specs that never
+              faced a real validator.
             </p>
             <div className="p70-grid3">
-              <div className="p70-card">
-                <h3>Too many tokens</h3>
+              <div className="p70-card p70-card-elevated">
+                <span className="p70-card-icon" aria-hidden="true">
+                  ◇
+                </span>
+                <h3>Token and attention debt</h3>
                 <p>
-                  The same intent fits in a small <span className="p70-code">.tq</span> surface — measurable vs
-                  natural-language task specs (see benchmark).
+                  Long natural-language briefs rot fast. A compact Torqa surface holds the same intent with less noise and
+                  clearer review.
                 </p>
               </div>
-              <div className="p70-card">
-                <h3>Unreliable outputs</h3>
+              <div className="p70-card p70-card-elevated">
+                <span className="p70-card-icon" aria-hidden="true">
+                  ◆
+                </span>
+                <h3>Outputs without a gate</h3>
                 <p>
-                  Generated previews are outputs of a <strong>validated</strong> model — not a substitute for checks.
-                  Invalid bundles do not complete a clean build path.
+                  Generated previews should be the fruit of a validated model — not wishful JSON. Invalid work stops before
+                  it becomes files.
                 </p>
               </div>
-              <div className="p70-card">
-                <h3>No validation step</h3>
+              <div className="p70-card p70-card-elevated">
+                <span className="p70-card-icon" aria-hidden="true">
+                  ◈
+                </span>
+                <h3>Silent drift</h3>
                 <p>
-                  Envelope, structural, and semantic phases run before projection. You get pass/fail and diagnostics,
-                  not silent drift.
+                  Structural and semantic phases run up front. You get an explicit pass or fail — not surprises in
+                  production.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="p70-section" id="ideas">
+        <section className="p70-section p70-section-tint" id="ideas">
           <div className="p70-wrap">
-            <h2>Core ideas</h2>
-            <p className="p70-sub">Three pillars that stay true whether you author by hand or with AI assistance.</p>
+            <h2>Three pillars</h2>
+            <p className="p70-sub">How TORQA stays honest whether humans or models author the spec.</p>
             <div className="p70-grid3">
               <div className="p70-card">
                 <h3>Semantic compression</h3>
-                <p>Store durable intent in the smallest faithful spec — fewer tokens, clearer diffs, repeatable CI.</p>
+                <p>Smallest faithful representation of intent — fewer tokens, sharper diffs, repeatable automation.</p>
               </div>
               <div className="p70-card">
                 <h3>Validation gate</h3>
-                <p>Parse and validate are explicit stages. Bad specs are rejected before projection touches disk.</p>
+                <p>Parsing and validation are first-class. What fails never pretends to be “done.”</p>
               </div>
               <div className="p70-card">
                 <h3>Projection</h3>
-                <p>One IR drives multiple surfaces (e.g. web preview, SQL-shaped artifacts, language stubs).</p>
+                <p>One canonical IR drives previews and artifacts across the surfaces you care about.</p>
               </div>
             </div>
           </div>
@@ -239,110 +232,110 @@ export default function App() {
 
         <section className="p70-section" id="demo">
           <div className="p70-wrap">
-            <h2>From prompt to system output</h2>
+            <h2>From idea to materialized output</h2>
             <p className="p70-sub">
-              This site explains and links; it is not the toolchain. A typical flagship-shaped flow looks like this
-              (abbreviated):
+              A flagship-shaped flow, expressed as a story — not a terminal session. The toolchain lives in your
+              environment; this page is the narrative.
             </p>
-            <div className="p70-demo-flow">
-              <div className="p70-demo-box">
-                <h4>Prompt (NL task)</h4>
-                <pre className="p70-demo-pre">{NL_SNIPPET}</pre>
+            <div className="p70-journey">
+              <div className="p70-journey-step">
+                <span className="p70-journey-num">1</span>
+                <div>
+                  <h3>Natural-language brief</h3>
+                  <p>
+                    Product and engineering describe flows, guards, and outcomes in plain language — the kind of brief you
+                    would hand to a senior engineer or a trusted model.
+                  </p>
+                </div>
               </div>
-              <div className="p70-demo-arrow" aria-hidden="true">
-                →
+              <div className="p70-journey-connector" aria-hidden="true" />
+              <div className="p70-journey-step">
+                <span className="p70-journey-num">2</span>
+                <div>
+                  <h3>Torqa surface</h3>
+                  <p>
+                    That intent is captured in a compact, checkable spec: flows, requirements, and explicit results — ready
+                    for validation and diff-friendly review.
+                  </p>
+                </div>
               </div>
-              <div className="p70-demo-box">
-                <h4>TORQA surface (.tq)</h4>
-                <pre className="p70-demo-pre">{TQ_SNIPPET}</pre>
-              </div>
-              <div className="p70-demo-arrow" aria-hidden="true">
-                →
-              </div>
-              <div className="p70-demo-box">
-                <h4>Output (after validate + build)</h4>
-                <pre className="p70-demo-pre">
-                  {`generated/webapp/   (Vite + React preview)
-generated/sql/       (schema-shaped)
-generated/python/    (stubs)
-…`}
-                </pre>
+              <div className="p70-journey-connector" aria-hidden="true" />
+              <div className="p70-journey-step">
+                <span className="p70-journey-num">3</span>
+                <div>
+                  <h3>Validated projection</h3>
+                  <p>
+                    After the gate passes, you get credible previews and artifacts — web experiences, data-shaped output,
+                    and language stubs — aligned to the same IR.
+                  </p>
+                </div>
               </div>
             </div>
-            <p style={{ marginTop: 24, color: "var(--muted)", fontSize: "15px" }}>
-              Run <span className="p70-code">torqa demo</span> for the full command list, or open the{" "}
-              <a href="/console">web console</a> / <a href="/desktop">browser desktop</a> surfaces.
-            </p>
-            <p style={{ marginTop: 12, color: "var(--muted)", fontSize: "15px" }}>
-              <strong>Official desktop (P71):</strong> <span className="p70-code">torqa-desktop</span> (Electron in{" "}
-              <span className="p70-code">desktop/</span>) — <span className="p70-code">npm install</span> once in that folder.
-              Uses the <span className="p70-code">torqa</span> CLI only; no duplicated validation logic.
-            </p>
+            <div className="p70-hero-cta p70-cta-row">
+              <a className="p70-btn p70-btn-primary" href="#desktop">
+                Try the desktop experience
+              </a>
+              <a className="p70-btn" href="#start">
+                Developer onboarding
+              </a>
+            </div>
           </div>
         </section>
 
         <section className="p70-section" id="benchmark">
           <div className="p70-wrap">
-            <h2>Benchmark</h2>
+            <h2>Measured compression</h2>
             <p className="p70-sub">
-              Flagship fixture compares NL task text vs <span className="p70-code">.tq</span> size — token estimates are
-              deterministic (not live model tokenizer APIs).
+              The flagship benchmark compares the same intent as a long task brief versus a Torqa surface — so compression
+              is visible, not hand-wavy.
             </p>
             <BenchmarkLive />
           </div>
         </section>
 
-        <section className="p70-section" id="how">
+        <section className="p70-section p70-section-tint" id="how">
           <div className="p70-wrap">
-            <h2>How it works</h2>
-            <p className="p70-sub">One pipeline shape, whether you use CLI, web UI, or desktop shell.</p>
+            <h2>How the pipeline feels</h2>
+            <p className="p70-sub">One shape from authoring to artifacts — CLI, desktop, or automation, same core.</p>
             <div className="p70-flow">
-              <span className="p70-flow-step">AI / human</span>
+              <span className="p70-flow-step">Author</span>
               <span className="p70-flow-glyph">→</span>
-              <span className="p70-flow-step accent">TORQA surface</span>
+              <span className="p70-flow-step accent">Torqa spec</span>
               <span className="p70-flow-glyph">→</span>
               <span className="p70-flow-step">Validate</span>
               <span className="p70-flow-glyph">→</span>
               <span className="p70-flow-step">Project</span>
               <span className="p70-flow-glyph">→</span>
-              <span className="p70-flow-step">Web · SQL · stubs</span>
+              <span className="p70-flow-step">Artifacts</span>
             </div>
           </div>
         </section>
 
         <section className="p70-section" id="start">
           <div className="p70-wrap">
-            <h2>Get started</h2>
+            <h2>For developers</h2>
             <p className="p70-sub">
-              Install from the repository root (Python 3.10+). Trial expectations:{" "}
-              <span className="p70-code">docs/TRIAL_READINESS.md</span>.
+              TORQA ships as an open codebase: install from the repository, run the bundled demos, and read the in-repo
+              documentation for every command and contract.
             </p>
             <div className="p70-grid3">
-              <div className="p70-card">
+              <div className="p70-card p70-card-elevated">
                 <h3>Install</h3>
-                <p>
-                  <span className="p70-code">pip install -e .</span>
-                </p>
-                <p style={{ marginTop: 10 }}>
-                  Quick path: <span className="p70-code">docs/QUICKSTART.md</span>
-                </p>
+                <p>Python 3.10+ and an editable install from the repo root; optional Node setup for the desktop shell.</p>
+                <p className="p70-card-foot">Full steps ship in the documentation bundle.</p>
               </div>
-              <div className="p70-card">
-                <h3>Run the demo</h3>
-                <p>
-                  <span className="p70-code">torqa demo</span> then <span className="p70-code">torqa demo verify</span>{" "}
-                  and <span className="p70-code">torqa build examples/benchmark_flagship/app.tq</span>
-                </p>
+              <div className="p70-card p70-card-elevated">
+                <h3>Demos</h3>
+                <p>Verify flagship assets, run a sample build, and inspect compression and gate proof — all from the CLI.</p>
+                <p className="p70-card-foot">The demo entrypoint prints the canonical path.</p>
               </div>
-              <div className="p70-card">
-                <h3>Open desktop</h3>
-                <p>
-                  Browser IDE: <span className="p70-code">/desktop</span> via <span className="p70-code">torqa-console</span>
-                  . Native: <span className="p70-code">torqa-desktop</span> (see <span className="p70-code">desktop/README.md</span>
-                  ). Legacy: <span className="p70-code">torqa-desktop-legacy --tk</span>
-                </p>
-                <p style={{ marginTop: 10 }}>
-                  Electron source: <span className="p70-code">desktop/</span>
+              <div className="p70-card p70-card-elevated">
+                <h3>Desktop</h3>
+                <p>Native app for folders and specs: open a workspace, load samples, validate and build with clear feedback.</p>
+                <p className="p70-card-foot">
+                  <a className="p70-inline-link" href="#desktop">
+                    Desktop overview →
+                  </a>
                 </p>
               </div>
             </div>
@@ -351,34 +344,26 @@ generated/python/    (stubs)
 
         <section className="p70-section" id="desktop">
           <div className="p70-wrap">
-            <h2>Desktop authoring</h2>
+            <h2>Desktop</h2>
             <p className="p70-sub">
-              The desktop is a <strong>surface</strong> for editing and running the toolchain — not the product website
-              you are reading now.
+              The TORQA desktop is a focused authoring shell: workspaces, editing, validate and build, diagnostics and IR
+              preview. Core semantics stay in the engine — the app does not reinvent validation.
             </p>
-            <div className="p70-card" style={{ maxWidth: 640 }}>
-              <h3>Choose your shell</h3>
+            <div className="p70-card p70-card-wide p70-card-elevated">
+              <h3>Run locally</h3>
               <p>
-                <a href="/desktop">Web desktop</a> (embedded UI) · <span className="p70-code">torqa-desktop</span> ·{" "}
-                <span className="p70-code">desktop/</span> (Electron, official)
-              </p>
-              <p style={{ marginTop: 12 }}>
-                Details: <span className="p70-code">docs/DEMO_SURFACES.md</span> ·{" "}
-                <span className="p70-code">docs/UI_SURFACE_RULES.md</span>
+                Install desktop dependencies once, then launch the app from the same environment where TORQA is installed.
+                First run offers guided samples so you are productive in minutes.
               </p>
             </div>
           </div>
         </section>
 
         <footer className="p70-footer">
-          <div className="p70-wrap">
-            <p>
-              Local preview — follow <span className="p70-code">docs/WEBUI_SECURITY.md</span> before exposing{" "}
-              <span className="p70-code">torqa-console</span> to untrusted networks.
-            </p>
-            <p style={{ marginTop: 8 }}>
-              Docs hub: <span className="p70-code">docs/DOC_MAP.md</span> · This page is built from{" "}
-              <span className="p70-code">website/</span> (official site; P72).
+          <div className="p70-wrap p70-footer-inner">
+            <p className="p70-footer-brand">TORQA</p>
+            <p className="p70-footer-copy">
+              Open source. Run the local server only in trusted environments. Documentation ships with the repository.
             </p>
           </div>
         </footer>

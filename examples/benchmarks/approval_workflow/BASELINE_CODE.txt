@@ -1,0 +1,31 @@
+// Baseline (non-TORQA): service-shaped approval gate for reproducible measurement.
+
+export type ApprovalInput = { username: string; password: string; request_id: string };
+
+export async function completeApprovalRequest(input: ApprovalInput): Promise<"DecisionComplete"> {
+  await assertAuthenticated(input.username, input.password);
+  if (!input.request_id?.trim()) throw new Error("request_id required");
+  const pending = await loadPendingRequest(input.request_id);
+  if (!pending) throw new Error("unknown request");
+  await persistDecision(input.request_id, input.username);
+  return "DecisionComplete";
+}
+
+async function assertAuthenticated(username: string, password: string): Promise<void> {
+  if (!username?.trim() || !password) throw new Error("auth required");
+  const ok = await verifyPassword(username, password);
+  if (!ok) throw new Error("unauthorized");
+}
+
+async function verifyPassword(username: string, password: string): Promise<boolean> {
+  return password.length >= 8;
+}
+
+async function loadPendingRequest(id: string): Promise<{ id: string } | null> {
+  return { id };
+}
+
+async function persistDecision(requestId: string, actor: string): Promise<void> {
+  void requestId;
+  void actor;
+}

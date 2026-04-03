@@ -24,7 +24,7 @@ cargo test --manifest-path rust-core/Cargo.toml
 
 ```bash
 pip install -r requirements.txt
-uvicorn webui.app:app --reload --host 127.0.0.1 --port 8000
+uvicorn website.server.app:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Open `http://127.0.0.1:8000`.

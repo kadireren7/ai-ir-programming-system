@@ -13,7 +13,7 @@ ENV PYTHONUNBUFFERED=1
 
 COPY requirements.txt pyproject.toml README.md LICENSE ./
 COPY src ./src
-COPY webui ./webui
+COPY website ./website
 COPY spec ./spec
 COPY examples ./examples
 
@@ -22,4 +22,4 @@ RUN pip install --no-cache-dir -r requirements.txt \
 
 EXPOSE 8000
 
-CMD ["python", "-m", "webui", "--host", "0.0.0.0", "--no-reload"]
+CMD ["python", "-m", "website.server", "--host", "0.0.0.0", "--no-reload"]

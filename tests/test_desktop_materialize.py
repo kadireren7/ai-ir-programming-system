@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from desktop_legacy.workspace_io import materialize_bundle_to_workspace
+from src.workspace_bundle_io import materialize_bundle_to_workspace
 
 REPO = Path(__file__).resolve().parents[1]
 

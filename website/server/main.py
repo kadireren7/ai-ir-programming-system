@@ -1,8 +1,4 @@
-"""
-Run the TORQA web server: ``python -m webui`` or ``torqa-console``.
-
-Serves ``/`` (product site), ``/console`` (IR lab), ``/desktop`` (desktop webview shell), and JSON APIs.
-"""
+"""CLI entry for ``torqa-console`` / ``python -m website.server``."""
 
 from __future__ import annotations
 
@@ -13,7 +9,7 @@ import os
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="torqa-console",
-        description="TORQA web: product site + /console IR lab + APIs (FastAPI + static).",
+        description="TORQA: marketing site + APIs (FastAPI). /console redirects to /.",
     )
     parser.add_argument(
         "--host",
@@ -36,7 +32,7 @@ def main() -> None:
     import uvicorn
 
     uvicorn.run(
-        "webui.app:app",
+        "website.server.app:app",
         host=args.host,
         port=args.port,
         reload=not args.no_reload,

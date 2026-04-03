@@ -41,7 +41,7 @@ The IR shape is intentionally aligned with the website demo (sign-in + audit + s
 ## Desktop / Web UI
 
 - **CLI:** `torqa build examples/benchmark_flagship/app.tq` (or `project` with `--root` / `--out`).
-- **Desktop (legacy):** same IR bundle as CLI — `desktop_legacy.workspace_io.materialize_bundle_to_workspace` accepts the parsed bundle JSON and writes under `<workspace>/generated_out` (see tests).
+- **Workspace materialize (tests / tooling):** same IR bundle as CLI — `src.workspace_bundle_io.materialize_bundle_to_workspace` accepts the parsed bundle JSON and writes under `<workspace>/generated_out` (see tests).
 
 ## Related
 

@@ -32,6 +32,13 @@ This is a **rough** stand-in for subword tokenization on English/prose and code.
 | `surface_to_ir_ratio` | `ir_bundle / max(1, torqa_source)` — IR expansion factor |
 | `generated_to_surface_ratio` | `generated / max(1, torqa_source)` if measured, else `null` |
 
+## P75 multi-scenario proof
+
+Five fixed scenarios (NL task + baseline code vs `.tq`) with checked-in aggregates:
+
+- Regenerate: `torqa-token-proof` → `reports/token_proof.json` + `docs/TOKEN_PROOF.md`
+- Manifest: `examples/benchmarks/token_proof/manifest.json`
+
 ## Running
 
 From repository root, after `pip install -e .`:

@@ -17,7 +17,7 @@ pytest.importorskip("fastapi")
 
 from fastapi.testclient import TestClient
 
-from webui.app import app
+from website.server.app import app
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -88,28 +88,23 @@ def test_regression_webui_health_contract() -> None:
     assert r.status_code == 200
     d = r.json()
     assert d.get("status") == "ok"
-    assert d.get("service") == "torqa-webui"
+    assert d.get("service") == "torqa-website"
     assert d.get("canonical_ir_version")
     assert d.get("package_version")
 
 
 def test_regression_static_shell_markers_console_desktop_site() -> None:
-    """HTML must keep hooks relied on by first-run, validation verdict, benchmark panel tests."""
+    """Site HTML hooks + /console redirect; desktop CTA page."""
     client = TestClient(app)
-    console = client.get("/console")
-    assert console.status_code == 200
-    c = console.content
-    assert b"diagnostics-verdict-strip" in c
-    assert b"validation-banner" in c
-    assert b"benchmark_panel.js" in c
-    assert b"side-demo-benchmark" in c
+    console = client.get("/console", follow_redirects=False)
+    assert console.status_code == 301
+    assert console.headers.get("location") == "/"
 
     desktop = client.get("/desktop")
     assert desktop.status_code == 200
     d = desktop.content
-    assert b"desk-diagnostics-verdict" in d
-    assert b"benchmark_panel.js" in d
-    assert b"desk-trial-welcome" in d
+    assert b"p73-desktop-unified" in d
+    assert b"data-torqa-surface=\"desktop-native-cta\"" in d
 
     site = client.get("/")
     assert site.status_code == 200
@@ -122,9 +117,8 @@ def test_regression_pyproject_entrypoint_scripts() -> None:
     text = (REPO / "pyproject.toml").read_text(encoding="utf-8")
     assert 'torqa = "src.cli.main:main"' in text
     for needle in (
-        'torqa-console = "webui.__main__:main"',
+        'torqa-console = "website.server.main:main"',
         'torqa-desktop = "src.torqa_desktop_launcher:main"',
-        'torqa-desktop-legacy = "desktop_legacy.__main__:main"',
         'torqa-gate-proof = "src.benchmarks.gate_proof_cli:main"',
         'torqa-compression-bench = "src.benchmarks.cli:main"',
         'torqa-flagship = "src.benchmarks.flagship_demo_cli:main"',

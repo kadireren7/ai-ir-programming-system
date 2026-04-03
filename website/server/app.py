@@ -1,5 +1,7 @@
 """
-TORQA web console: load canonical IR examples, run verifier + orchestrator, preview projections.
+TORQA site host: marketing bundle (``/``), JSON APIs, desktop pointer, ``/console`` → ``/``.
+
+Static build output: ``website/dist/site/`` (``npm run build`` in ``website/``).
 """
 
 from __future__ import annotations
@@ -7,13 +9,12 @@ from __future__ import annotations
 import base64
 import json
 import logging
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -37,7 +38,8 @@ from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_func
 from src.project_materialize import build_zip_bytes, validate_bundle_dict
 from .middleware_rate_limit import RateLimitMiddleware
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+WEBSITE_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = WEBSITE_ROOT.parent
 
 try:
     from dotenv import load_dotenv
@@ -51,11 +53,11 @@ EXAMPLES_DIR = REPO_ROOT / "examples" / "core"
 TQ_EXAMPLES_DIR = REPO_ROOT / "examples" / "torqa"
 BENCHMARK_FLAGSHIP_DIR = REPO_ROOT / "examples" / "benchmark_flagship"
 GATE_PROOF_MANIFEST = BENCHMARK_FLAGSHIP_DIR / "gate_invalid" / "manifest.json"
-STATIC_DIR = Path(__file__).resolve().parent / "static"
-SITE_DIR = STATIC_DIR / "site"
-CONSOLE_DIR = STATIC_DIR / "console"
+SITE_DIR = WEBSITE_ROOT / "dist" / "site"
+SHARED_STATIC_DIR = WEBSITE_ROOT / "static" / "shared"
+DESKTOP_STATIC = WEBSITE_ROOT / "static" / "desktop"
 
-_LOG = logging.getLogger("torqa.webui")
+_LOG = logging.getLogger("torqa.website")
 
 
 def _bundle_envelope_errors(bundle: Dict[str, Any]) -> List[str]:
@@ -70,7 +72,7 @@ async def lifespan(app: FastAPI):
         level=logging.INFO,
         format="%(levelname)s [%(name)s] %(message)s",
     )
-    _LOG.info("TORQA web console ready")
+    _LOG.info("TORQA website host ready")
     yield
 
 
@@ -101,62 +103,44 @@ class SystemHealthRequest(RunRequest):
 
 app = FastAPI(
     title="TORQA Web",
-    description="TORQA: product site (/), IR console (/console), desktop shell (/desktop), JSON APIs.",
+    description="TORQA: marketing site (/), /desktop pointer, JSON APIs; /console redirects to /.",
     version="0.3.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(RateLimitMiddleware, max_calls=120, window_sec=60.0)
 
-if STATIC_DIR.is_dir():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+if SITE_DIR.is_dir():
+    app.mount("/static/site", StaticFiles(directory=str(SITE_DIR)), name="site")
+if SHARED_STATIC_DIR.is_dir():
+    app.mount("/static/shared", StaticFiles(directory=str(SHARED_STATIC_DIR)), name="shared")
 
 
 @app.get("/")
 def site_home():
-    """P72: official product website (static bundle from ``website/`` build → ``webui/static/site/``); not the IR console."""
+    """Marketing site bundle from ``website/dist/site`` (Vite production build)."""
     page = SITE_DIR / "index.html"
     if not page.is_file():
-        raise HTTPException(500, "static UI missing: webui/static/site/index.html")
+        raise HTTPException(
+            500,
+            "Site bundle missing: run `npm run build` in website/ (expect website/dist/site/index.html).",
+        )
     return FileResponse(page)
 
 
 @app.get("/console")
-def console_page():
-    """P36: browser IR lab — Monaco console, separate from marketing site."""
-    page = CONSOLE_DIR / "index.html"
-    if not page.is_file():
-        raise HTTPException(500, "static UI missing: webui/static/console/index.html")
-    return FileResponse(page)
-
-
-DESKTOP_STATIC = STATIC_DIR / "desktop"
+def console_legacy_redirect():
+    """Legacy path; marketing-only web surface."""
+    return RedirectResponse(url="/", status_code=301)
 
 
 @app.get("/desktop")
 def desktop_page():
+    """Native-desktop pointer page."""
     page = DESKTOP_STATIC / "index.html"
     if not page.is_file():
-        raise HTTPException(500, "desktop UI missing: webui/static/desktop/index.html")
+        raise HTTPException(500, "desktop pointer missing: website/static/desktop/index.html")
     return FileResponse(page)
-
-
-@app.get("/api/desktop/ready")
-def desktop_ready():
-    """Masaüstü arayüzü için ortam özeti (API anahtarı şema doğrulama vb.)."""
-    openai_ok = bool(os.environ.get("OPENAI_API_KEY", "").strip())
-    try:
-        import jsonschema  # noqa: F401
-
-        jsonschema_ok = True
-    except ImportError:
-        jsonschema_ok = False
-    return {
-        "openai_configured": openai_ok,
-        "jsonschema_available": jsonschema_ok,
-        "package_version": _package_version(),
-        "canonical_ir_version": CANONICAL_IR_VERSION,
-    }
 
 
 def _package_version() -> str:
@@ -172,7 +156,7 @@ def _package_version() -> str:
 def health():
     return {
         "status": "ok",
-        "service": "torqa-webui",
+        "service": "torqa-website",
         "canonical_ir_version": CANONICAL_IR_VERSION,
         "package_version": _package_version(),
     }

@@ -1,12 +1,12 @@
-# Benchmark task: Simple form flow
+# Task: simple form flow
 
 ## Natural language description
 
-A user-facing flow collects a small set of required fields (for example: name, email, and a short message), validates them at submission time, and either accepts the submission or returns clear validation errors without persisting invalid data. After a successful submission, the user sees a confirmation state. The system must not store or forward the payload until all required fields pass basic checks (non-empty where required, email in a plausible format).
+Build a user-facing flow named “contact submit”. The user must provide a username, a password, and an email address before the flow can complete. The system must verify that the username is acceptable and that the password matches the account for that username (standard login-style checks). When all inputs are present and valid, the flow completes with an explicit outcome indicating the submission was accepted.
 
-## Expected behavior summary
+## Expected behavior
 
-- **Inputs:** At least three fields; all marked required must be present and non-blank before success.
-- **Validation gate:** Invalid submissions are rejected; no side effects (no persistence, no downstream calls) occur on reject.
-- **Success path:** On valid submission, the user enters a **confirmed** state; the system records or acknowledges the payload exactly once (idempotent submit behavior is not required unless you extend the task).
-- **Observability:** Distinguishable outcomes: validation error vs success confirmation.
+- Required inputs: `username`, `password`, `email` (all must exist before completion).
+- Preconditions: username verification and password verification against the username must succeed.
+- Terminal result: a single named completion state equivalent to “Submitted” for a successful contact submission.
+- No additional side effects or branches are required beyond this minimal contract.

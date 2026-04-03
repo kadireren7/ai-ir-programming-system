@@ -3,8 +3,8 @@
 TORQA is an **early architecture prototype**, not a hardened production platform.
 
 - Generated web apps and server stubs are **demonstration projections**. Do not expose them to the public internet without a full security review.
-- The web console (`webui/`) runs a local FastAPI server. Bind to `127.0.0.1` for local trials; do not run it as a multi-tenant service without authentication and isolation.
-- A **prototype in-memory rate limit** applies to `/api/*` (see `webui/middleware_rate_limit.py`). Replace with Redis or edge rate limiting before any public deployment.
+- The site server (`website/server/`) runs a local FastAPI app. Bind to `127.0.0.1` for local trials; do not run it as a multi-tenant service without authentication and isolation.
+- A **prototype in-memory rate limit** applies to `/api/*` (see `website/server/middleware_rate_limit.py`). Replace with Redis or edge rate limiting before any public deployment.
 - The Rust bridge executes `cargo run` from the repository. Only run IR bundles you trust; treat the console as a **developer tool**, not an anonymous endpoint.
 - Demo inputs and execution paths use registry-backed stubs. Real authentication, storage, and policy enforcement are **out of scope** for this repository revision.
 

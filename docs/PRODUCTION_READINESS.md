@@ -98,4 +98,5 @@ Grouped by theme. Items are **gaps relative to a shrink-wrapped or internet-scal
 | [FAILURE_MODES.md](FAILURE_MODES.md) | Expected failures and fixes |
 | [WEBUI_SECURITY.md](WEBUI_SECURITY.md) | Local server security notes |
 | [P72_WEBSITE_OFFICIAL.md](P72_WEBSITE_OFFICIAL.md) | Official product website vs host vs console/desktop |
+| [P73_PRODUCT_SURFACES.md](P73_PRODUCT_SURFACES.md) | One website, one desktop; legacy UI removed |
 | [DOC_MAP.md](DOC_MAP.md) | Full doc index |

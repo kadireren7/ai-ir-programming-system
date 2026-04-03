@@ -1,5 +1,7 @@
 # P71 — Official desktop surface (replacement decision)
 
+> **P73:** **`desktop_legacy/`** and **`torqa-desktop-legacy`** are **removed**. **`GET /desktop`** is a **native-desktop CTA** only. Materialize helpers live in **`src/workspace_bundle_io.py`**. See [P73_PRODUCT_SURFACES.md](P73_PRODUCT_SURFACES.md).
+
 **Rule:** TORQA core (`torqa` CLI / APIs) owns validation and IR. Desktop code is **only** a surface.
 
 ## Gap audit (Python legacy vs TypeScript Electron)
@@ -18,15 +20,11 @@
 | 10 | Dark / light theme | Tk: dark-only styling; webview uses `/desktop` theme | Yes | Yes |
 | 11 | Editor-like feel | Mixed (Tk prototype; webview = browser IDE) | Yes | Yes |
 
-## Decision
+## Decision (current)
 
-**The Electron app under `desktop/` is the single official native desktop** launched by **`torqa-desktop`** (`src/torqa_desktop_launcher.py`).
+**The Electron app under `desktop/` is the only official native desktop**, launched by **`torqa-desktop`** (`src/torqa_desktop_launcher.py`).
 
-**`desktop_legacy/`** remains as **legacy / fallback** only:
-
-- **`torqa-desktop-legacy`** / **`python -m desktop_legacy`** — Tk or pywebview + `workspace_io` (no Node).
-
-**`GET /desktop`** on `torqa-console` is unchanged: it is the **browser-hosted IDE shell**, not the Electron app. Naming: “desktop” route vs “Desktop app” in docs means: native = Electron; browser IDE = `/desktop`.
+**`GET /desktop`** on `torqa-console` serves a **short CTA page** for that app (not a browser IDE).
 
 ## What was not done
 
@@ -36,5 +34,5 @@
 ## See also
 
 - [`desktop/README.md`](../desktop/README.md) — official app build/run
-- [`desktop_legacy/README.md`](../desktop_legacy/README.md) — legacy commands
+- [P73_PRODUCT_SURFACES.md](P73_PRODUCT_SURFACES.md) — surface consolidation
 - [`docs/DEMO_SURFACES.md`](DEMO_SURFACES.md), [`docs/UI_SURFACE_RULES.md`](UI_SURFACE_RULES.md)

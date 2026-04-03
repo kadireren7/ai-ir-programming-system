@@ -1,12 +1,12 @@
-# Benchmark task: Conditional logic flow
+# Task: multi-step logic (branching inputs)
 
 ## Natural language description
 
-A process branches on evaluated conditions over inputs and optional prior outcomes. Example: if the user’s region is `EU`, apply GDPR retention rules; otherwise apply default retention. If the account is `enterprise`, skip the marketing step; otherwise run it. Multiple conditions can combine (e.g. region **and** plan tier). The implementation must make the branch structure explicit enough that an independent reader can see which path runs for which inputs.
+Author a flow called “branchy flow” where the user signs in and provides two categorical inputs: `region` and `plan_tier`. Routing or policy may depend on these values in a full implementation; for this benchmark the contract only requires that both are present and validated after authentication, and that the flow completes in a named routed state.
 
-## Expected behavior summary
+## Expected behavior
 
-- **Exhaustiveness:** For the defined input space, every combination maps to exactly one **primary path** (or a documented **fallback** path for “else”).
-- **No silent default:** If an input combination is undefined, the system must **error** or take an explicit `else` path—never an undocumented mix of branches.
-- **Test vectors:** At least three distinct input scenarios are distinguishable: EU vs non-EU, enterprise vs non-enterprise, and one combined case.
-- **Side effects:** Actions tied to a branch (e.g. “apply strict retention”) run **only** when that branch is taken.
+- Required inputs: `username`, `password`, `region`, `plan_tier`.
+- Password verification must succeed for the given username.
+- `region` and `plan_tier` must exist as inputs before completion.
+- Terminal result name equivalent to “Routed”.

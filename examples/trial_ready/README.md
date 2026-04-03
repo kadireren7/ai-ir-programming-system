@@ -44,9 +44,9 @@ torqa --json demo benchmark
 torqa-console
 ```
 
-Then open `http://127.0.0.1:8000/` (and `/console` or `/desktop` if you want those surfaces).
+Then open `http://127.0.0.1:8000/` for the marketing site. Use **`torqa-desktop`** for the native authoring app.
 
-**Native desktop:** `torqa-desktop` (Electron in `desktop/`; run `cd desktop && npm install` once) — see [`desktop/README.md`](../../desktop/README.md). Legacy: `torqa-desktop-legacy`.
+**Native desktop:** `torqa-desktop` (Electron in `desktop/`; run `cd desktop && npm install` once) — see [`desktop/README.md`](../../desktop/README.md).
 
 **On disk:** `examples/benchmark_flagship/compression_baseline_report.json`
 

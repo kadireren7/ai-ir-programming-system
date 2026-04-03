@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "description_en": "P75 reproducible token comparison: fixed NL task prompts and baseline code stubs vs minimal .tq surfaces.",
+  "estimator_id": "utf8_bytes_div_4_v1",
+  "scenarios": [
+    {
+      "id": "simple_form_flow",
+      "category": "simple form flow",
+      "relative_dir": "examples/benchmarks/simple_form_flow"
+    },
+    {
+      "id": "approval_workflow",
+      "category": "approval workflow",
+      "relative_dir": "examples/benchmarks/approval_workflow"
+    },
+    {
+      "id": "data_transform_pipeline",
+      "category": "data transformation",
+      "relative_dir": "examples/benchmarks/data_transform_pipeline"
+    },
+    {
+      "id": "conditional_logic_flow",
+      "category": "multi-step logic",
+      "relative_dir": "examples/benchmarks/conditional_logic_flow"
+    },
+    {
+      "id": "multi_step_automation",
+      "category": "small automation",
+      "relative_dir": "examples/benchmarks/multi_step_automation"
+    }
+  ]
+}

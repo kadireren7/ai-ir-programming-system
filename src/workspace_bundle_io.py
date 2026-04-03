@@ -1,4 +1,4 @@
-"""Shared: write IR flow scaffold or materialized projection tree into a user-chosen directory."""
+"""Write IR flow scaffold or materialized projection tree into a user-chosen directory (core-side helper)."""
 
 from __future__ import annotations
 
@@ -21,11 +21,11 @@ def materialize_bundle_to_workspace(
     try:
         root = Path(workspace).resolve()
         if not root.is_dir():
-            return {"ok": False, "error": "Seçilen yol bir klasör değil."}
+            return {"ok": False, "error": "Workspace path is not a directory."}
         if not isinstance(bundle, dict):
-            return {"ok": False, "error": "IR paketi bir JSON nesnesi olmalı."}
+            return {"ok": False, "error": "Bundle must be a JSON object."}
 
-        from src.project_materialize import materialize_project
+        from src.project_materialize import local_webapp_hint, materialize_project
 
         dest = root / out_subdir
         ok, summary, written = materialize_project(bundle, dest, engine_mode=engine_mode)
@@ -33,7 +33,7 @@ def materialize_bundle_to_workspace(
         if not diag.get("ok", False):
             return {
                 "ok": False,
-                "error": "Doğrulama başarısız.",
+                "error": "Validation failed.",
                 "errors": summary.get("errors", []),
                 "diagnostics": diag,
                 "written_under": str(dest),
@@ -41,11 +41,10 @@ def materialize_bundle_to_workspace(
         if not ok:
             return {
                 "ok": False,
-                "error": "Tutarlılık hataları: " + "; ".join(str(e) for e in summary.get("errors", [])[:5]),
+                "error": "Consistency errors: " + "; ".join(str(e) for e in summary.get("errors", [])[:5]),
                 "written": written,
                 "written_under": str(dest),
             }
-        from src.project_materialize import local_webapp_hint
 
         return {
             "ok": True,
@@ -62,9 +61,9 @@ def write_flow_project(workspace: str, bundle: Dict[str, Any]) -> Dict[str, Any]
     try:
         root = Path(workspace).resolve()
         if not root.is_dir():
-            return {"ok": False, "error": "Seçilen yol bir klasör değil."}
+            return {"ok": False, "error": "Workspace path is not a directory."}
         if not isinstance(bundle, dict):
-            return {"ok": False, "error": "IR paketi bir JSON nesnesi olmalı."}
+            return {"ok": False, "error": "Bundle must be a JSON object."}
 
         out_dir = root / "torqa-flow"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -76,9 +75,9 @@ def write_flow_project(workspace: str, bundle: Dict[str, Any]) -> Dict[str, Any]
         readme.write_text(
             "TORQA flow workspace\n"
             "====================\n\n"
-            "ir_bundle.json — IR hedefi (doğrulama ve çalıştırma için)\n\n"
-            "Tam konsol: proje kökünde `python -m webui` veya `torqa-console`\n"
-            "AI önerileri için .env içinde OPENAI_API_KEY tanımlayın.\n",
+            "ir_bundle.json — IR target for validation and runs\n\n"
+            "Full console: torqa-console (repo root)\n"
+            "Set OPENAI_API_KEY in .env for AI suggestions.\n",
             encoding="utf-8",
         )
         return {"ok": True, "dir": str(out_dir), "bundle": str(bundle_path)}
@@ -90,7 +89,7 @@ def write_flow_project_json_str(workspace: str, ir_bundle_json: str) -> Dict[str
     try:
         bundle = json.loads(ir_bundle_json)
     except json.JSONDecodeError as ex:
-        return {"ok": False, "error": f"JSON hatası: {ex}"}
+        return {"ok": False, "error": f"JSON error: {ex}"}
     return write_flow_project(workspace, bundle)
 
 
@@ -104,7 +103,7 @@ def materialize_bundle_json_str(
     try:
         bundle = json.loads(ir_bundle_json)
     except json.JSONDecodeError as ex:
-        return {"ok": False, "error": f"JSON hatası: {ex}"}
+        return {"ok": False, "error": f"JSON error: {ex}"}
     return materialize_bundle_to_workspace(
         workspace, bundle, out_subdir=out_subdir, engine_mode=engine_mode
     )

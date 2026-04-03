@@ -13,7 +13,7 @@
 | **Best for** | Teams and builders who want **validated specs + codegen**, AI-assisted or not. |
 | **Product story** | Deeper direction: [`docs/TORQA_VISION_NORTH_STAR.md`](docs/TORQA_VISION_NORTH_STAR.md) · maturity detail: [`STATUS.md`](STATUS.md) |
 | **Architecture** | TORQA-first layering (vs Python/Rust): [`docs/TORQA_DOMINANCE.md`](docs/TORQA_DOMINANCE.md) (P30 milestone) · [`docs/ARCHITECTURE_RULES.md`](docs/ARCHITECTURE_RULES.md) · [`docs/SURFACE_CLASSIFICATION.md`](docs/SURFACE_CLASSIFICATION.md) |
-| **Product website** | Official site source [`website/`](website/) → build to `webui/static/site/` → **`/`** with `torqa-console` · [`docs/P72_WEBSITE_OFFICIAL.md`](docs/P72_WEBSITE_OFFICIAL.md) |
+| **Product website** | All in [`website/`](website/) — Vite app + `npm run build` → `website/dist/site/`, FastAPI in `website/server/`, `torqa-console` · [`docs/P72_WEBSITE_OFFICIAL.md`](docs/P72_WEBSITE_OFFICIAL.md) |
 
 ---
 
@@ -78,8 +78,8 @@ torqa build examples/benchmark_flagship/app.tq
 | **P31 benchmark baseline** | [`docs/BENCHMARK_FLAGSHIP.md`](docs/BENCHMARK_FLAGSHIP.md) · [`examples/benchmark_flagship/app.tq`](examples/benchmark_flagship/app.tq) |
 | **P32 compression metrics** | [`docs/BENCHMARK_COMPRESSION.md`](docs/BENCHMARK_COMPRESSION.md) · `torqa-compression-bench` |
 | **P33 validation gate proof** | [`docs/VALIDATION_GATE.md`](docs/VALIDATION_GATE.md) · `torqa-gate-proof` · [`examples/benchmark_flagship/gate_invalid/`](examples/benchmark_flagship/gate_invalid/) |
-| **P34 Web/Desktop demo** | [`docs/DEMO_SURFACES.md`](docs/DEMO_SURFACES.md) · `torqa-console` · **`torqa-desktop`** (Electron in `desktop/`) · legacy: `torqa-desktop-legacy` |
-| **P36 UI surfaces** | [`docs/UI_SURFACE_RULES.md`](docs/UI_SURFACE_RULES.md) · `/` vs `/console` vs `/desktop` |
+| **P34 Web/Desktop demo** | [`docs/DEMO_SURFACES.md`](docs/DEMO_SURFACES.md) · `torqa-console` · **`torqa-desktop`** (Electron in `desktop/`) |
+| **P36 / P73 UI surfaces** | [`docs/UI_SURFACE_RULES.md`](docs/UI_SURFACE_RULES.md) · `/` marketing site · `/console` → `/` · `/desktop` → desktop pointer · [`docs/P73_PRODUCT_SURFACES.md`](docs/P73_PRODUCT_SURFACES.md) |
 | **First `.tq`** | [`examples/workspace_minimal/app.tq`](examples/workspace_minimal/app.tq) + [`examples/torqa/templates/`](examples/torqa/templates/) |
 | **Illustrative flows** | [`examples/torqa/auth_login.tq`](examples/torqa/auth_login.tq), [`examples/torqa/signin_flow.tq`](examples/torqa/signin_flow.tq) |
 | **IR package + compose** | [`docs/USING_PACKAGES.md`](docs/USING_PACKAGES.md) · runnable tree [`examples/package_demo/`](examples/package_demo/) |
@@ -118,7 +118,7 @@ python -m pytest
 
 Optional Rust: `cargo test --manifest-path rust-core/Cargo.toml`
 
-**Web:** `pip install -r requirements.txt` then `torqa-console` or `python -m webui` → **`/`** product site, **`/console`** IR lab ([`docs/UI_SURFACE_RULES.md`](docs/UI_SURFACE_RULES.md)). Docker: `docker compose up --build` → `http://127.0.0.1:8000`.
+**Web:** `pip install -r requirements.txt` then `torqa-console` or `python -m website.server` → **`/`** marketing site (JSON APIs for local preview) ([`docs/UI_SURFACE_RULES.md`](docs/UI_SURFACE_RULES.md)). Docker: `docker compose up --build` → `http://127.0.0.1:8000`.
 
 **IDE:** open [`Torqa.code-workspace`](Torqa.code-workspace) so the window title shows TORQA.
 

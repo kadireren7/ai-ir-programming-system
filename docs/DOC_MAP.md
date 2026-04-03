@@ -32,11 +32,11 @@ Grouped entry points. **Normative** technical contracts are marked.
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Contribution process |
 | [DEMO_LOCALHOST.md](DEMO_LOCALHOST.md) | Run generated Vite app locally |
 | [DEMO_SURFACES.md](DEMO_SURFACES.md) | **P34:** Web UI + Desktop demo launch and what to show |
-| [desktop/README.md](../desktop/README.md) | **P71:** Official TORQA Desktop (Electron; `torqa-desktop`) |
-| [P71_DESKTOP_OFFICIAL.md](P71_DESKTOP_OFFICIAL.md) | Desktop parity audit + official vs legacy |
-| [desktop_legacy/README.md](../desktop_legacy/README.md) | Legacy Python/Tk desktop (`torqa-desktop-legacy`) |
-| [website/README.md](../website/README.md) | **P72:** Official product website source (`npm run build` → `webui/static/site/` → `GET /`) |
-| [P72_WEBSITE_OFFICIAL.md](P72_WEBSITE_OFFICIAL.md) | Website vs webui/console/desktop roles; no duplicate official site |
+| [desktop/README.md](../desktop/README.md) | Official TORQA Desktop (Electron; `torqa-desktop`) |
+| [P71_DESKTOP_OFFICIAL.md](P71_DESKTOP_OFFICIAL.md) | Historical desktop parity notes (superseded by P73 for surface split) |
+| [website/README.md](../website/README.md) | Official marketing site (`npm run build` → `website/dist/site/` → `GET /`; host: `website/server/`) |
+| [P72_WEBSITE_OFFICIAL.md](P72_WEBSITE_OFFICIAL.md) | Website vs host; `/desktop` updated in P73 |
+| [P73_PRODUCT_SURFACES.md](P73_PRODUCT_SURFACES.md) | **P73:** One website, one desktop; legacy UI removed |
 | [UI_SURFACE_RULES.md](UI_SURFACE_RULES.md) | **P36:** Website vs Desktop vs `/console` — purpose and layout rules |
 
 ## Product direction (non-normative wire)

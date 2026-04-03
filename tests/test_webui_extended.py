@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 pytest.importorskip("fastapi")
 
-from webui.app import app
+from website.server.app import app
 
 
 @pytest.fixture

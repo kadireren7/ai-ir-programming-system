@@ -1,0 +1,34 @@
+// Baseline (non-TORQA): minimal multi-step automation outline.
+
+export type SignupAutomationInput = { username: string; password: string };
+
+export async function runSignupAutomation(input: SignupAutomationInput): Promise<"AutomationComplete"> {
+  await stepValidateCredentials(input.username, input.password);
+  await stepCreateProfileStub(input.username);
+  await stepApplyDefaults(input.username);
+  return "AutomationComplete";
+}
+
+async function stepValidateCredentials(username: string, password: string): Promise<void> {
+  if (!username?.trim() || !password) throw new Error("auth required");
+  const uok = await verifyUsername(username);
+  if (!uok) throw new Error("bad username");
+  const pok = await verifyPassword(username, password);
+  if (!pok) throw new Error("bad password");
+}
+
+async function stepCreateProfileStub(username: string): Promise<void> {
+  void username;
+}
+
+async function stepApplyDefaults(username: string): Promise<void> {
+  void username;
+}
+
+async function verifyUsername(u: string): Promise<boolean> {
+  return u.length >= 2;
+}
+
+async function verifyPassword(username: string, password: string): Promise<boolean> {
+  return password.length >= 8;
+}

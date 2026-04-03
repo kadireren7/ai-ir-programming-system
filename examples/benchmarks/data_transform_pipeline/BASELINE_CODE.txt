@@ -1,0 +1,35 @@
+// Baseline (non-TORQA): minimal staging pipeline with auth — fixed for token comparison.
+
+export type PipelineInput = {
+  username: string;
+  password: string;
+  source_record: string;
+};
+
+export async function runDataPipeline(input: PipelineInput): Promise<"Staged"> {
+  await authenticate(input.username, input.password);
+  if (input.source_record == null || String(input.source_record).length === 0) {
+    throw new Error("source_record required");
+  }
+  const normalized = normalizeRecord(String(input.source_record));
+  await writeStagingBuffer(normalized);
+  return "Staged";
+}
+
+async function authenticate(username: string, password: string): Promise<void> {
+  if (!username?.trim() || !password) throw new Error("auth required");
+  const ok = await verifyPassword(username, password);
+  if (!ok) throw new Error("unauthorized");
+}
+
+async function verifyPassword(username: string, password: string): Promise<boolean> {
+  return password.length >= 8;
+}
+
+function normalizeRecord(raw: string): string {
+  return raw.trim();
+}
+
+async function writeStagingBuffer(_payload: string): Promise<void> {
+  return;
+}

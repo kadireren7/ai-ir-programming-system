@@ -9,7 +9,7 @@ export default defineConfig(({ command }) => ({
   plugins: [react()],
   base: command === "build" ? "/static/site/" : "/",
   build: {
-    outDir: path.resolve(__dirname, "../webui/static/site"),
+    outDir: path.resolve(__dirname, "dist/site"),
     emptyOutDir: true,
     assetsDir: "assets",
     rollupOptions: {

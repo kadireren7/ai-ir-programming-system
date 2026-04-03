@@ -23,9 +23,9 @@ Unsupported as *primary* input for `validate`: raw `.tq` / `.pxir` (CLI directs 
 | Tool | Role |
 |------|------|
 | **`torqa`** / **`python -m torqa`** | Primary CLI: `build`, `project`, `surface`, `validate`, `diagnostics`, `run`, `guided`, `demo` (+ `verify` / `emit`), packages, patch, `check`, … — [WEBUI_AND_CLI_SURFACES.md](WEBUI_AND_CLI_SURFACES.md), [QUICKSTART.md](QUICKSTART.md). |
-| **`torqa-console`** / **`python -m webui`** | Local web: product site `/`, IR lab `/console`, desktop-style `/desktop`. |
+| **`torqa-console`** / **`python -m website.server`** | Local web: marketing site `/` + JSON APIs; `/console` → `/`; `/desktop` → desktop pointer. |
 | **`torqa-desktop`** | Official native shell (Electron in `desktop/`; launches `torqa` CLI subprocesses). |
-| **`torqa-desktop-legacy`** / **`python -m desktop_legacy`** | Legacy Tk / pywebview + `workspace_io` (fallback). |
+| **`src/workspace_bundle_io.py`** | Materialize / flow scaffold helpers (tests, tooling; not a UI surface). |
 | **Benchmark / gate CLIs** | `torqa-compression-bench`, `torqa-gate-proof`, `torqa-flagship` (legacy alias for `torqa demo` text / verify). |
 
 ---

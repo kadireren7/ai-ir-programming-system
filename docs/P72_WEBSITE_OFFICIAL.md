@@ -6,14 +6,13 @@
 
 | Path / artifact | Current role | Overlaps “official product website”? | Verdict |
 |-----------------|--------------|----------------------------------------|---------|
-| **`GET /`** → `webui/static/site/*` (built from [`website/`](../website/)) | **Product homepage** — hero, problems, compression, gate, demo, benchmark UI, get started, desktop CTA, dark/light | **Yes — this is the website** | **Keep as official website** |
-| **`GET /console`** → `webui/static/console/*` | **IR lab** — Monaco, diagnostics, pipeline, examples | No (developer tool) | **Separate** — playground / console |
-| **`GET /desktop`** → `webui/static/desktop/*` | **Browser IDE shell** — explorer, editor, materialize | No (authoring UI) | **Separate** |
-| **`webui/app.py`** + `/api/*` | **Backend** for console, desktop, benchmark JSON, health | No (not a page) | **Keep** — required host |
-| **`webui/static/styles.css`**, **`app.js`** | Shared assets for **`/console`** (not `/`) | No | **Keep** — console styling/JS |
-| **`webui/static/shared/*`** | Shared panels (benchmark render helper) used by console/desktop/site | Partial (site may load `benchmark_panel.js` for CI markers) | **Keep** — shared widgets |
+| **`GET /`** → `website/dist/site/*` (Vite build from [`website/`](../website/)) | **Product homepage** — hero, problems, compression, gate, demo, benchmark UI, get started, desktop CTA, dark/light | **Yes — this is the website** | **Keep as official website** |
+| **`GET /console`** | **301 → `/`** (browser IR lab removed) | No | **Retired** |
+| **`GET /desktop`** → `website/static/desktop/*` | **P73:** Native-desktop **pointer** | No | **Separate** — see [P73_PRODUCT_SURFACES.md](P73_PRODUCT_SURFACES.md) |
+| **`website/server/app.py`** + `/api/*` | **Backend** for site, benchmark JSON, health | No (not a page) | **Keep** — required host |
+| **`website/static/shared/*`** | `benchmark_panel.js` etc. for CI markers / optional hooks | Partial | **Keep** where referenced |
 
-There is **no second maintained marketing-site source** in the repo: the former hand-written homepage was replaced by the TypeScript app (P70). **`webui/`** is the **server and app shell**, not a duplicate “old website.”
+There is **no second maintained marketing-site source**: the TypeScript app (P70+) and the FastAPI host live together under [`website/`](../website/).
 
 ## Required responsibilities checklist (TS website)
 
@@ -28,16 +27,16 @@ There is **no second maintained marketing-site source** in the repo: the former 
 | 7 | Desktop CTA | Yes |
 | 8 | Dark / light | Yes |
 | 9 | Serious product look | Yes (dedicated design system in `website/src`) |
-| 10 | Not an editor | Yes (links to `/console`; no Monaco on `/`) |
+| 10 | Not an editor | Yes (marketing-only; no in-browser lab) |
 
 ## Decision
 
 - **Official website source:** [`website/`](../website/) (TypeScript + React + Vite).  
-- **Build output:** `npm run build` → `webui/static/site/` → served at **`/`** by `torqa-console`.  
-- **`webui/`** remains the **host** for `/`, `/console`, `/desktop`, and APIs — **not** retired; its role is **infrastructure + non-website surfaces**.
+- **Build output:** `npm run build` → `website/dist/site/` → served at **`/`** by `torqa-console`.  
+- **`website/server/`** hosts `/`, `/desktop`, APIs, and **`/console` → `/` redirect**. **`/desktop`** static file is under **P73** (pointer page).
 
 ## See also
 
-- [UI_SURFACE_RULES.md](UI_SURFACE_RULES.md) — `/` vs `/console` vs `/desktop`
+- [UI_SURFACE_RULES.md](UI_SURFACE_RULES.md) — `/` vs `/desktop` vs `/console` redirect
 - [DEMO_SURFACES.md](DEMO_SURFACES.md) — what to show where
 - [website/README.md](../website/README.md) — build & dev

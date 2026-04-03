@@ -106,7 +106,7 @@ Define stable Python public API for "core only": 5 functions or classes (e.g. pa
 **Prompt F3.1 — Web MVP**
 
 ```text
-Extend webui: add "Project" mode — user pastes or loads .tq, compiles to IR, then POST /api/materialize-project with target root path OR returns zip of generated tree (choose one for security). Document threat model (no arbitrary path without auth). Tests with TestClient.
+Extend `website/server`: add "Project" mode — user pastes or loads .tq, compiles to IR, then POST /api/materialize-project with target root path OR returns zip of generated tree (choose one for security). Document threat model (no arbitrary path without auth). Tests with TestClient.
 ```
 
 **Prompt F3.2 — Masaüstü kabuk (ince)**
@@ -138,7 +138,7 @@ Add CHANGELOG.md with Keep a Changelog format. Link IR version bump checklist fr
 **Prompt F4.2 — Güvenlik gözden geçirme**
 
 ```text
-Review webui materialize and project APIs for path traversal and zip slip. List fixes with CVE-style severity wording; implement minimal path canonicalization tests.
+Review `website/server` materialize and project APIs for path traversal and zip slip. List fixes with CVE-style severity wording; implement minimal path canonicalization tests.
 ```
 
 **F4 bitti sayılır:** Dışarıya “1.x deney” demek için yeterli süreç var.
@@ -193,7 +193,7 @@ Her faz sonunda: `TORQA_MAJOR_WORK_PROMPTS.md` içindeki **M5** çıktı disipli
 | **F0** | Tamamlandı | [`MAINTAINER_VERIFY.md`](MAINTAINER_VERIFY.md), [`CODEGEN_INVENTORY.md`](CODEGEN_INVENTORY.md), [`F1_F2_GAP.md`](F1_F2_GAP.md) |
 | **F1** | Tamamlandı | `torqa project` (`src/cli/main.py`, `src/project_materialize.py`), [`examples/workspace_minimal/`](../examples/workspace_minimal/) |
 | **F2** | Monorepo içi | [`PACKAGE_SPLIT.md`](PACKAGE_SPLIT.md), `src/torqa_public.py`, `pyproject.toml` → `[preview-web]` (placeholder extra) |
-| **F3** | Kısmen | Web: `POST /api/materialize-project-zip` + **Download ZIP** (`webui/`). Masaüstü: `materialize_project` / **Üretim ağacı yaz** (`desktop/`). VS Code: [`editors/vscode-torqa/tasks.json`](../editors/vscode-torqa/tasks.json) + [`README.md`](../editors/vscode-torqa/README.md) |
+| **F3** | Kısmen | Web: `POST /api/materialize-project-zip` + **Download ZIP** (`website/server/`). Masaüstü: `materialize_project` / **Üretim ağacı yaz** (`desktop/`). VS Code: [`editors/vscode-torqa/tasks.json`](../editors/vscode-torqa/tasks.json) + [`README.md`](../editors/vscode-torqa/README.md) |
 | **F4** | Tamamlandı | [`CHANGELOG.md`](../CHANGELOG.md), [`WEBUI_SECURITY.md`](WEBUI_SECURITY.md), güvenlik testleri (`tests/test_materialize_security.py`) |
 | **F5** | Örnek + şablon | [`examples/packages/demo_lib/`](../examples/packages/demo_lib/), [`examples/core/consumes_torqa_demo_lib.json`](../examples/core/consumes_torqa_demo_lib.json), [`TEMPLATE_preview_package.md`](TEMPLATE_preview_package.md) |
 

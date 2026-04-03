@@ -7,4 +7,5 @@ export type TorqaRequest =
       outDir?: string;
       engineMode?: "python_only" | "rust_preferred" | "rust_only";
     }
-  | { kind: "benchmark" };
+  /** Flagship baseline on disk, or workspace-relative benchmark dir when parent folder is P31 layout. */
+  | { kind: "benchmark"; workspaceRoot?: string; relativePath?: string };

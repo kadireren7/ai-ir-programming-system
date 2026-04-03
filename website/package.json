@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "P72 — Official TORQA product website (builds into webui/static/site for GET /)",
+  "description": "Official TORQA marketing site — Vite build to dist/site; served by website.server (torqa-console)",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

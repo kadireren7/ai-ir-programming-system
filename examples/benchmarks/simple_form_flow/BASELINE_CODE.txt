@@ -1,0 +1,27 @@
+// Baseline (non-TORQA): approximate hand-written UI + guard rails for the same intent.
+// Fixed text for reproducible token measurement — not executed.
+
+export type ContactSubmitInput = { username: string; password: string; email: string };
+
+export async function runContactSubmitFlow(input: ContactSubmitInput): Promise<"Submitted"> {
+  if (!input.username?.trim()) throw new Error("username required");
+  if (!input.password) throw new Error("password required");
+  if (!input.email?.trim()) throw new Error("email required");
+  const usernameOk = await verifyUsername(input.username);
+  if (!usernameOk) throw new Error("invalid username");
+  const passwordOk = await verifyPassword(input.username, input.password);
+  if (!passwordOk) throw new Error("invalid credentials");
+  return "Submitted";
+}
+
+async function verifyUsername(u: string): Promise<boolean> {
+  return u.length >= 2;
+}
+
+async function verifyPassword(username: string, password: string): Promise<boolean> {
+  return password.length >= 8;
+}
+
+export function ContactForm(props: { onSubmit: (v: ContactSubmitInput) => void }) {
+  return null;
+}

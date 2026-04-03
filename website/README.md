@@ -1,10 +1,10 @@
 # TORQA website (official — P72)
 
-**Single official product website** for the TORQA story (torqa.dev-style): hero, compression + gate narrative, demo links, get started, desktop CTA. **Not** the IR console (`/console`) or browser IDE (`/desktop`). Built output is served at **`GET /`** when you run `torqa-console`.
+**Official marketing website** — premium positioning copy only (no command cheatsheets on the page). Built output is served at **`GET /`** when you run `torqa-console`. **`/console`** redirects to **`/`** (browser IR lab removed). **`/desktop`** is a short pointer page ([P73](../docs/P73_PRODUCT_SURFACES.md)).
 
 Semantic authority stays in **TORQA core**; this app only explains, links, and reads public APIs (e.g. benchmark report) for display.
 
-## Build (updates `webui/static/site/`)
+## Build (writes `dist/site/`)
 
 From this folder:
 
@@ -13,7 +13,7 @@ npm install
 npm run build
 ```
 
-Then run `torqa-console` (or `python -m webui`) and open **http://127.0.0.1:8000/**.
+Then run `torqa-console` (or `python -m website.server`) and open **http://127.0.0.1:8000/**.
 
 ## Develop
 
@@ -25,4 +25,4 @@ Uses `/` as asset base (Vite dev). Production build uses `/static/site/` so asse
 
 ## Stack
 
-React 18, TypeScript, Vite 5. **Not** an editor — content + links only; IR lab stays at `/console`.
+React 18, TypeScript, Vite 5. **Not** an editor — marketing narrative + optional live benchmark API only.
