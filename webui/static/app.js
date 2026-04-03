@@ -161,6 +161,74 @@ function formatDiagnosticsPanelText(diag) {
   return head + JSON.stringify(diag, null, 2);
 }
 
+async function runFullDiagnosticsFromEditor() {
+  setStatus("Running diagnostics…", "neutral");
+  const ir = parseJsonLabel(getIrText(), "IR bundle");
+  if (!ir.ok) {
+    showParseHint(ir.error);
+    setStatus("Fix JSON first.", "bad");
+    return { ok: false };
+  }
+  hideParseHint();
+  try {
+    const out = await fetchJSON("/api/diagnostics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ir_bundle: ir.data }),
+    });
+    $("out-diagnostics").textContent = formatDiagnosticsPanelText(out);
+    const nIssues = (out.issues && out.issues.length) || 0;
+    setDiagnosticsVerdict(out);
+    updateValidationBanner(
+      true,
+      !!out.ok,
+      out.ok ? "Full diagnostics: pass" : "Full diagnostics: fail",
+      out.ok ? "No blocking issues." : `${nIssues} issue(s) — see Diagnostics tab.`
+    );
+    setStatus(out.ok ? "Diagnostics clean" : "Issues found · see Diagnostics tab", out.ok ? "ok" : "bad");
+    setTab("diagnostics");
+    advanceWorkflow(3);
+    return { ok: true, out };
+  } catch (e) {
+    setStatus(String(e.message || e), "bad");
+    setDiagnosticsVerdict(null);
+    return { ok: false };
+  }
+}
+
+const CONSOLE_FIRST_RUN_KEY = "torqa-console-first-run-v1";
+
+function showConsoleFirstRunOverlay() {
+  const ov = $("console-first-run-overlay");
+  if (ov) ov.hidden = false;
+}
+
+function hideConsoleFirstRunOverlay() {
+  const ov = $("console-first-run-overlay");
+  if (ov) ov.hidden = true;
+}
+
+function consoleFirstRunDone() {
+  localStorage.setItem(CONSOLE_FIRST_RUN_KEY, "1");
+  hideConsoleFirstRunOverlay();
+}
+
+async function loadConsoleSampleProject() {
+  const bundle = await fetchJSON("/api/examples/valid_minimal_flow.json");
+  const text = JSON.stringify(bundle, null, 2);
+  setIrText(text);
+  savedIrText = text;
+  hideParseHint();
+  if (editorMode !== "ir") setEditorMode("ir");
+  setStatus("Loaded sample: valid_minimal_flow.json", "ok");
+  advanceWorkflow(2);
+}
+
+async function consoleFirstRunQuickDemo() {
+  await loadConsoleSampleProject();
+  await runFullDiagnosticsFromEditor();
+}
+
 function fillPipelineOutputPanels(out) {
   $("out-validation").textContent = JSON.stringify(
     {
@@ -173,6 +241,9 @@ function fillPipelineOutputPanels(out) {
     2
   );
   $("out-diagnostics").textContent = formatDiagnosticsPanelText(out.diagnostics || {});
+  const diag = out.diagnostics || {};
+  if (diag && typeof diag.ok === "boolean") setDiagnosticsVerdict(diag);
+  else setDiagnosticsVerdict(!!out.ir_valid);
   $("out-semantic").textContent = JSON.stringify(out.semantic, null, 2);
   $("out-engine").textContent = JSON.stringify(out.engine, null, 2);
   const arts = out.orchestrator.artifacts || [];
@@ -192,7 +263,7 @@ function fillPipelineOutputPanels(out) {
   $("out-artifacts").textContent = JSON.stringify(
     {
       by_target_language: byTargetLanguage,
-      note: "Not only website: check generated/sql, generated/rust, generated/python, etc. when using torqa demo.",
+      note: "Not only website: check generated/sql, generated/rust, generated/python, etc. when using torqa demo emit.",
       artifacts: summary,
     },
     null,
@@ -200,6 +271,21 @@ function fillPipelineOutputPanels(out) {
   );
   $("out-execution-trace").textContent = JSON.stringify(out.execution_trace || {}, null, 2);
   $("out-raw").textContent = JSON.stringify(out, null, 2);
+
+  const verr = out.validation_errors || [];
+  const vdetail =
+    out.ir_valid === true
+      ? `${arts.length} artifact group(s) — open Artifacts tab for file list.`
+      : (Array.isArray(verr) ? verr : [])
+          .slice(0, 3)
+          .map((x) => (typeof x === "string" ? x : JSON.stringify(x)))
+          .join("; ") || "See Validation tab.";
+  updateValidationBanner(
+    true,
+    !!out.ir_valid,
+    out.ir_valid ? "Pipeline: IR valid" : "Pipeline: validation failed",
+    vdetail
+  );
 }
 
 function setTab(name) {
@@ -365,6 +451,107 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+function updateValidationBanner(visible, ok, title, detail) {
+  const el = $("validation-banner");
+  if (!el) return;
+  if (!visible) {
+    el.hidden = true;
+    el.innerHTML = "";
+    el.className = "validation-banner";
+    return;
+  }
+  el.hidden = false;
+  el.className = "validation-banner" + (ok ? " ok" : " bad");
+  const verdict = ok
+    ? '<span class="vb-verdict vb-verdict-pass">PASS</span>'
+    : '<span class="vb-verdict vb-verdict-fail">FAIL</span>';
+  const d =
+    detail != null && String(detail).trim() !== ""
+      ? `<span class="vb-detail">${escapeHtml(String(detail))}</span>`
+      : "";
+  el.innerHTML =
+    verdict +
+    `<div class="vb-body"><span class="vb-title">${escapeHtml(String(title))}</span>${d}</div>`;
+}
+
+/** Latest full-diagnostics / IR diagnostics outcome for the Diagnostics tab strip. Pass null to hide. */
+function setDiagnosticsVerdict(state) {
+  const strip = $("diagnostics-verdict-strip");
+  if (!strip) return;
+  if (state == null) {
+    strip.hidden = true;
+    strip.className = "diagnostics-verdict-strip";
+    strip.innerHTML = "";
+    return;
+  }
+  const ok = typeof state === "boolean" ? state : !!state.ok;
+  let issueCount = null;
+  if (typeof state === "object" && state !== null && Array.isArray(state.issues)) {
+    issueCount = state.issues.length;
+  }
+  strip.hidden = false;
+  strip.className = "diagnostics-verdict-strip" + (ok ? " dv-ok" : " dv-fail");
+  const badge = ok ? "PASS" : "FAIL";
+  const sub =
+    issueCount != null
+      ? ok
+        ? "No blocking issues in this report."
+        : `${issueCount} blocking issue(s) — details below.`
+      : ok
+        ? "No blocking issues in this report."
+        : "Blocking issues — details below.";
+  strip.innerHTML =
+    `<span class="dv-badge">${badge}</span>` +
+    `<div class="dv-copy"><strong>Validation result</strong>` +
+    `<span class="dv-sub">${escapeHtml(sub)}</span></div>`;
+}
+
+async function refreshDemoInsights() {
+  const benchRoot = $("side-demo-benchmark");
+  const gateEl = $("side-demo-gate");
+  if (!benchRoot && !gateEl) return;
+
+  let br = { ok: false };
+  let gr = { ok: false };
+  try {
+    br = await fetchJSON("/api/demo/benchmark-report");
+  } catch (e) {
+    br = { ok: false };
+  }
+  try {
+    gr = await fetchJSON("/api/demo/gate-proof-report");
+  } catch (e) {
+    gr = { ok: false };
+  }
+
+  if (benchRoot) {
+    if (typeof torqaRenderBenchmarkPanel === "function" && br.ok && br.report && br.report.metrics) {
+      const html = torqaRenderBenchmarkPanel(br.report.metrics);
+      benchRoot.innerHTML =
+        html || '<p class="tq-bm-fallback">P32 · incomplete benchmark metrics</p>';
+    } else if (br.ok === false && br.message) {
+      benchRoot.innerHTML =
+        '<p class="tq-bm-fallback">P32 · ' + escapeHtml(String(br.message)) + "</p>";
+    } else {
+      benchRoot.innerHTML =
+        '<p class="tq-bm-fallback">P32 · benchmark report not found or unavailable</p>';
+    }
+  }
+
+  const gateLines = [];
+  if (gr.ok && gr.report && gr.report.summary) {
+    const s = gr.report.summary;
+    const by = s.rejections_by_stage || {};
+    gateLines.push(
+      `P33 · gate: ${s.accepted} ok · ${s.rejected} rejected (parse ${by.parse || 0} · validate ${by.validate || 0} · project ${by.project || 0})`
+    );
+    gateLines.push(`Expectation mismatches: ${s.mismatch_with_expectation}`);
+  } else {
+    gateLines.push("P33 · gate report unavailable");
+  }
+  if (gateEl) gateEl.textContent = gateLines.join("\n");
+}
+
 function selectedExampleName() {
   const el = document.querySelector('input[name="ex"]:checked');
   return el ? el.value : null;
@@ -441,10 +628,18 @@ if (_bCtq) {
       if (!j.ok) {
         const hint = j.hint ? ` · ${j.hint}` : "";
         setStatus(`${j.code || "tq"}: ${j.message || "compile failed"}${hint}`, "bad");
+        updateValidationBanner(true, false, ".tq compile: rejected", j.message || j.code || "");
         return;
       }
       savedIrText = JSON.stringify(j.ir_bundle, null, 2);
       setEditorMode("ir");
+      const diagOk = !!(j.diagnostics && j.diagnostics.ok);
+      updateValidationBanner(
+        true,
+        diagOk,
+        diagOk ? ".tq → IR: diagnostics pass" : ".tq → IR: diagnostics report issues",
+        diagOk ? "Run pipeline or download ZIP." : "See Diagnostics tab."
+      );
       setStatus("Compiled .tq → IR", "ok");
       advanceWorkflow(2);
     } catch (e) {
@@ -526,7 +721,14 @@ $("btn-download-zip").addEventListener("click", async () => {
       }),
     });
     if (!res.ok) {
-      const t = await res.text();
+      let t = await res.text();
+      try {
+        const j = JSON.parse(t);
+        t = j.message || j.detail || t;
+      } catch (_) {
+        /* plain text */
+      }
+      updateValidationBanner(true, false, "ZIP not built", String(t).slice(0, 400));
       throw new Error(t || res.statusText);
     }
     const metaB64 = res.headers.get("X-TORQA-Materialize-Meta");
@@ -566,34 +768,20 @@ $("btn-download-zip").addEventListener("click", async () => {
         urlA.removeAttribute("href");
       }
     }
+    updateValidationBanner(
+      true,
+      true,
+      "ZIP ready",
+      `${meta.written_count ?? 0} file(s) — extract and use commands below for Vite when present.`
+    );
     setStatus("ZIP indirildi · altta localhost komutları", "ok");
   } catch (e) {
     setStatus(String(e.message || e), "bad");
   }
 });
 
-$("btn-diagnostics").addEventListener("click", async () => {
-  setStatus("Running diagnostics…", "neutral");
-  const ir = parseJsonLabel(getIrText(), "IR bundle");
-  if (!ir.ok) {
-    showParseHint(ir.error);
-    setStatus("Fix JSON first.", "bad");
-    return;
-  }
-  hideParseHint();
-  try {
-    const out = await fetchJSON("/api/diagnostics", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ir_bundle: ir.data }),
-    });
-    $("out-diagnostics").textContent = formatDiagnosticsPanelText(out);
-    setStatus(out.ok ? "Diagnostics clean" : "Issues found · see Diagnostics tab", out.ok ? "ok" : "bad");
-    setTab("diagnostics");
-    advanceWorkflow(3);
-  } catch (e) {
-    setStatus(String(e.message || e), "bad");
-  }
+$("btn-diagnostics").addEventListener("click", () => {
+  runFullDiagnosticsFromEditor();
 });
 
 $("btn-preview-patch").addEventListener("click", async () => {
@@ -654,6 +842,7 @@ $("btn-patch").addEventListener("click", async () => {
     });
     setIrText(JSON.stringify(out.ir_bundle, null, 2));
     $("out-diagnostics").textContent = formatDiagnosticsPanelText(out.diagnostics);
+    setDiagnosticsVerdict(out.diagnostics || { ok: out.ok, issues: [] });
     setStatus(
       out.ok ? "Mutations applied · IR updated" : "Applied · diagnostics still failing",
       out.ok ? "ok" : "bad"
@@ -715,9 +904,16 @@ $("btn-guided").addEventListener("click", async () => {
       body: JSON.stringify({ ir_bundle: ir.data }),
     });
     $("out-diagnostics").textContent = formatDiagnosticsPanelText(diag);
+    setDiagnosticsVerdict(diag);
     setTab("diagnostics");
     advanceWorkflow(3);
     if (!diag.ok) {
+      updateValidationBanner(
+        true,
+        false,
+        "Guided: stopped at diagnostics",
+        "Fix issues, then run pipeline or guided again."
+      );
       setStatus("Guided stopped: fix diagnostics, then Run pipeline.", "bad");
       return;
     }
@@ -742,7 +938,89 @@ $("btn-guided").addEventListener("click", async () => {
   }
 });
 
+const _btnDemoTq = $("btn-demo-flagship-tq");
+const _btnDemoIr = $("btn-demo-flagship-ir");
+if (_btnDemoTq) {
+  _btnDemoTq.addEventListener("click", async () => {
+    try {
+      const data = await fetchJSON("/api/demo/flagship-tq");
+      savedTqText = data.source || "";
+      setEditorMode("tq");
+      if (useFallback) $("ir-editor-fallback").value = savedTqText;
+      else if (irEditor) irEditor.setValue(savedTqText);
+      setStatus("Flagship app.tq loaded", "ok");
+      updateValidationBanner(
+        true,
+        true,
+        "Flagship surface loaded",
+        "Use “Compile → IR bundle” to run the validation gate on this demo."
+      );
+      advanceWorkflow(1);
+    } catch (e) {
+      setStatus(String(e.message || e), "bad");
+    }
+  });
+}
+if (_btnDemoIr) {
+  _btnDemoIr.addEventListener("click", async () => {
+    setStatus("Loading flagship…", "neutral");
+    try {
+      const data = await fetchJSON("/api/demo/flagship-tq");
+      const j = await fetchJSON("/api/compile-tq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: data.source }),
+      });
+      $("out-diagnostics").textContent = j.diagnostics
+        ? formatDiagnosticsPanelText(j.diagnostics)
+        : JSON.stringify(j, null, 2);
+      if (j.diagnostics && typeof j.diagnostics === "object") setDiagnosticsVerdict(j.diagnostics);
+      else setDiagnosticsVerdict(j.ok);
+      setTab("diagnostics");
+      if (!j.ok) {
+        const hint = j.hint ? ` ${j.hint}` : "";
+        updateValidationBanner(true, false, "Flagship compile rejected", (j.message || j.code || "") + hint);
+        setStatus(`${j.code || "tq"}: ${j.message || "failed"}`, "bad");
+        return;
+      }
+      savedIrText = JSON.stringify(j.ir_bundle, null, 2);
+      setEditorMode("ir");
+      setIrText(savedIrText);
+      const diagOk = !!(j.diagnostics && j.diagnostics.ok);
+      updateValidationBanner(
+        true,
+        diagOk,
+        "Flagship IR ready",
+        diagOk ? "Run pipeline or Download ZIP for artifact tree." : "Review Diagnostics tab."
+      );
+      setStatus("Flagship compiled to IR", "ok");
+      advanceWorkflow(2);
+    } catch (e) {
+      setStatus(String(e.message || e), "bad");
+    }
+  });
+}
+
+function initConsoleTheme() {
+  const root = document.documentElement;
+  if (root.getAttribute("data-torqa-surface") !== "web-console") return;
+  const KEY = "torqa-web-console-theme";
+  const saved = localStorage.getItem(KEY);
+  if (saved === "light" || saved === "dark") {
+    root.setAttribute("data-theme", saved);
+  }
+  const btn = $("btn-theme-toggle");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem(KEY, next);
+    });
+  }
+}
+
 async function boot() {
+  initConsoleTheme();
   try {
     await initMonaco();
   } catch (e) {
@@ -751,12 +1029,18 @@ async function boot() {
   }
 
   try {
+    await refreshDemoInsights();
     await refreshExamples();
-    const first = selectedExampleName();
-    if (first && !useFallback) {
-      const bundle = await fetchJSON(`/api/examples/${encodeURIComponent(first)}`);
-      setIrText(JSON.stringify(bundle, null, 2));
-      advanceWorkflow(2);
+    const firstRunDone = localStorage.getItem(CONSOLE_FIRST_RUN_KEY) === "1";
+    if (firstRunDone) {
+      const first = selectedExampleName();
+      if (first && !useFallback) {
+        const bundle = await fetchJSON(`/api/examples/${encodeURIComponent(first)}`);
+        setIrText(JSON.stringify(bundle, null, 2));
+        advanceWorkflow(2);
+      }
+    } else {
+      showConsoleFirstRunOverlay();
     }
     refreshWorkflowUI();
     setStatus("Ready", "ok");
@@ -764,5 +1048,54 @@ async function boot() {
     setStatus(String(e.message || e), "bad");
   }
 }
+
+(function initConsoleFirstRunUi() {
+  const bSample = $("btn-console-first-run-sample");
+  const bDemo = $("btn-console-first-run-demo");
+  const bDismiss = $("btn-console-first-run-dismiss");
+  if (!bSample || !bDemo || !bDismiss) return;
+
+  bSample.addEventListener("click", async () => {
+    try {
+      await loadConsoleSampleProject();
+      updateValidationBanner(
+        true,
+        true,
+        "Sample loaded",
+        "Use Full diagnostics or Run pipeline from the toolbar."
+      );
+      consoleFirstRunDone();
+      setStatus("Sample in editor · try Full diagnostics or Run pipeline", "ok");
+    } catch (e) {
+      setStatus(String(e.message || e), "bad");
+    }
+  });
+
+  bDemo.addEventListener("click", async () => {
+    try {
+      await consoleFirstRunQuickDemo();
+      consoleFirstRunDone();
+    } catch (e) {
+      setStatus(String(e.message || e), "bad");
+    }
+  });
+
+  bDismiss.addEventListener("click", async () => {
+    consoleFirstRunDone();
+    try {
+      const first = selectedExampleName();
+      if (first && !useFallback) {
+        const bundle = await fetchJSON(`/api/examples/${encodeURIComponent(first)}`);
+        setIrText(JSON.stringify(bundle, null, 2));
+        hideParseHint();
+        advanceWorkflow(2);
+      }
+    } catch (e) {
+      setStatus(String(e.message || e), "bad");
+      return;
+    }
+    setStatus("Ready · examples in the sidebar", "ok");
+  });
+})();
 
 boot();

@@ -1,0 +1,9 @@
+# Benchmark: document approval — same shape as examples/workflows/document_approval.tq
+module benchmark.workflow_document_approval
+
+intent document_approval
+requires username, password, document_id, revision, approver_id, requester_id
+forbid locked
+result Approval decision logged for document
+
+flow:

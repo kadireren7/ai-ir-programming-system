@@ -1,0 +1,16 @@
+# P26: TORQA-authored tails for ``torqa validate`` when the path is not a ready IR JSON bundle.
+# After session inputs, seven ``open_hint_*`` slugs define static CLI lines (order = merge order).
+# Path interpolation ({path}) for the first two rows is applied in Python (see validate_open_hints_ir).
+# Regenerate:
+#   torqa surface examples/torqa_self/cli_validate_open_hints.tq --out examples/torqa_self/cli_validate_open_hints_bundle.json
+
+module torqa.self.cli_validate_open_hints
+
+intent cli_validate_open_hints
+requires username, password, ip_address, open_hint_tq_surface, open_hint_tq_build, open_hint_badext_surface, open_hint_badext_build, open_hint_badjson_minimal, open_hint_badjson_schema, open_hint_notdict_minimal
+
+result OK
+
+flow:
+  create session
+  emit login_success

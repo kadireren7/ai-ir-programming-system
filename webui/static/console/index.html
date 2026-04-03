@@ -1,26 +1,55 @@
 <!DOCTYPE html>
-<html lang="en" data-app-lang="en">
+<html lang="en" data-app-lang="en" data-torqa-surface="web-console" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TORQA Console</title>
+  <title>TORQA — Web console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/shared/torqa-tokens.css" />
+  <link rel="stylesheet" href="/static/shared/benchmark_panel.css" />
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body class="app">
+  <div
+    id="console-first-run-overlay"
+    class="first-run-overlay"
+    hidden
+    aria-modal="true"
+    role="dialog"
+    aria-labelledby="console-first-run-title"
+  >
+    <div class="first-run-dialog">
+      <h2 id="console-first-run-title" class="first-run-title">Welcome — first run</h2>
+      <p class="first-run-lead">
+        <strong>Load sample project</strong> puts a tiny valid IR in the editor (use <strong>Full diagnostics</strong> when you are ready).
+        <strong>Quick demo</strong> loads the same sample and runs diagnostics — opens the Diagnostics tab.
+      </p>
+      <p class="first-run-hint">
+        <strong>Dismiss</strong> closes this dialog and loads the first list example. You can use the sidebar anytime.
+      </p>
+      <div class="first-run-actions">
+        <button type="button" id="btn-console-first-run-sample" class="btn btn-primary">Load sample project</button>
+        <button type="button" id="btn-console-first-run-demo" class="btn btn-secondary">Quick demo</button>
+        <button type="button" id="btn-console-first-run-dismiss" class="btn btn-ghost">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
   <header class="app-header">
     <div class="brand">
       <span class="logo" aria-hidden="true">TQ</span>
       <div class="brand-text">
-        <h1>TORQA Console</h1>
-        <p class="tagline">Semantic core is the source of truth · validate · run engine · preview projections</p>
+        <h1>Web console</h1>
+        <p class="tagline">IR lab in the browser · validate · run engine · projections · flagship + P32/P33 in the sidebar</p>
         <p class="tagline-sub" lang="tr">Özet akış: örnek yükle → doğrula → motor + projeksiyon · üretilen dosyalar asıl kaynak değildir</p>
       </div>
     </div>
     <div class="header-actions">
-      <span class="env-hint">Local tool</span>
+      <a class="header-nav-link" href="/" data-torqa-nav="product">Product home</a>
+      <button type="button" class="btn btn-ghost btn-theme-toggle" id="btn-theme-toggle" title="Toggle light/dark">Theme</button>
+      <span class="env-hint">Local</span>
       <span class="link-doc" title="Open docs/CORE_SPEC.md in your repo">IR contract</span>
     </div>
   </header>
@@ -49,6 +78,20 @@
 
   <div class="app-body">
     <aside class="sidebar" aria-label="Examples">
+      <div class="side-card side-card-demo" aria-label="Flagship demo">
+        <div class="side-demo-head">
+          <span class="side-demo-badge">P31 · P32 · P33</span>
+          <h2 class="side-title side-title-tight">Flagship demo</h2>
+          <p class="side-desc side-desc-muted" lang="en">Benchmark surface + validation gate story (same paths as CLI).</p>
+        </div>
+        <button type="button" id="btn-demo-flagship-tq" class="btn btn-primary btn-block">Load flagship .tq</button>
+        <button type="button" id="btn-demo-flagship-ir" class="btn btn-secondary btn-block btn-mt-sm">Compile → IR bundle</button>
+        <div id="side-demo-metrics" class="side-demo-metrics-wrap" aria-live="polite">
+          <div id="side-demo-benchmark" class="side-demo-benchmark-root">Loading benchmark…</div>
+          <pre class="side-desc side-desc-tiny mono side-demo-gate-pre" id="side-demo-gate"></pre>
+        </div>
+        <p class="side-desc side-desc-tiny">Launch guide: <code class="inline-code">docs/DEMO_SURFACES.md</code></p>
+      </div>
       <div class="side-card">
         <h2 class="side-title">Hazır örnekler <span class="side-title-en">/ Examples</span></h2>
         <p class="side-desc">
@@ -60,7 +103,7 @@
         <button type="button" id="btn-load-example" class="btn btn-primary btn-block">Load selected · Seçileni yükle</button>
         <input type="file" id="ir-file-input" accept=".json,application/json" hidden />
         <button type="button" id="btn-open-ir-file" class="btn btn-secondary btn-block btn-mt">Bilgisayardan JSON aç · Open bundle file</button>
-        <p class="side-footnote">Tam klasör + prompt akışı: <code class="inline-code">python -m desktop --tk</code> veya PATH’e ekli <code class="inline-code">torqa-desktop --tk</code></p>
+        <p class="side-footnote">Tam klasör + prompt (legacy Tk): <code class="inline-code">python -m desktop_legacy --tk</code> veya <code class="inline-code">torqa-desktop-legacy --tk</code> · native Electron: <code class="inline-code">torqa-desktop</code></p>
       </div>
     </aside>
 
@@ -147,6 +190,14 @@
           <h2 class="panel-title">Results</h2>
           <div id="status" class="status-pill" role="status"></div>
         </div>
+        <div id="validation-banner" class="validation-banner" role="status" hidden></div>
+        <div
+          id="diagnostics-verdict-strip"
+          class="diagnostics-verdict-strip"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
         <div class="tabs" role="tablist">
           <button type="button" class="tab active" role="tab" data-tab="validation" aria-selected="true">Validation</button>
           <button type="button" class="tab" role="tab" data-tab="diagnostics" aria-selected="false">Diagnostics</button>
@@ -175,6 +226,7 @@
     <span>Generated projections are not the source of truth · see <code class="inline-code">docs/CORE_SPEC.md</code></span>
   </footer>
 
+  <script src="/static/shared/benchmark_panel.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
   <script src="/static/app.js"></script>
 </body>

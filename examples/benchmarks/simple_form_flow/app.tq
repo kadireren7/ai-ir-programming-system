@@ -1,0 +1,8 @@
+# Benchmark: simple form flow — minimal TORQA surface (password required by .tq header rules).
+module benchmark.simple_form
+
+intent contact_submit
+requires username, password, email
+result Submitted
+
+flow:

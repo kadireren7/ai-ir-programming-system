@@ -1,0 +1,9 @@
+# Simulated bad AI output: missing required result line before flow: (parse reject).
+
+module examples.ai_output.rejected
+
+intent bad_missing_result
+requires username, password
+
+flow:
+  create session

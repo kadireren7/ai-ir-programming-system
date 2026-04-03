@@ -1,0 +1,249 @@
+{
+  "classification": {
+    "semantic_failure": "IR meaning: unknown functions/effects, arity/types, forbid guarantees, comparisons.",
+    "structure_failure": "Bundle envelope, IR shape, identifiers, transitions, policy/handoff contract, determinism collisions.",
+    "syntax_failure": "Surface / wire parse: .tq header & flow, JSON bundle decode, schema surface rules."
+  },
+  "report_id": "failure_types",
+  "schema_version": 1,
+  "sources": [
+    {
+      "detail": null,
+      "failure_bucket": null,
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/app.tq",
+      "primary_code": null,
+      "primary_formal_phase": null,
+      "primary_phase": null,
+      "reject_stage": null,
+      "source_id": "app"
+    },
+    {
+      "detail": "IR validation: all condition_id values must be globally unique.",
+      "failure_bucket": "structure_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/bundle_duplicate_condition_id.json",
+      "primary_code": "PX_IR_CONDITION_ID_COLLISION",
+      "primary_formal_phase": "wellformed",
+      "primary_phase": "structural",
+      "reject_stage": "validate",
+      "source_id": "bundle_duplicate_condition_id"
+    },
+    {
+      "detail": "Bundle IR shape invalid (ValueError): IR symbol table: duplicate input name 'username'.",
+      "failure_bucket": "structure_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/bundle_duplicate_input_names.json",
+      "primary_code": "PX_PARSE_FAILED",
+      "primary_formal_phase": "syntax",
+      "primary_phase": "structural",
+      "reject_stage": "validate",
+      "source_id": "bundle_duplicate_input_names"
+    },
+    {
+      "detail": "IR validation: all transition_id values must be unique.",
+      "failure_bucket": "structure_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/bundle_duplicate_transition_id.json",
+      "primary_code": "PX_IR_TRANSITION_DUPLICATE",
+      "primary_formal_phase": "kind_type",
+      "primary_phase": "structural",
+      "reject_stage": "validate",
+      "source_id": "bundle_duplicate_transition_id"
+    },
+    {
+      "detail": "Bundle envelope: unknown top-level key 'not_allowed_top_level_key'.",
+      "failure_bucket": "structure_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/bundle_envelope_unknown_key.json",
+      "primary_code": "PX_UNSPECIFIED",
+      "primary_formal_phase": "policy",
+      "primary_phase": "envelope",
+      "reject_stage": "validate",
+      "source_id": "bundle_envelope_unknown_key"
+    },
+    {
+      "detail": "IR semantics: identifier 'ip_address' used in forbid c_forbid_0001 without a before-state guarantee from preconditions.",
+      "failure_bucket": "semantic_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/bundle_forbid_without_guarantee.json",
+      "primary_code": "PX_SEM_FORBID_GUARANTEE",
+      "primary_formal_phase": "wellformed",
+      "primary_phase": "semantic",
+      "reject_stage": "validate",
+      "source_id": "bundle_forbid_without_guarantee"
+    },
+    {
+      "detail": "IR semantics: unknown effect '__p33_unknown_effect__' at transitions[0](t_0001).",
+      "failure_bucket": "semantic_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/bundle_semantic_unknown_effect.json",
+      "primary_code": "PX_SEM_UNKNOWN_EFFECT",
+      "primary_formal_phase": "kind_type",
+      "primary_phase": "semantic",
+      "reject_stage": "validate",
+      "source_id": "bundle_semantic_unknown_effect"
+    },
+    {
+      "detail": "Bundle IR shape invalid (TypeError): string indices must be integers, not 'str'",
+      "failure_bucket": "structure_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/bundle_shape_preconditions_not_list.json",
+      "primary_code": "PX_PARSE_FAILED",
+      "primary_formal_phase": "syntax",
+      "primary_phase": "structural",
+      "reject_stage": "validate",
+      "source_id": "bundle_shape_preconditions_not_list"
+    },
+    {
+      "detail": "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+      "failure_bucket": "syntax_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/malformed_brace_only.json",
+      "primary_code": "JSONDecodeError",
+      "primary_formal_phase": null,
+      "primary_phase": null,
+      "reject_stage": "parse",
+      "source_id": "malformed_brace_only"
+    },
+    {
+      "detail": "tq: 'result' is required immediately before flow: (line 4). Fix: add e.g. `result OK` or `result Login Successful` on the previous line.",
+      "failure_bucket": "syntax_failure",
+      "group": "benchmark_flagship_gate_invalid",
+      "path": "examples/benchmark_flagship/gate_invalid/malformed_missing_result.tq",
+      "primary_code": "PX_TQ_MISSING_RESULT",
+      "primary_formal_phase": null,
+      "primary_phase": null,
+      "reject_stage": "parse",
+      "source_id": "malformed_missing_result"
+    },
+    {
+      "detail": "Bundle envelope: unknown top-level key 'not_allowed_top_level_key'.",
+      "failure_bucket": "structure_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/bundle_envelope_unknown_key.json",
+      "primary_code": "PX_UNSPECIFIED",
+      "primary_formal_phase": "policy",
+      "primary_phase": "envelope",
+      "reject_stage": "validate",
+      "source_id": "envelope_unknown_top_level_key"
+    },
+    {
+      "detail": null,
+      "failure_bucket": null,
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/control_valid.tq",
+      "primary_code": null,
+      "primary_formal_phase": null,
+      "primary_phase": null,
+      "reject_stage": null,
+      "source_id": "control_valid"
+    },
+    {
+      "detail": "IR validation: all condition_id values must be globally unique.",
+      "failure_bucket": "structure_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/duplicate_condition_id.json",
+      "primary_code": "PX_IR_CONDITION_ID_COLLISION",
+      "primary_formal_phase": "wellformed",
+      "primary_phase": "structural",
+      "reject_stage": "validate",
+      "source_id": "duplicate_condition_id"
+    },
+    {
+      "detail": "Bundle IR shape invalid (ValueError): IR symbol table: duplicate input name 'username'.",
+      "failure_bucket": "structure_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/duplicate_input_names.json",
+      "primary_code": "PX_PARSE_FAILED",
+      "primary_formal_phase": "syntax",
+      "primary_phase": "structural",
+      "reject_stage": "validate",
+      "source_id": "duplicate_input_names"
+    },
+    {
+      "detail": "IR semantics: identifier 'ip_address' used in forbid c_forbid_0001 without a before-state guarantee from preconditions.",
+      "failure_bucket": "semantic_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/forbid_without_guarantee.json",
+      "primary_code": "PX_SEM_FORBID_GUARANTEE",
+      "primary_formal_phase": "wellformed",
+      "primary_phase": "semantic",
+      "reject_stage": "validate",
+      "source_id": "forbid_without_input_guarantee"
+    },
+    {
+      "detail": "IR validation: goal must be a non-empty string.",
+      "failure_bucket": "structure_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/ir_goal_empty.json",
+      "primary_code": "PX_IR_GOAL_EMPTY",
+      "primary_formal_phase": "kind_type",
+      "primary_phase": "structural",
+      "reject_stage": "validate",
+      "source_id": "missing_ir_goal_fields"
+    },
+    {
+      "detail": "tq: unrecognized line outside flow: 'this is not valid torqa syntax' (line 2). See docs/TQ_AUTHOR_CHEATSHEET.md",
+      "failure_bucket": "syntax_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/malformed_garbage.tq",
+      "primary_code": "PX_TQ_UNRECOGNIZED_LINE",
+      "primary_formal_phase": null,
+      "primary_phase": null,
+      "reject_stage": "parse",
+      "source_id": "malformed_garbage_tq"
+    },
+    {
+      "detail": "Expecting property name enclosed in double quotes: line 2 column 1 (char 2)",
+      "failure_bucket": "syntax_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/malformed_json.json",
+      "primary_code": "JSONDecodeError",
+      "primary_formal_phase": null,
+      "primary_phase": null,
+      "reject_stage": "parse",
+      "source_id": "malformed_json_decode"
+    },
+    {
+      "detail": "tq: 'result' is required immediately before flow: (line 4). Fix: add e.g. `result OK` or `result Login Successful` on the previous line.",
+      "failure_bucket": "syntax_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/malformed_missing_result.tq",
+      "primary_code": "PX_TQ_MISSING_RESULT",
+      "primary_formal_phase": null,
+      "primary_phase": null,
+      "reject_stage": "parse",
+      "source_id": "malformed_missing_result_tq"
+    },
+    {
+      "detail": "Bundle IR shape invalid (TypeError): string indices must be integers, not 'str'",
+      "failure_bucket": "structure_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/preconditions_not_list.json",
+      "primary_code": "PX_PARSE_FAILED",
+      "primary_formal_phase": "syntax",
+      "primary_phase": "structural",
+      "reject_stage": "validate",
+      "source_id": "preconditions_wrong_type"
+    },
+    {
+      "detail": "IR semantics: unknown effect '__stress_unknown_effect__' at transitions[0](t_0001).",
+      "failure_bucket": "semantic_failure",
+      "group": "validation_stress",
+      "path": "examples/validation_stress/cases/semantic_unknown_effect.json",
+      "primary_code": "PX_SEM_UNKNOWN_EFFECT",
+      "primary_formal_phase": "kind_type",
+      "primary_phase": "semantic",
+      "reject_stage": "validate",
+      "source_id": "semantic_unknown_transition_effect"
+    }
+  ],
+  "summary": {
+    "accepted_count": 2,
+    "semantic_failure_count": 4,
+    "sources_total": 21,
+    "structure_failure_count": 10,
+    "syntax_failure_count": 5
+  }
+}

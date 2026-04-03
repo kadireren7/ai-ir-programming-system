@@ -1,0 +1,15 @@
+# Flagship TORQA → website demo (P25).
+# Full sign-in shape: guarded account, session + audit transitions → richer generated webapp.
+# Walkthrough: docs/FIRST_REAL_DEMO.md
+
+module demo.site
+
+intent member_signin
+requires username, password, ip_address
+forbid locked
+ensures session.created
+result Signed in
+
+flow:
+  create session
+  emit login_success

@@ -1,0 +1,14 @@
+# Validation-heavy sign-in shape: forbid + ensures + audit transition.
+# requires: primary login field first, password, ip_address for emit login_success.
+
+module demo.validation
+
+intent sign_in_validated
+requires username, password, ip_address
+forbid locked
+ensures session.created
+result Sign-in OK
+
+flow:
+  create session
+  emit login_success

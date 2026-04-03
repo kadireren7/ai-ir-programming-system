@@ -23,7 +23,7 @@ This file summarizes what is **implemented** versus **roadmap** for the current 
 - **Stable diagnostic codes** and a unified report: `src/diagnostics/` (`build_full_diagnostic_report`).
 - **AI suggest path** (optional `OPENAI_API_KEY`, OpenAI HTTP API + verifier repair loop): `src/ai/adapter.py`, `/api/ai/suggest`, CLI `ai-suggest`.
 - **Controlled IR patches** via JSON mutations: `src/control/ir_mutation_json.py`, `/api/ir/patch`, CLI `patch`.
-- **CLI** `TORQA` or `python -m src.cli.main`: `validate`, `diagnostics`, `explain`, `quality`, `strategy`, `project`, `run`, `ai-suggest`, `patch`, `preview-patch`, `check` (+ global `--json`).
+- **CLI** `torqa` / `python -m torqa` / `python -m src.cli.main`: primary **`build`** and **`project`**; **`surface`** (`.tq`/`.pxir`→JSON); **`validate`** / **`diagnostics`** (bundle `.json` only); **`demo`** (index / `verify` / `emit`); plus `run`, `guided`, `explain`, `quality`, `strategy`, `ai-suggest`, `patch`, `preview-patch`, `check`, `bundle-lint`, … (+ global **`--json`** before the subcommand).
 - **Web UI**: rate limiting, Monaco, `/api/quality`, `/api/explain`, `/api/strategy`, `/api/preview-patch`, `/api/system-health`.
 - **Platform reports**: `build_ir_quality_report`, `explain_ir_goal`, `explain_projection_strategy`, `build_generation_quality_report`, `build_patch_preview_report`, `build_system_health_report`, `build_engine_parity_report`, `build_semantic_fix_suggestions`.
 - **Rust bridge timeout**: `TORQA_RUST_TIMEOUT_SEC` (default 120s).

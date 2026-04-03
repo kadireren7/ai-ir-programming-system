@@ -1,0 +1,8 @@
+# Stress control: minimal valid surface (must parse, validate, and project).
+module stress.control
+
+intent ok_flow
+requires username, password
+result OK
+
+flow:

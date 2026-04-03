@@ -1,0 +1,20 @@
+# P31 — Canonical benchmark baseline: login + dashboard shell (product-shaped, small IR).
+#
+# Story: authenticated member signs in; session is created; login is audited (IP). UI projection
+# yields a Vite + React app with Overview / Sign in / After sign-in (dashboard shell), plus
+# server_stub when transitions exist.
+#
+# Use for token/loc benchmarks vs hand-written React: see docs/BENCHMARK_FLAGSHIP.md and
+# BENCHMARK_TASK.md in this directory.
+
+module benchmark.flagship
+
+intent login_dashboard_shell
+requires username, password, ip_address
+forbid locked
+ensures session.created
+result Welcome back
+
+flow:
+  create session
+  emit login_success

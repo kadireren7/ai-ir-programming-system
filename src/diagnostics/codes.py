@@ -22,6 +22,8 @@ PX_IR_TRANSITION_STATE = "PX_IR_TRANSITION_STATE"
 PX_IR_METADATA = "PX_IR_METADATA"
 PX_IR_EXPR = "PX_IR_EXPR"
 PX_IR_SEMANTIC_DETERMINISM = "PX_IR_SEMANTIC_DETERMINISM"
+PX_IR_CANONICAL_ORDER = "PX_IR_CANONICAL_ORDER"
+PX_IR_TRANSITION_AMBIGUOUS = "PX_IR_TRANSITION_AMBIGUOUS"
 
 # Handoff (ASCII / operator constraints)
 PX_HANDOFF = "PX_HANDOFF"
@@ -84,6 +86,10 @@ def classify_message(message: str) -> str:
         return PX_IR_METADATA
     if "Semantic determinism:" in m:
         return PX_IR_SEMANTIC_DETERMINISM
+    if "must be ascending by numeric suffix" in m or "must be ascending by transition_id" in m:
+        return PX_IR_CANONICAL_ORDER
+    if "at most one transition may go from" in m and "before" in m and "after" in m:
+        return PX_IR_TRANSITION_AMBIGUOUS
     if m.startswith("Handoff:"):
         return PX_HANDOFF
     if "unknown function" in m:

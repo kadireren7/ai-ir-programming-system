@@ -1,0 +1,12 @@
+# Minimal multi-step automation: two surface steps in order (session → audit emit).
+# Longer pipelines are modeled in IR after materialize; this is the max chain in tq_v1 flow:.
+
+module demo.automation.chain
+
+intent automation_two_step
+requires username, password, ip_address
+result Automation chain completed
+
+flow:
+  create session
+  emit login_success

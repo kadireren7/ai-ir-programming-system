@@ -1,3 +1,10 @@
+//! Structural IR validation (shape, ids, metadata.ir_version).
+//!
+//! P24: This crate path is the first **surfaced** Rust concentration for TORQA — exposed to Python
+//! via the bridge ``validate_ir`` action and ``rust_structural_validation_digest``. Python
+//! ``canonical_ir.validate_ir`` remains stricter (condition_id patterns, kinds, full metadata);
+//! do not assume parity on every edge case until deliberately aligned.
+
 use std::collections::HashSet;
 
 use crate::ir::expr::IrExpr;

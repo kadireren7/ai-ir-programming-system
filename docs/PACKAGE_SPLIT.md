@@ -4,7 +4,7 @@
 
 Monorepo today ships one installable **`torqa`** distribution.
 
-**Entry surfaces (F1):** interactive and scripting users invoke **`torqa`** or **`python -m src.cli.main`** (same entrypoint). Embedded tools import **`src.torqa_public`** (`parse_tq`, `load_bundle_from_path`, `validate_bundle`, `materialize_to_directory`, `build_generated_zip`) per the list below — not `compat.*` for new code.
+**Entry surfaces (F1):** interactive and scripting users invoke **`torqa`**, **`python -m torqa`**, or **`python -m src.cli.main`** (same entrypoint). Embedded tools import **`src.torqa_public`** (`parse_tq`, `load_bundle_from_path`, `validate_bundle`, `materialize_to_directory`, `build_generated_zip`) per the list below — not `compat.*` for new code.
 
 Long-term split:
 

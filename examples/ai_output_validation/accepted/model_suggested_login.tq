@@ -1,0 +1,11 @@
+# Simulated successful AI-authored surface: satisfies tq_v1 (password + result + flow).
+
+module examples.ai_output.accepted
+
+intent model_suggested_login
+requires username, password, ip_address
+result Login accepted by validator
+
+flow:
+  create session
+  emit login_success

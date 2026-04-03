@@ -1,0 +1,8 @@
+# Benchmark: conditional logic — region + plan_tier as branch inputs (minimal surface).
+module benchmark.conditional
+
+intent branchy_flow
+requires username, password, region, plan_tier
+result Routed
+
+flow:

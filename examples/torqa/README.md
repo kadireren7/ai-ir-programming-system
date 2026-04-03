@@ -16,7 +16,7 @@ These files are **canonical surface** examples: one spelling, one shape per conc
 - `ir_goal.result` → `"OK"` (from `result OK`; no transition steps).
 - `ir_goal.metadata.source_map` → `surface: "tq_v1"` only (no `tq_module`).
 
-**Starter copies:** `examples/torqa/templates/minimal.tq` and `login_flow.tq`. One-page reminders: `docs/TQ_AUTHOR_CHEATSHEET.md`.
+**Starter copies:** `examples/torqa/templates/` (`minimal.tq`, `minimal_form.tq`, `session_only.tq`, `guarded_session.tq`, `login_flow.tq`, `validation_rich_login.tq`). One-page reminders: `docs/TQ_AUTHOR_CHEATSHEET.md`.
 
 ## `canonical_session_flow.tq`
 

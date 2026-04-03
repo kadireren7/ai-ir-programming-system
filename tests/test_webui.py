@@ -25,10 +25,69 @@ def test_api_health(client):
     assert "package_version" in data
 
 
-def test_index_html(client):
+def test_website_homepage_p36(client):
     r = client.get("/")
     assert r.status_code == 200
-    assert b"TORQA Console" in r.content
+    assert b"data-torqa-surface=\"website\"" in r.content
+    assert b"site-benchmark-root" in r.content
+    assert b"id=\"site-first-run\"" in r.content
+    assert b"id=\"site-what-is\"" in r.content
+    assert b"site-theme-toggle" in r.content
+    assert b"/console" in r.content
+
+
+def test_web_console_page_p36(client):
+    r = client.get("/console")
+    assert r.status_code == 200
+    assert b"diagnostics-verdict-strip" in r.content
+    assert b"side-demo-benchmark" in r.content
+    assert b"benchmark_panel.js" in r.content
+    assert b"data-torqa-surface=\"web-console\"" in r.content
+    assert b"btn-demo-flagship-tq" in r.content
+    assert b"validation-banner" in r.content
+    assert b"btn-theme-toggle" in r.content
+    assert b"console-first-run-overlay" in r.content
+    assert b"btn-console-first-run-sample" in r.content
+
+
+def test_desktop_page_demo_controls(client):
+    r = client.get("/desktop")
+    assert r.status_code == 200
+    assert b"desk-diagnostics-verdict" in r.content
+    assert b"benchmark_panel.js" in r.content
+    assert b"btn-desk-flagship" in r.content
+    assert b"btn-desk-minimal-sample" in r.content
+    assert b"btn-validate" in r.content
+    assert b"btn-desk-first-run-sample" in r.content
+    assert b"btn-desk-first-run-demo" in r.content
+    assert b"desk-demo-metrics" in r.content
+    assert b"desk-gate-summary" in r.content
+
+
+def test_api_demo_flagship_tq(client):
+    r = client.get("/api/demo/flagship-tq")
+    assert r.status_code == 200
+    data = r.json()
+    assert data.get("name") == "app.tq"
+    assert "source" in data
+    assert "flow:" in data["source"]
+
+
+def test_api_demo_benchmark_report(client):
+    r = client.get("/api/demo/benchmark-report")
+    assert r.status_code == 200
+    data = r.json()
+    assert data.get("ok") is True
+    assert data["report"].get("metrics")
+
+
+def test_api_demo_gate_proof_report(client):
+    r = client.get("/api/demo/gate-proof-report")
+    assert r.status_code == 200
+    data = r.json()
+    assert data.get("ok") is True
+    s = data["report"]["summary"]
+    assert s.get("mismatch_with_expectation") == 0
 
 
 def test_examples_list(client):

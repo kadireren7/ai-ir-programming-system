@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+# TODO(P18+ / Rust concentration): Prefer moving validation + execution hot paths behind a
+# stable Rust core API; keep Python as mode/routing glue and fallback only.
+
 from typing import Any, Dict, List, Tuple
 
 from src.ir.canonical_ir import (

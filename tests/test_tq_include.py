@@ -88,6 +88,30 @@ def test_multi_file_parse_tmp_workspace_passes_diagnostics(tmp_path):
     assert rep["ok"] is True, rep
 
 
+def test_two_distinct_includes_merge_in_order(tmp_path):
+    sub = tmp_path / "lib"
+    sub.mkdir()
+    (sub / "inputs.tq").write_text(
+        "requires username, password, ip_address\nforbid locked\n",
+        encoding="utf-8",
+    )
+    (sub / "ensure.tq").write_text("ensures session.created\n", encoding="utf-8")
+    main = tmp_path / "app.tq"
+    main.write_text(
+        "module demo\nintent x\ninclude \"lib/inputs.tq\"\ninclude \"lib/ensure.tq\"\n"
+        "result OK\nflow:\n  create session\n  emit login_success\n",
+        encoding="utf-8",
+    )
+    bundle = parse_tq_source(main.read_text(encoding="utf-8"), tq_path=main)
+    assert bundle["ir_goal"]["metadata"]["source_map"]["tq_includes"] == [
+        "lib/inputs.tq",
+        "lib/ensure.tq",
+    ]
+    g = ir_goal_from_json(bundle)
+    rep = build_full_diagnostic_report(g)
+    assert rep["ok"] is True, rep
+
+
 def test_include_duplicate_line_rejected(tmp_path):
     main = tmp_path / "m.tq"
     frag = tmp_path / "f.tq"

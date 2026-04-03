@@ -1,0 +1,9 @@
+# Pipeline step: map source fields to a target schema (rename, defaults, derived fields).
+# IR extension: postconditions that staged output matches target_schema; trace field_map_ref in metadata.
+module examples.data_pipelines.map
+
+intent map_fields
+requires username, password, source_record, target_schema, field_map_ref
+result Fields mapped to target shape
+
+flow:

@@ -1,0 +1,8 @@
+# Benchmark: customer onboarding — same shape as examples/workflows/customer_onboarding.tq
+module benchmark.workflow_customer_onboarding
+
+intent customer_onboarding
+requires email, password, company_name, job_title, terms_version, terms_accepted_at
+result Profile captured; next stage is provisioning review
+
+flow:

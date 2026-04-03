@@ -1,9 +1,10 @@
 """
 TORQA Desktop: Cursor-style window, folder picker, prompt → IR → write project folder.
 
-Run: ``python -m desktop`` or ``torqa-desktop`` (``pip install -e .``).
-Embedded browser (optional): ``pip install -e ".[desktop-webview]"`` — may fail on Windows
-if ``pythonnet`` cannot build; then use ``python -m desktop --tk``.
+Run: ``python -m desktop_legacy`` or ``torqa-desktop-legacy`` (``pip install -e .``).
+Embedded browser (optional): on Linux/macOS ``pip install -e ".[desktop-webview]"`` pulls
+``pywebview``. On Windows that extra skips ``pywebview`` (avoids ``pythonnet`` wheel builds);
+use ``python -m desktop_legacy --tk`` or install ``pythonnet``/``pywebview`` manually if you have wheels.
 
 **Paths:** On Windows, ``filedialog`` returns drive paths like ``C:/Users/...``; materialize
 resolves with ``Path.resolve()`` and writes under ``generated_out`` (see ``docs/TORQA_NIHAI_VISION_ROADMAP.md`` F3.2).
@@ -71,13 +72,13 @@ class DesktopApi:
         return None
 
     def write_flow_project(self, workspace: str, ir_bundle_json: str) -> Dict[str, Any]:
-        from desktop.workspace_io import write_flow_project_json_str
+        from desktop_legacy.workspace_io import write_flow_project_json_str
 
         return write_flow_project_json_str(workspace, ir_bundle_json)
 
     def materialize_project(self, workspace: str, ir_bundle_json: str) -> Dict[str, Any]:
         """Validate IR and write projection tree under ``<workspace>/generated_out`` (``torqa project``)."""
-        from desktop.workspace_io import materialize_bundle_json_str
+        from desktop_legacy.workspace_io import materialize_bundle_json_str
 
         return materialize_bundle_json_str(workspace, ir_bundle_json, engine_mode="python_only")
 
@@ -117,7 +118,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.tk:
-        from desktop.tk_shell import run_tk_desktop
+        from desktop_legacy.tk_shell import run_tk_desktop
 
         run_tk_desktop()
         return
@@ -127,11 +128,11 @@ def main() -> None:
     except ImportError as ex:
         print(
             "pywebview yok; Tkinter moduna geçiliyor. Kurulum: pip install -e .  "
-            'İsteğe bağlı gömülü tarayıcı: pip install -e ".[desktop-webview]" '
-            "(Windows'ta pythonnet derlemesi sık başarısız; o zaman --tk kullanın.)",
+            "Linux/macOS: pip install -e \".[desktop-webview]\".  "
+            "Windows: --tk kullanın veya önce pip install pythonnet --only-binary :all: sonra pip install pywebview.",
             file=sys.stderr,
         )
-        from desktop.tk_shell import run_tk_desktop
+        from desktop_legacy.tk_shell import run_tk_desktop
 
         run_tk_desktop()
         return
@@ -140,7 +141,7 @@ def main() -> None:
         _run_pywebview_desktop()
     except Exception as ex:
         print(f"pywebview başlatılamadı ({ex}); Tkinter modu kullanılıyor.", file=sys.stderr)
-        from desktop.tk_shell import run_tk_desktop
+        from desktop_legacy.tk_shell import run_tk_desktop
 
         run_tk_desktop()
 

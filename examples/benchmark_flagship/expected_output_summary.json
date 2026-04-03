@@ -1,0 +1,24 @@
+{
+  "benchmark_id": "p31_login_dashboard_shell_v1",
+  "schema_version": 1,
+  "source_tq": "examples/benchmark_flagship/app.tq",
+  "ir_goal": "LoginDashboardShell",
+  "module": "benchmark.flagship",
+  "validation_must_pass": true,
+  "required_webapp_paths": [
+    "generated/webapp/package.json",
+    "generated/webapp/vite.config.ts",
+    "generated/webapp/index.html",
+    "generated/webapp/README.md",
+    "generated/webapp/src/main.tsx",
+    "generated/webapp/src/App.tsx",
+    "generated/webapp/src/pages/LandingPage.tsx",
+    "generated/webapp/src/pages/LoginPage.tsx",
+    "generated/webapp/src/pages/DashboardPage.tsx",
+    "generated/webapp/src/styles.css"
+  ],
+  "required_when_transitions_non_empty": [
+    "generated/webapp/src/server_stub.ts"
+  ],
+  "notes": "Paths are relative to materialize root. Aligns with WEBAPP_CORE_RELATIVE_PATHS + server_stub when flow has transitions (P21)."
+}

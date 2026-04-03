@@ -1,0 +1,9 @@
+# Template: intake / contact form — multiple required fields before confirmation.
+# Map username/password to your auth story or treat as internal field names; add email, subject in IR.
+module examples.workflows.intake
+
+intent form_intake
+requires username, password, email, subject, body
+result Submission accepted
+
+flow:

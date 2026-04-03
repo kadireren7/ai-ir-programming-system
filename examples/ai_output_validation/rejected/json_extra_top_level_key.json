@@ -1,0 +1,40 @@
+{
+  "ir_goal": {
+    "goal": "ModelSuggestedGoal",
+    "inputs": [
+      { "name": "username", "type": "text" },
+      { "name": "password", "type": "text" }
+    ],
+    "preconditions": [
+      {
+        "condition_id": "c_req_0001",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "exists",
+          "arguments": [{ "type": "identifier", "name": "username" }]
+        }
+      },
+      {
+        "condition_id": "c_req_0002",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "exists",
+          "arguments": [{ "type": "identifier", "name": "password" }]
+        }
+      }
+    ],
+    "forbids": [],
+    "transitions": [],
+    "postconditions": [],
+    "result": "OK",
+    "metadata": {
+      "ir_version": "1.4",
+      "source": "ai_simulation",
+      "canonical_language": "english",
+      "source_map": { "available": true, "prototype_only": true, "surface": "synthetic_json" }
+    }
+  },
+  "model_note_do_not_merge": "Extra top-level keys are rejected by the bundle envelope."
+}

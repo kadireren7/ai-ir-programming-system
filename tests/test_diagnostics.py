@@ -18,6 +18,8 @@ def test_full_report_flags_duplicate_example():
     g = ir_goal_from_json(raw)
     assert validate_ir(g)
     rep = build_full_diagnostic_report(g)
+    assert "summary" in rep
+    assert rep["summary"]["validation_ok"] is False
     assert rep["ok"] is False
     codes = {i["code"] for i in rep["issues"]}
     assert PX_IR_CONDITION_ID_COLLISION in codes

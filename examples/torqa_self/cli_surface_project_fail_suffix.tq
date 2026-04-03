@@ -8,7 +8,7 @@
 module torqa.self.cli_surface_project_fail_suffix
 
 intent surface_project_fail_hints
-requires username, password, ip_address, surface_fail_surface_cmd, surface_fail_packages_doc, surface_fail_language_cmd
+requires username, password, ip_address, surface_fail_surface_cmd, surface_fail_packages_doc, surface_fail_language_cmd, surface_fail_first_real_demo
 
 result OK
 

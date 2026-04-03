@@ -1,0 +1,2 @@
+# Reusable fragment: session postcondition (include after requires / forbid blocks).
+ensures session.created

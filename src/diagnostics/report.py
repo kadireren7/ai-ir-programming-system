@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+# TODO(P18+ / Rust concentration): Structural + policy checks that are pure over IR may move to
+# Rust; Python remains orchestration, hint attachment, and compatibility reporting.
+
 from typing import Any, Dict, List, Optional
 
 from src.diagnostics import codes as diag_codes
@@ -12,6 +15,7 @@ from src.ir.canonical_ir import (
 )
 from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 
+from src.diagnostics.summary import summarize_diagnostic_report
 from src.diagnostics.user_hints import augment_issue
 
 
@@ -53,12 +57,14 @@ def build_full_diagnostic_report(
     issues = [augment_issue(i) for i in issues]
     warnings = [augment_issue(i) for i in warnings]
 
-    return {
+    rep = {
         "ok": ok,
         "issues": issues,
         "warnings": warnings,
         "semantic_report": semantic,
     }
+    rep["summary"] = summarize_diagnostic_report(rep)
+    return rep
 
 
 def build_ir_shape_error_report(exc: BaseException) -> Dict[str, Any]:
@@ -75,9 +81,11 @@ def build_ir_shape_error_report(exc: BaseException) -> Dict[str, Any]:
             "message": f"Bundle IR shape invalid ({type(exc).__name__}): {exc}",
         }
     )
-    return {
+    rep = {
         "ok": False,
         "issues": [issue],
         "warnings": [],
         "semantic_report": {"errors": [], "warnings": []},
     }
+    rep["summary"] = summarize_diagnostic_report(rep)
+    return rep

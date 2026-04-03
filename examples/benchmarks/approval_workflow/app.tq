@@ -1,0 +1,8 @@
+# Benchmark: approval workflow — minimal surface; request_id models the pending request handle.
+module benchmark.approval
+
+intent approval_request
+requires username, password, request_id
+result DecisionComplete
+
+flow:

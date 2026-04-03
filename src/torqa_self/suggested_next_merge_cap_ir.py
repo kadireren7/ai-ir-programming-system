@@ -3,14 +3,15 @@ Behavior policy for ``suggested_next``: merge list cap + human CLI display cap (
 
 Source: ``examples/torqa_self/cli_suggested_next_merge_cap.tq`` → committed bundle.
 Inputs after ``username`` / ``password`` / ``ip_address``:
-  index 3 — ``sn_merge_cap_*`` → max items in merged lists (CLI JSON, web, project).
-  index 4 — ``sn_display_cap_*`` → max lines under stderr "Next:" for some human-mode paths.
+  index 3 — ``sn_merge_cap_<N>`` → max items in merged lists (``N`` parsed from slug; P26).
+  index 4 — ``sn_display_cap_<N>`` → max lines under stderr "Next:" for some human-mode paths.
 
 Which hint strings are chosen stays elsewhere; these knobs only bound counts / presentation.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -26,18 +27,19 @@ _DISPLAY_SLUG_INDEX = _CORE_INPUTS + 1
 _DEFAULT_MERGE_CAP = 10
 _DEFAULT_DISPLAY_CAP = 6
 
-_MERGE_CAP_BY_SLUG = {
-    "sn_merge_cap_6": 6,
-    "sn_merge_cap_8": 8,
-    "sn_merge_cap_10": 10,
-    "sn_merge_cap_12": 12,
-}
+_MERGE_CAP_RE = re.compile(r"^sn_merge_cap_(\d+)$")
+_DISPLAY_CAP_RE = re.compile(r"^sn_display_cap_(\d+)$")
 
-_DISPLAY_CAP_BY_SLUG = {
-    "sn_display_cap_4": 4,
-    "sn_display_cap_6": 6,
-    "sn_display_cap_8": 8,
-}
+
+def _positive_int_from_slug(slug: str, pattern: re.Pattern[str], default: int) -> int:
+    m = pattern.match((slug or "").strip())
+    if not m:
+        return default
+    try:
+        n = int(m.group(1))
+        return n if n > 0 else default
+    except ValueError:
+        return default
 
 
 def suggested_next_merge_cap(*, bundle_path: Optional[Path] = None) -> int:
@@ -54,10 +56,7 @@ def suggested_next_merge_cap(*, bundle_path: Optional[Path] = None) -> int:
     if len(names) <= _MERGE_SLUG_INDEX:
         return _DEFAULT_MERGE_CAP
     slug = names[_MERGE_SLUG_INDEX]
-    cap = _MERGE_CAP_BY_SLUG.get(slug)
-    if cap is None:
-        return _DEFAULT_MERGE_CAP
-    return cap
+    return _positive_int_from_slug(slug, _MERGE_CAP_RE, _DEFAULT_MERGE_CAP)
 
 
 def suggested_next_display_cap(*, bundle_path: Optional[Path] = None) -> int:
@@ -74,7 +73,4 @@ def suggested_next_display_cap(*, bundle_path: Optional[Path] = None) -> int:
     if len(names) <= _DISPLAY_SLUG_INDEX:
         return _DEFAULT_DISPLAY_CAP
     slug = names[_DISPLAY_SLUG_INDEX]
-    cap = _DISPLAY_CAP_BY_SLUG.get(slug)
-    if cap is None:
-        return _DEFAULT_DISPLAY_CAP
-    return cap
+    return _positive_int_from_slug(slug, _DISPLAY_CAP_RE, _DEFAULT_DISPLAY_CAP)

@@ -1,5 +1,7 @@
 """
-Run the TORQA web console: ``python -m webui`` or ``torqa-console``.
+Run the TORQA web server: ``python -m webui`` or ``torqa-console``.
+
+Serves ``/`` (product site), ``/console`` (IR lab), ``/desktop`` (desktop webview shell), and JSON APIs.
 """
 
 from __future__ import annotations
@@ -11,7 +13,7 @@ import os
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="torqa-console",
-        description="TORQA web console (FastAPI + static UI).",
+        description="TORQA web: product site + /console IR lab + APIs (FastAPI + static).",
     )
     parser.add_argument(
         "--host",

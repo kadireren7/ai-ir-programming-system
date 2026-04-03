@@ -1,0 +1,148 @@
+{
+  "ir_goal": {
+    "goal": "ProjectionStubPathsPolicy",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "text"
+      },
+      {
+        "name": "password",
+        "type": "text"
+      },
+      {
+        "name": "ip_address",
+        "type": "text"
+      }
+    ],
+    "preconditions": [
+      {
+        "condition_id": "c_req_0001",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "exists",
+          "arguments": [
+            {
+              "type": "identifier",
+              "name": "username"
+            }
+          ]
+        }
+      },
+      {
+        "condition_id": "c_req_0002",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "exists",
+          "arguments": [
+            {
+              "type": "identifier",
+              "name": "password"
+            }
+          ]
+        }
+      },
+      {
+        "condition_id": "c_req_0003",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "exists",
+          "arguments": [
+            {
+              "type": "identifier",
+              "name": "ip_address"
+            }
+          ]
+        }
+      },
+      {
+        "condition_id": "c_req_0004",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "verify_username",
+          "arguments": [
+            {
+              "type": "identifier",
+              "name": "username"
+            }
+          ]
+        }
+      },
+      {
+        "condition_id": "c_req_0005",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "verify_password",
+          "arguments": [
+            {
+              "type": "identifier",
+              "name": "username"
+            },
+            {
+              "type": "identifier",
+              "name": "password"
+            }
+          ]
+        }
+      }
+    ],
+    "forbids": [],
+    "transitions": [
+      {
+        "transition_id": "t_0001",
+        "effect_name": "start_session",
+        "arguments": [
+          {
+            "type": "identifier",
+            "name": "username"
+          }
+        ],
+        "from_state": "before",
+        "to_state": "after"
+      },
+      {
+        "transition_id": "t_0002",
+        "effect_name": "log_successful_login",
+        "arguments": [
+          {
+            "type": "identifier",
+            "name": "username"
+          },
+          {
+            "type": "identifier",
+            "name": "ip_address"
+          }
+        ],
+        "from_state": "after",
+        "to_state": "after"
+      }
+    ],
+    "postconditions": [],
+    "result": "OK",
+    "metadata": {
+      "ir_version": "1.4",
+      "source": "python_prototype",
+      "canonical_language": "english",
+      "source_map": {
+        "available": true,
+        "prototype_only": true,
+        "surface": "tq_v1",
+        "tq_module": "torqa.projection.stub_paths_policy",
+        "projection_stub_paths": {
+          "cpp": "generated/cpp/main.cpp",
+          "go": "generated/go/main.go",
+          "kotlin": "generated/kotlin/Main.kt",
+          "python": "generated/python/main.py",
+          "rust": "generated/rust/main.rs",
+          "sql": "generated/sql/schema.sql",
+          "typescript": "generated/typescript/index.ts"
+        }
+      }
+    }
+  }
+}

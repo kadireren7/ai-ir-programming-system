@@ -1,0 +1,10 @@
+# Template: approval workflow (pending → approve/reject semantics in IR later).
+# Extend: add forbids/ensures, transitions, and flow: steps when your projection needs them.
+module examples.workflows.approval
+
+intent approval_decision
+requires username, password, request_id, approver_id
+forbid locked
+result Decision recorded
+
+flow:

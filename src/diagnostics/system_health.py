@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from src.bridge.rust_structural_validation import rust_structural_validation_digest
 from src.codegen.generation_quality import build_generation_quality_report
 from src.diagnostics.report import build_full_diagnostic_report
 from src.execution.engine_routing import run_rust_pipeline_with_fallback
@@ -57,6 +58,9 @@ def build_system_health_report(
         "ir_summary": {
             "goal": ir_goal.goal,
             "fingerprint": compute_ir_fingerprint(ir_goal),
+        },
+        "rust_core": {
+            "structural_validation": rust_structural_validation_digest(ir_goal),
         },
         "diagnostics": diagnostics,
         "ir_quality": quality,

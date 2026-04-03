@@ -1,0 +1,9 @@
+# Minimal “form-shaped” flow: collect credentials in requires, no effects in flow: yet.
+# IR still gets standard preconditions (exists, verify_username, verify_password).
+# Next step: add   create session   under flow: (see session_only.tq or login_flow.tq).
+
+intent form_capture
+requires username, password
+result OK
+
+flow:

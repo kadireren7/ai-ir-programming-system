@@ -1,0 +1,9 @@
+# Template: decision tree / branching — discrete inputs drive different paths in IR.
+# Extend: preconditions and transitions per branch; flow: only allows login-oriented steps today.
+module examples.workflows.decision_tree
+
+intent routed_decision
+requires username, password, region_code, plan_tier
+result Path selected
+
+flow:

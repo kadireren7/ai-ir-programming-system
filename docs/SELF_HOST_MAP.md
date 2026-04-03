@@ -25,7 +25,8 @@ Emits `single_flow`, `group_blurbs`, and `entries[]` (paths, group, role, primar
 | **Onboarding** (`cli_onboarding`) | First `suggested_next` lines in many merges | `user_hints`, CLI, Web | Yes (hint lists) |
 | **Surface/project fail suffix** (`cli_surface_project_fail_suffix`) | Extra lines after onboarding for surface/project errors | `user_hints` | Yes |
 | **Report line order** (`cli_report_suggested_next_order`) | Order for scanning `report_next_*` slugs | `suggested_next_from_report` | Indirectly (JSON `suggested_next`) |
-| **Merge cap + display cap** (`cli_suggested_next_merge_cap`) | Max merged list length; human `Next:` line count on `.tq` parse errors | `user_hints`, `cmd_surface` stderr | Yes (truncation) |
+| **Validate open hints** (`cli_validate_open_hints`, P26) | Static tails when `validate` gets non-JSON / bad JSON / non-object root | `_open_json_bundle_file` | Indirectly (JSON `suggested_next`) |
+| **Merge cap + display cap** (`cli_suggested_next_merge_cap`) | Max merged list length; human `Next:` line count on `.tq` parse errors; numeric suffix parsed from slug (P26) | `user_hints`, `cmd_surface` stderr | Yes (truncation) |
 | **Merge order + secondary order** (`cli_suggested_next_merge_order`) | Onboarding vs context first; optional sem/surface tie-break | `user_hints` | Indirectly |
 | **Language reference taxonomy** | Taxonomy lists in language payload | `language_reference_payload` | If they run `torqa language` |
 | **Layered authoring passes** | Authoring pass list | `language_reference_payload` | `torqa language` |
@@ -39,7 +40,7 @@ Emits `single_flow`, `group_blurbs`, and `entries[]` (paths, group, role, primar
 
 | Group | Members | Idea |
 |-------|---------|------|
-| **Guidance** | onboarding, surface_fail_suffix, report_order | *What* to suggest and *which order* to scan report lines |
+| **Guidance** | onboarding, surface_fail_suffix, report_order, validate_open_hints | *What* to suggest, report scan order, validate open-file tails |
 | **Limits** | merge_cap (incl. display cap) | *How many* lines to keep or print |
 | **Ordering** | merge_order (incl. secondary report order) | *Which block first* and small tie-breaks among selected lines |
 | **Language reference** | taxonomy, layered_passes, rules, condition_patterns, prose_refs | `torqa language` reference document |
@@ -49,6 +50,16 @@ Emits `single_flow`, `group_blurbs`, and `entries[]` (paths, group, role, primar
 ## 3. Naming (stability)
 
 Historical **P11–P16.1** file names and **slug** identifiers in bundles are **stable** (drift tests, downstream notes). P17 adds **documentation and catalog labels only** — no renames of `.tq` / `.json` / slugs in this priority.
+
+---
+
+## P17.1 stability lock
+
+- **No renaming** of committed `.tq` files, bundle JSON names, or IR input slugs without an intentional migration and full drift regeneration.
+- **No new catalog groups** (`guidance`, `limits`, `ordering`, `language_reference` are frozen) without a **new roadmap phase (P18+)**.
+- **No new registry rows** in `SELF_HOST_BUNDLE_PAIRS` without the same — the catalog is a **read-only product surface** for shipped structure.
+- **Runtime:** `self_host_catalog()` enforces pair/meta length alignment and rejects unknown group ids (`RuntimeError` with P17.1 messages).
+- **Changes** to this layer require an explicit priority / changelog entry, not drive-by edits.
 
 ---
 

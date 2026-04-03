@@ -1,0 +1,23 @@
+# P28 — Default multi-language stub file paths for projection (TORQA-authored policy).
+# Parsed into ir_goal.metadata.source_map.projection_stub_paths; codegen merges with per-flow overrides.
+# Regenerate bundle:
+#   torqa surface examples/torqa/projection_stub_paths_policy.tq --out examples/torqa/projection_stub_paths_policy_bundle.json
+
+module torqa.projection.stub_paths_policy
+
+intent projection_stub_paths_policy
+requires username, password, ip_address
+
+stub_path rust generated/rust/main.rs
+stub_path python generated/python/main.py
+stub_path sql generated/sql/schema.sql
+stub_path typescript generated/typescript/index.ts
+stub_path go generated/go/main.go
+stub_path kotlin generated/kotlin/Main.kt
+stub_path cpp generated/cpp/main.cpp
+
+result OK
+
+flow:
+  create session
+  emit login_success

@@ -1,6 +1,6 @@
 # Quick Start (canonical)
 
-**Goal:** install once, run one command, see generated output. **Time:** about 5 minutes if Python is already set up.
+**Goal:** install once, run one command with the **TORQA** CLI, see generated output. **Time:** about 5 minutes if Python is already set up.
 
 ## 0. Prerequisites
 
@@ -39,9 +39,12 @@ Exit code `0` and `"ok": true` in JSON means the IR bundle shape checks passed.
 
 | Step | Where |
 |------|--------|
-| First **.tq** edits | Copy [`examples/torqa/templates/minimal.tq`](../examples/torqa/templates/minimal.tq); see [templates README](../examples/torqa/templates/README.md) |
+| **Public flagship trial (command index)** | Run `torqa demo` (repo root) then follow the printout — [FLAGSHIP_DEMO.md](FLAGSHIP_DEMO.md) · [`examples/benchmark_flagship/`](../examples/benchmark_flagship/) |
+| **Flagship `.tq` → website** | [FIRST_REAL_DEMO.md](FIRST_REAL_DEMO.md) · [`examples/torqa_demo_site/app.tq`](../examples/torqa_demo_site/app.tq) |
+| First **.tq** edits | Start from [`examples/torqa/templates/`](../examples/torqa/templates/) (`minimal.tq`, `session_only.tq`, `guarded_session.tq`, `login_flow.tq`, …); see [templates README](../examples/torqa/templates/README.md) |
 | Guided **workspace** | [`examples/workspace_minimal/README.md`](../examples/workspace_minimal/README.md) |
 | First **IR package** flow | [USING_PACKAGES.md](USING_PACKAGES.md) + [`examples/package_demo/`](../examples/package_demo/) |
+| Native **desktop** (`.tq` editor, `torqa` CLI) | `torqa-desktop` after `cd desktop && npm install` — [desktop/README.md](../desktop/README.md) · legacy: `torqa-desktop-legacy` |
 | Full doc index | [DOC_MAP.md](DOC_MAP.md) |
 
 ## If `torqa` is not found

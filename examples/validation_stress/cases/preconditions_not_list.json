@@ -1,0 +1,17 @@
+{
+  "ir_goal": {
+    "goal": "PrecMustBeList",
+    "inputs": [],
+    "preconditions": "this_must_be_an_array_not_a_string",
+    "forbids": [],
+    "transitions": [],
+    "postconditions": [],
+    "result": "OK",
+    "metadata": {
+      "ir_version": "1.4",
+      "source": "python_prototype",
+      "canonical_language": "english",
+      "source_map": { "available": true, "prototype_only": true }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+# Pipeline step: normalize structured input (strings trimmed, dates/numbers coerced per schema).
+# IR extension: ordered preconditions for each normalization pass; quarantine rows that fail a step.
+module examples.data_pipelines.normalize
+
+intent normalize_input
+requires username, password, raw_record, normalization_profile
+result Normalized record ready
+
+flow:

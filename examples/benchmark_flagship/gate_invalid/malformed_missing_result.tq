@@ -1,0 +1,4 @@
+# P33: malformed surface — missing required `result` before flow:
+intent broken_missing_result
+requires username, password, ip_address
+flow:

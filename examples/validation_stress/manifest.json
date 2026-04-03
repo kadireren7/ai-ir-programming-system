@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "description": "Validation stress suite: invalid inputs must be rejected before a successful projection path.",
+  "cases": [
+    {
+      "id": "control_valid",
+      "category": "control_valid",
+      "path": "cases/control_valid.tq",
+      "expect_accepted": true,
+      "expect_reject_at": null
+    },
+    {
+      "id": "malformed_garbage_tq",
+      "category": "malformed_torqa",
+      "path": "cases/malformed_garbage.tq",
+      "expect_accepted": false,
+      "expect_reject_at": "parse"
+    },
+    {
+      "id": "malformed_missing_result_tq",
+      "category": "malformed_torqa",
+      "path": "cases/malformed_missing_result.tq",
+      "expect_accepted": false,
+      "expect_reject_at": "parse"
+    },
+    {
+      "id": "malformed_json_decode",
+      "category": "malformed_json",
+      "path": "cases/malformed_json.json",
+      "expect_accepted": false,
+      "expect_reject_at": "parse"
+    },
+    {
+      "id": "missing_ir_goal_fields",
+      "category": "missing_field",
+      "path": "cases/ir_goal_empty.json",
+      "expect_accepted": false,
+      "expect_reject_at": "validate"
+    },
+    {
+      "id": "envelope_unknown_top_level_key",
+      "category": "missing_field",
+      "path": "cases/bundle_envelope_unknown_key.json",
+      "expect_accepted": false,
+      "expect_reject_at": "validate"
+    },
+    {
+      "id": "duplicate_input_names",
+      "category": "duplicated_identifier",
+      "path": "cases/duplicate_input_names.json",
+      "expect_accepted": false,
+      "expect_reject_at": "validate"
+    },
+    {
+      "id": "duplicate_condition_id",
+      "category": "duplicated_identifier",
+      "path": "cases/duplicate_condition_id.json",
+      "expect_accepted": false,
+      "expect_reject_at": "validate"
+    },
+    {
+      "id": "semantic_unknown_transition_effect",
+      "category": "invalid_condition",
+      "path": "cases/semantic_unknown_effect.json",
+      "expect_accepted": false,
+      "expect_reject_at": "validate"
+    },
+    {
+      "id": "forbid_without_input_guarantee",
+      "category": "invalid_condition",
+      "path": "cases/forbid_without_guarantee.json",
+      "expect_accepted": false,
+      "expect_reject_at": "validate"
+    },
+    {
+      "id": "preconditions_wrong_type",
+      "category": "invalid_condition",
+      "path": "cases/preconditions_not_list.json",
+      "expect_accepted": false,
+      "expect_reject_at": "validate"
+    }
+  ]
+}

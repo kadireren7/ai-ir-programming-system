@@ -511,8 +511,44 @@ def _validate_ir_expr(expr: IRExpr, errors: List[str], path: str) -> None:
     errors.append(f"{path}: unknown IR expression class {type(expr)!r}.")
 
 
+def _ids_ascending_by_numeric_suffix(ids: List[str], *, label: str, errors: List[str]) -> None:
+    """Require list order to match strictly increasing numeric suffixes (stable wire format)."""
+    if len(ids) < 2:
+        return
+    try:
+        nums = [int(x.rsplit("_", 1)[-1]) for x in ids]
+    except ValueError:
+        return
+    if nums != sorted(nums) or len(set(nums)) != len(nums):
+        errors.append(
+            f"IR validation: {label} must be ascending by numeric suffix (deterministic order); "
+            f"reorder entries to match condition_id / transition_id sequence."
+        )
+
+
+def _validate_ir_transition_graph_unambiguous(ir_goal: IRGoal, errors: List[str]) -> None:
+    """
+    With only ``before`` / ``after`` states, more than one ``before`` → ``after`` edge leaves
+    effect order undefined for the prototype engine.
+    """
+    ba = [t for t in ir_goal.transitions if t.from_state == "before" and t.to_state == "after"]
+    if len(ba) > 1:
+        errors.append(
+            "IR validation: at most one transition may go from 'before' to 'after' "
+            f"(found {len(ba)}); merge effects or chain with an intermediate 'after' state."
+        )
+
+
 def validate_ir(ir_goal: IRGoal) -> List[str]:
-    """Return a list of integrity errors; empty means OK."""
+    """
+    Return a list of integrity errors; empty means OK.
+
+    Determinism: ``preconditions``, ``forbids``, ``postconditions``, and ``transitions`` must be
+    listed in strictly ascending numeric suffix order (``c_req_0001`` before ``c_req_0002``, etc.).
+
+    Ambiguity: at most one transition may use ``from_state`` ``before`` and ``to_state`` ``after``
+    (prototype two-state machine).
+    """
     errors: List[str] = []
 
     if not (ir_goal.goal and str(ir_goal.goal).strip()):
@@ -597,6 +633,25 @@ def validate_ir(ir_goal: IRGoal) -> List[str]:
 
     if len(trans_ids) != len(set(trans_ids)):
         errors.append("IR validation: all transition_id values must be unique.")
+
+    _ids_ascending_by_numeric_suffix(
+        [c.condition_id for c in ir_goal.preconditions],
+        label="preconditions[]",
+        errors=errors,
+    )
+    _ids_ascending_by_numeric_suffix(
+        [c.condition_id for c in ir_goal.forbids],
+        label="forbids[]",
+        errors=errors,
+    )
+    _ids_ascending_by_numeric_suffix(
+        [c.condition_id for c in ir_goal.postconditions],
+        label="postconditions[]",
+        errors=errors,
+    )
+    _ids_ascending_by_numeric_suffix(trans_ids, label="transitions[] (transition_id)", errors=errors)
+
+    _validate_ir_transition_graph_unambiguous(ir_goal, errors)
 
     for key in ("ir_version", "source", "canonical_language"):
         if key not in ir_goal.metadata:

@@ -1,0 +1,110 @@
+{
+  "report_id": "retry_stats",
+  "schema_version": 1,
+  "summary": {
+    "failure_count": 0,
+    "failure_rate": null,
+    "live_flag_requested": false,
+    "max_retries_configured": 3,
+    "mean_api_rounds_on_success": null,
+    "mean_retries_after_first_on_success": null,
+    "measurement_mode": "skipped_no_live_or_no_api_key",
+    "openai_api_key_present": false,
+    "success_count": 0,
+    "tasks_live_measured": 0,
+    "tasks_total": 7
+  },
+  "tasks": [
+    {
+      "api_rounds": null,
+      "failure_code": null,
+      "live_measured": false,
+      "max_model_rounds": 4,
+      "max_retries_configured": 3,
+      "measurement_mode": "skipped_no_live_or_no_api_key",
+      "path": "examples/benchmarks/approval_workflow/TASK.md",
+      "prompt_char_count": 643,
+      "retries_after_first": null,
+      "success": null,
+      "task_id": "approval_workflow"
+    },
+    {
+      "api_rounds": null,
+      "failure_code": null,
+      "live_measured": false,
+      "max_model_rounds": 4,
+      "max_retries_configured": 3,
+      "measurement_mode": "skipped_no_live_or_no_api_key",
+      "path": "examples/benchmarks/conditional_logic_flow/TASK.md",
+      "prompt_char_count": 632,
+      "retries_after_first": null,
+      "success": null,
+      "task_id": "conditional_logic_flow"
+    },
+    {
+      "api_rounds": null,
+      "failure_code": null,
+      "live_measured": false,
+      "max_model_rounds": 4,
+      "max_retries_configured": 3,
+      "measurement_mode": "skipped_no_live_or_no_api_key",
+      "path": "examples/benchmarks/data_transform_pipeline/TASK.md",
+      "prompt_char_count": 602,
+      "retries_after_first": null,
+      "success": null,
+      "task_id": "data_transform_pipeline"
+    },
+    {
+      "api_rounds": null,
+      "failure_code": null,
+      "live_measured": false,
+      "max_model_rounds": 4,
+      "max_retries_configured": 3,
+      "measurement_mode": "skipped_no_live_or_no_api_key",
+      "path": "examples/benchmarks/multi_step_automation/TASK.md",
+      "prompt_char_count": 589,
+      "retries_after_first": null,
+      "success": null,
+      "task_id": "multi_step_automation"
+    },
+    {
+      "api_rounds": null,
+      "failure_code": null,
+      "live_measured": false,
+      "max_model_rounds": 4,
+      "max_retries_configured": 3,
+      "measurement_mode": "skipped_no_live_or_no_api_key",
+      "path": "examples/benchmarks/simple_form_flow/TASK.md",
+      "prompt_char_count": 633,
+      "retries_after_first": null,
+      "success": null,
+      "task_id": "simple_form_flow"
+    },
+    {
+      "api_rounds": null,
+      "failure_code": null,
+      "live_measured": false,
+      "max_model_rounds": 4,
+      "max_retries_configured": 3,
+      "measurement_mode": "skipped_no_live_or_no_api_key",
+      "path": "examples/benchmarks/workflow_customer_onboarding/TASK.md",
+      "prompt_char_count": 618,
+      "retries_after_first": null,
+      "success": null,
+      "task_id": "workflow_customer_onboarding"
+    },
+    {
+      "api_rounds": null,
+      "failure_code": null,
+      "live_measured": false,
+      "max_model_rounds": 4,
+      "max_retries_configured": 3,
+      "measurement_mode": "skipped_no_live_or_no_api_key",
+      "path": "examples/benchmarks/workflow_document_approval/TASK.md",
+      "prompt_char_count": 583,
+      "retries_after_first": null,
+      "success": null,
+      "task_id": "workflow_document_approval"
+    }
+  ]
+}

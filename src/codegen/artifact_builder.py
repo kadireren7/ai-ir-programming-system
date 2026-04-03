@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json
+from html import escape as html_escape
 from typing import Any, Dict, List, Sequence, Tuple
 
 from src.ir.canonical_ir import IRGoal
 from src.projection.projection_strategy import ProjectionPlan, ProjectionTarget
+from src.projection.stub_paths_layout import effective_stub_paths_for_goal
 from src.projection.extra_artifacts import merge_extra_projection_artifacts
 from src.codegen.ir_to_projection import (
     ir_goal_cpp_projection,
@@ -25,6 +28,87 @@ WEBSITE_GENERATION_PROFILE: Dict[str, bool] = {
     "supports_previewable_structure": True,
 }
 
+# P21 — Webapp projection audit (deterministic Vite + React under ``generated/webapp/``).
+# Always emitted: package.json, tsconfig.json, vite.config.ts, index.html, README.md,
+# src/main.tsx (entry), src/App.tsx (shell + section nav), src/vite-env.d.ts, src/styles.css,
+# src/pages/LandingPage.tsx, LoginPage.tsx, DashboardPage.tsx.
+# Optional: src/server_stub.ts when ``IRGoal.transitions`` is non-empty.
+# Prior gaps: README cited an internal threshold label; index title ignored the flow name;
+# App.tsx stacked all sections (no shell); page copy read as generic placeholders.
+WEBAPP_CORE_RELATIVE_PATHS: Tuple[str, ...] = (
+    "generated/webapp/package.json",
+    "generated/webapp/tsconfig.json",
+    "generated/webapp/vite.config.ts",
+    "generated/webapp/index.html",
+    "generated/webapp/README.md",
+    "generated/webapp/src/main.tsx",
+    "generated/webapp/src/App.tsx",
+    "generated/webapp/src/pages/LandingPage.tsx",
+    "generated/webapp/src/pages/LoginPage.tsx",
+    "generated/webapp/src/pages/DashboardPage.tsx",
+    "generated/webapp/src/styles.css",
+    "generated/webapp/src/vite-env.d.ts",
+)
+
+_WEBAPP_APP_TSX = """import React, { useState } from "react";
+import { LandingPage } from "./pages/LandingPage";
+import { LoginPage } from "./pages/LoginPage";
+import { DashboardPage } from "./pages/DashboardPage";
+
+type DemoView = "overview" | "login" | "dashboard";
+
+export function App() {
+  const flowName = __FLOW__;
+  const flowResult = __FLOW_RESULT__;
+  const [view, setView] = useState<DemoView>("overview");
+
+  return (
+    <div className="app-root">
+      <header className="app-header">
+        <div className="app-header-top">
+          <span className="app-badge" aria-hidden="true">TORQA</span>
+          <span className="app-header-meta">Generated preview</span>
+        </div>
+        <h1>{flowName}</h1>
+        <p className="app-tagline">Local UI shell from your validated TORQA intent — not wired to a real backend.</p>
+      </header>
+      <nav className="app-nav" aria-label="Demo sections">
+        <button
+          type="button"
+          className={view === "overview" ? "nav-item active" : "nav-item"}
+          onClick={() => setView("overview")}
+        >
+          Overview
+        </button>
+        <button
+          type="button"
+          className={view === "login" ? "nav-item active" : "nav-item"}
+          onClick={() => setView("login")}
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          className={view === "dashboard" ? "nav-item active" : "nav-item"}
+          onClick={() => setView("dashboard")}
+        >
+          After sign-in
+        </button>
+      </nav>
+      <main className="app-main">
+        {view === "overview" && <LandingPage flowName={flowName} />}
+        {view === "login" && <LoginPage />}
+        {view === "dashboard" && <DashboardPage flowResult={flowResult} />}
+      </main>
+      <footer className="app-footer-bar">
+        <span className="footer-brand">TORQA</span>
+        <span className="footer-note">Projection preview · run <code className="footer-code">npm run dev</code> in this folder</span>
+      </footer>
+    </div>
+  );
+}
+"""
+
 
 def _all_targets(plan: ProjectionPlan) -> List[ProjectionTarget]:
     return [plan.primary_target] + list(plan.secondary_targets)
@@ -44,7 +128,7 @@ def _website_candidate_targets(plan: ProjectionPlan) -> List[ProjectionTarget]:
 
 def _fallback_website_target(goal: IRGoal) -> ProjectionTarget:
     reasons = [
-        "V6.2 threshold requires a minimal website-capable artifact set.",
+        "Projection emits a minimal website-capable demo bundle under generated/webapp/.",
         "No explicit TypeScript frontend target selected by strategy; fallback website target enabled.",
     ]
     if len(goal.inputs) >= 3:
@@ -68,20 +152,7 @@ def build_generation_plan(ir_goal: IRGoal, projection_plan: ProjectionPlan) -> D
 
     website_ready = bool(ir_goal.goal and ir_goal.result is not None and len(ir_goal.inputs) > 0)
     frontend_target = website_targets[0]
-    website_files = [
-        "generated/webapp/package.json",
-        "generated/webapp/tsconfig.json",
-        "generated/webapp/vite.config.ts",
-        "generated/webapp/index.html",
-        "generated/webapp/README.md",
-        "generated/webapp/src/main.tsx",
-        "generated/webapp/src/App.tsx",
-        "generated/webapp/src/pages/LandingPage.tsx",
-        "generated/webapp/src/pages/LoginPage.tsx",
-        "generated/webapp/src/pages/DashboardPage.tsx",
-        "generated/webapp/src/styles.css",
-        "generated/webapp/src/vite-env.d.ts",
-    ]
+    website_files = list(WEBAPP_CORE_RELATIVE_PATHS)
     if len(ir_goal.transitions) > 0:
         website_files.append("generated/webapp/src/server_stub.ts")
 
@@ -132,39 +203,34 @@ def build_generation_plan(ir_goal: IRGoal, projection_plan: ProjectionPlan) -> D
 def generate_stub_artifact(goal: IRGoal, target: ProjectionTarget) -> Dict[str, Any]:
     lang = target.language.lower()
     purpose = target.purpose
+    paths = effective_stub_paths_for_goal(goal)
     if lang == "rust":
-        files = [
-            (
-                "generated/rust/main.rs",
-                ir_goal_rust_projection(goal),
-            )
-        ]
+        content = ir_goal_rust_projection(goal)
+        stub_key = "rust"
     elif lang == "python":
-        files = [
-            (
-                "generated/python/main.py",
-                ir_goal_python_projection(goal),
-            )
-        ]
+        content = ir_goal_python_projection(goal)
+        stub_key = "python"
     elif lang == "sql":
-        files = [("generated/sql/schema.sql", ir_goal_sql_projection(goal))]
+        content = ir_goal_sql_projection(goal)
+        stub_key = "sql"
     elif lang == "typescript":
-        files = [
-            (
-                "generated/typescript/index.ts",
-                ir_goal_typescript_index_projection(goal),
-            )
-        ]
+        content = ir_goal_typescript_index_projection(goal)
+        stub_key = "typescript"
     elif lang == "go":
-        files = [("generated/go/main.go", ir_goal_go_projection(goal))]
+        content = ir_goal_go_projection(goal)
+        stub_key = "go"
     elif lang == "kotlin":
-        files = [("generated/kotlin/Main.kt", ir_goal_kotlin_projection(goal))]
+        content = ir_goal_kotlin_projection(goal)
+        stub_key = "kotlin"
     else:
-        files = [("generated/cpp/main.cpp", ir_goal_cpp_projection(goal))]
+        content = ir_goal_cpp_projection(goal)
+        stub_key = "cpp"
+    fn = paths.get(stub_key) or paths.get("cpp", "generated/cpp/main.cpp")
+    files = [(fn, content)]
     return {
         "target_language": lang,
         "purpose": purpose,
-        "files": [{"filename": fn, "content": content} for fn, content in files],
+        "files": [{"filename": f, "content": c} for f, c in files],
     }
 
 
@@ -172,9 +238,37 @@ def _generate_website_artifact(goal: IRGoal, plan: Dict[str, Any]) -> Dict[str, 
     goal_title = goal.goal or "Generated Website"
     page_names = [i.name for i in goal.inputs[:3]]
     form_fields = "\n".join(
-        [f"        <label>{name}<input name=\"{name}\" /></label>" for name in page_names]
-    ) or '        <label>username<input name="username" /></label>'
+        (
+            f'        <div className="field">\n'
+            f'          <label htmlFor={json.dumps(n)}>{n}</label>\n'
+            f'          <input id={json.dumps(n)} name={json.dumps(n)} '
+            f'type="{"password" if n.lower() == "password" else "text"}" />\n'
+            f"        </div>"
+        )
+        for n in page_names
+    ) or (
+        '        <div className="field">\n'
+        '          <label htmlFor="username">username</label>\n'
+        '          <input id="username" name="username" type="text" />\n'
+        "        </div>"
+    )
     has_transitions = len(goal.transitions) > 0
+    flow_literal = json.dumps(goal_title)
+    result_str = str(goal.result) if goal.result is not None else ""
+    flow_result_literal = json.dumps(result_str)
+    app_tsx = _WEBAPP_APP_TSX.replace("__FLOW__", flow_literal).replace("__FLOW_RESULT__", flow_result_literal)
+    index_title = html_escape(goal_title)
+    readme = (
+        f"# {goal_title} — demo webapp\n\n"
+        "This folder is produced by **TORQA** projection (Vite + React). "
+        "Use it as a local preview baseline; API and auth are not wired here.\n\n"
+        "## Run locally\n\n"
+        "```bash\n"
+        "npm install\n"
+        "npm run dev\n"
+        "```\n\n"
+        "Open the URL Vite prints (often http://localhost:5173).\n"
+    )
     files: List[Tuple[str, str]] = [
         (
             "generated/webapp/package.json",
@@ -228,12 +322,12 @@ export default defineConfig({
         ),
         (
             "generated/webapp/index.html",
-            """<!DOCTYPE html>
+            f"""<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Generated app</title>
+    <title>{index_title}</title>
   </head>
   <body>
     <div id="root"></div>
@@ -249,13 +343,7 @@ export default defineConfig({
         ),
         (
             "generated/webapp/README.md",
-            f"# {goal_title} Web App\n\n"
-            "Generated by V6.2 projection/codegen threshold.\n\n"
-            "## Run\n\n"
-            "```bash\n"
-            "npm install\n"
-            "npm run dev\n"
-            "```\n",
+            readme,
         ),
         (
             "generated/webapp/src/main.tsx",
@@ -269,29 +357,26 @@ ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
         ),
         (
             "generated/webapp/src/App.tsx",
-            f"""import React from "react";
-import {{ LandingPage }} from "./pages/LandingPage";
-import {{ LoginPage }} from "./pages/LoginPage";
-import {{ DashboardPage }} from "./pages/DashboardPage";
-
-export function App() {{
-  return (
-    <main className="app-shell">
-      <h1>{goal_title}</h1>
-      <LandingPage />
-      <LoginPage />
-      <DashboardPage />
-    </main>
-  );
-}}
-""",
+            app_tsx,
         ),
         (
             "generated/webapp/src/pages/LandingPage.tsx",
             """import React from "react";
 
-export function LandingPage() {
-  return <section><h2>Landing</h2><p>Generated landing page.</p></section>;
+export function LandingPage({ flowName }: { flowName: string }) {
+  return (
+    <section className="page" aria-labelledby="overview-title">
+      <h2 id="overview-title">Overview</h2>
+      <p>
+        This screen is <strong>projected from TORQA</strong> for the <strong>{flowName}</strong> flow.
+        Use the navigation above to step through a sign-in layout and the post-login view.
+      </p>
+      <ul className="page-list">
+        <li>Structure and copy reflect your intent spec, not hand-written React.</li>
+        <li>Forms are visual placeholders — hook them to your API when you ship.</li>
+      </ul>
+    </section>
+  );
 }
 """,
         ),
@@ -301,11 +386,11 @@ export function LandingPage() {
 
 export function LoginPage() {{
   return (
-    <section>
-      <h2>Login</h2>
+    <section className="page" aria-labelledby="login-title">
+      <h2 id="login-title">Sign in</h2>
       <form>
 {form_fields}
-        <button type="submit">Sign In</button>
+        <button type="submit">Sign in</button>
       </form>
     </section>
   );
@@ -316,17 +401,151 @@ export function LoginPage() {{
             "generated/webapp/src/pages/DashboardPage.tsx",
             """import React from "react";
 
-export function DashboardPage() {
-  return <section><h2>Dashboard</h2><p>Skeleton dashboard view.</p></section>;
+export function DashboardPage({ flowResult }: { flowResult: string }) {
+  return (
+    <section className="page page-dashboard" aria-labelledby="dash-title">
+      <h2 id="dash-title">After sign-in</h2>
+      <p className="flow-result-line">
+        Declared flow result: <strong>{flowResult || "—"}</strong>
+      </p>
+      <p className="muted">Happy-path layout from your TORQA spec; connect real session and data in product code.</p>
+    </section>
+  );
 }
 """,
         ),
         (
             "generated/webapp/src/styles.css",
-            """.app-shell { font-family: Arial, sans-serif; max-width: 900px; margin: 2rem auto; }
-section { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
-label { display: block; margin-bottom: 0.5rem; }
-input { margin-left: 0.5rem; }
+            """* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f0f4fa 0%, #e8ecf3 40%, #fff 100%);
+  color: #0f172a;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+.app-root {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 1.75rem 1.25rem 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.app-header-top {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+.app-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff;
+}
+.app-header-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.app-header h1 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.app-tagline { margin: 0; color: #475569; font-size: 0.95rem; max-width: 52ch; }
+.app-nav {
+  display: flex;
+  gap: 0.4rem;
+  margin: 1.35rem 0 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+.app-nav .nav-item {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  transition: background 0.15s, border-color 0.15s;
+}
+.app-nav .nav-item:hover {
+  background: #fff;
+  border-color: rgba(37, 99, 235, 0.35);
+}
+.app-nav .nav-item.active {
+  border-color: #2563eb;
+  background: #fff;
+  color: #1e40af;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12);
+}
+.app-main {
+  flex: 1;
+}
+.app-main .page {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+}
+.app-main .page h2 { margin-top: 0; font-size: 1.15rem; }
+.page-list { margin: 0.75rem 0 0; padding-left: 1.25rem; color: #475569; font-size: 0.9rem; }
+.page-list li { margin-bottom: 0.35rem; }
+.flow-result-line { font-size: 1rem; margin: 0 0 0.75rem; }
+.field { margin-bottom: 0.85rem; }
+.field label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.3rem; color: #334155; }
+.field input {
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  border-radius: 8px;
+  font: inherit;
+}
+.muted { color: #64748b; font-size: 0.9rem; }
+button[type="submit"] {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1.1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff;
+}
+button[type="submit"]:hover { filter: brightness(1.05); }
+.app-footer-bar {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.footer-brand {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #2563eb;
+}
+.footer-code { font-size: 0.75rem; padding: 0.1em 0.35em; background: #f1f5f9; border-radius: 4px; }
 """,
         ),
     ]

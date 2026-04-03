@@ -10,7 +10,7 @@ Cross-check with [`TORQA_NIHAI_VISION_ROADMAP.md`](TORQA_NIHAI_VISION_ROADMAP.md
 | Validate / lint | `torqa validate`, `torqa bundle-lint`, `build_full_diagnostic_report` |
 | Write generated tree | `torqa project` with `--root`, `--source`, `--out`; `src/project_materialize.py` |
 | CI webapp smoke | `scripts/ci_build_generated_webapp.py` (golden JSON → npm build) |
-| Demo emit | `torqa demo` |
+| Demo emit | `torqa demo emit` |
 
 ## Gaps closed in this iteration
 

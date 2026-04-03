@@ -1,0 +1,42 @@
+{
+  "ir_goal": {
+    "goal": "DupTransitionId",
+    "inputs": [{ "name": "username", "type": "text" }],
+    "preconditions": [
+      {
+        "condition_id": "c_req_0001",
+        "kind": "require",
+        "expr": {
+          "type": "call",
+          "name": "exists",
+          "arguments": [{ "type": "identifier", "name": "username" }]
+        }
+      }
+    ],
+    "forbids": [],
+    "transitions": [
+      {
+        "transition_id": "t_0001",
+        "effect_name": "start_session",
+        "arguments": [{ "type": "identifier", "name": "username" }],
+        "from_state": "before",
+        "to_state": "after"
+      },
+      {
+        "transition_id": "t_0001",
+        "effect_name": "start_session",
+        "arguments": [{ "type": "identifier", "name": "username" }],
+        "from_state": "after",
+        "to_state": "after"
+      }
+    ],
+    "postconditions": [],
+    "result": "OK",
+    "metadata": {
+      "ir_version": "1.4",
+      "source": "python_prototype",
+      "canonical_language": "english",
+      "source_map": { "available": true, "prototype_only": true }
+    }
+  }
+}

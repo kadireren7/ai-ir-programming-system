@@ -1,6 +1,7 @@
-# Minimal valid .tq (tq_v1): intent → requires → result → flow: (order is fixed).
-# Full rules: docs/TQ_SURFACE_MAPPING.md — one-page summary: docs/TQ_AUTHOR_CHEATSHEET.md
-# Copy this file, edit names, then: torqa surface your_file.tq   or   torqa build your_file.tq
+# Minimal valid .tq (tq_v1): intent → requires → result → flow: (fixed order; empty flow: is OK).
+# Same idea as minimal_form.tq with a shorter intent name.
+# Rules: docs/TQ_SURFACE_MAPPING.md — cheatsheet: docs/TQ_AUTHOR_CHEATSHEET.md
+# Copy, edit, then: torqa surface your_file.tq  |  torqa build your_file.tq
 
 intent demo_idle
 requires username, password

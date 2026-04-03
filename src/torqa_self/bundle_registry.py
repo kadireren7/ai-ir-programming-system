@@ -15,6 +15,23 @@ Regenerate bundles with ``torqa surface`` after editing any listed ``.tq``; see
 ``examples/torqa_self/README.md`` and ``docs/SELF_HOST_MAP.md``.
 
 Debug / demo: ``torqa --json language --self-host-catalog`` — machine-readable catalog (no new policy).
+
+---------------------------------------------------------------------------
+P17.1 stability contract (self-host lockdown)
+---------------------------------------------------------------------------
+
+- ``SELF_HOST_BUNDLE_PAIRS`` **order is stable** (drift tests and maintainer scripts depend on it).
+- ``_SELF_HOST_ENTRY_META`` must stay **1:1 aligned** with ``SELF_HOST_BUNDLE_PAIRS`` (same length,
+  same index = same .tq row). Do not insert or reorder rows without updating both tuples together.
+- **Group ids are frozen** to exactly:
+  ``guidance``, ``limits``, ``ordering``, ``language_reference`` (see ``SELF_HOST_LOCKED_GROUP_IDS``).
+  No new groups without an explicit roadmap phase (**P18+**).
+- **No new registry entries** (no extra ``( .tq , bundle )`` pairs) without an explicit priority
+  phase; **P26** added ``cli_validate_open_hints`` under the same locked **guidance** group.
+- Renaming ``.tq`` files, committed bundles, or IR input slugs remains governed by the same
+  contract as before: only with intentional migration + drift regeneration, not drive-by edits.
+
+Runtime checks: ``self_host_catalog()`` asserts pair/meta length match and rejects unknown group ids.
 """
 
 from __future__ import annotations
@@ -37,6 +54,7 @@ SELF_HOST_BUNDLE_PAIRS: Tuple[Tuple[Path, Path], ...] = (
     (_SELF / "cli_suggested_next_merge_order.tq", _SELF / "cli_suggested_next_merge_order_bundle.json"),
     (_SELF / "cli_surface_project_fail_suffix.tq", _SELF / "cli_surface_project_fail_suffix_bundle.json"),
     (_SELF / "cli_report_suggested_next_order.tq", _SELF / "cli_report_suggested_next_order_bundle.json"),
+    (_SELF / "cli_validate_open_hints.tq", _SELF / "cli_validate_open_hints_bundle.json"),
     (_SELF / "language_reference_taxonomy.tq", _SELF / "language_reference_taxonomy_bundle.json"),
     (_SELF / "layered_authoring_passes.tq", _SELF / "layered_authoring_passes_bundle.json"),
     (_SELF / "language_reference_rules_prefix.tq", _SELF / "language_reference_rules_prefix_bundle.json"),
@@ -75,6 +93,12 @@ _SELF_HOST_ENTRY_META: Tuple[Tuple[str, bool, str, str], ...] = (
         False,
         "Scan order for report_next_* lines (predicates stay in Python).",
         "src.torqa_self.report_suggested_next_ir",
+    ),
+    (
+        "guidance",
+        True,
+        "Static validate open-file suggested_next lines (wrong extension / bad JSON / non-object root).",
+        "src.torqa_self.validate_open_hints_ir, src.cli.main _open_json_bundle_file",
     ),
     (
         "language_reference",
@@ -122,6 +146,13 @@ _GROUP_BLURBS: Dict[str, str] = {
     "language_reference": "Author-facing reference payload; driven by TORQA bundles, bridged in Python.",
 }
 
+# P17.1: frozen set of catalog group ids — no new member without roadmap phase (P18+).
+SELF_HOST_LOCKED_GROUP_IDS: frozenset[str] = frozenset(
+    {"guidance", "limits", "ordering", "language_reference"}
+)
+assert SELF_HOST_LOCKED_GROUP_IDS == frozenset(_GROUP_LABELS.keys())
+assert SELF_HOST_LOCKED_GROUP_IDS == frozenset(_GROUP_BLURBS.keys())
+
 
 def self_host_bundle_pairs() -> List[Tuple[Path, Path]]:
     return list(SELF_HOST_BUNDLE_PAIRS)
@@ -133,10 +164,17 @@ def self_host_group_blurbs() -> Dict[str, str]:
 
 def self_host_catalog() -> List[Dict[str, Any]]:
     """Stable, JSON-friendly index of every self-host pair + maintainer notes (P17)."""
+    np = len(SELF_HOST_BUNDLE_PAIRS)
+    nm = len(_SELF_HOST_ENTRY_META)
+    if np != nm:
+        raise RuntimeError("P17.1 violation: registry/meta drift")
+
     rows: List[Dict[str, Any]] = []
     for (tq, bundle), (gid, user_visible, role, py_hint) in zip(
         SELF_HOST_BUNDLE_PAIRS, _SELF_HOST_ENTRY_META, strict=True
     ):
+        if gid not in _GROUP_LABELS:
+            raise RuntimeError("Unknown self-host group (P17.1 locked set)")
         try:
             tq_rel = str(tq.relative_to(_ROOT)).replace("\\", "/")
         except ValueError:
@@ -148,7 +186,7 @@ def self_host_catalog() -> List[Dict[str, Any]]:
         rows.append(
             {
                 "group": gid,
-                "group_label": _GROUP_LABELS.get(gid, gid),
+                "group_label": _GROUP_LABELS[gid],
                 "tq": tq_rel,
                 "bundle": bundle_rel,
                 "user_visible_hint_strings": user_visible,

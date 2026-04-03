@@ -59,12 +59,12 @@ Web konsolu **tarayıcı güvenliği** yüzünden bilgisayarındaki rastgele kla
 
 ```powershell
 cd C:\Users\kadir\Desktop\Project-X
-python -m desktop --tk
+python -m desktop_legacy --tk
 ```
 
-`torqa-desktop` PATH’teyse: `torqa-desktop --tk`
+`torqa-desktop-legacy` PATH’teyse: `torqa-desktop-legacy --tk`
 
-**pywebview** (gömülü pencere + web arayüzü) için: `python -m desktop` — Windows’ta `pythonnet` derlemesi sık başarısız olur; o zaman **`--tk` zorunlu** pratik çözümdür.
+**pywebview** (gömülü pencere + web arayüzü): Linux/macOS’ta `pip install -e ".[desktop-webview]"` sonra `python -m desktop_legacy`. Windows’ta bu extra `pywebview` kurmaz (kaynak `pythonnet` derlemesini önlemek için); Windows’ta pratik çözüm **`python -m desktop_legacy --tk`**. Gömülü pencere şartsa: önce `pip install pythonnet --only-binary :all:` (teker yoksa bu adım da başarısız olabilir), sonra `pip install pywebview`.
 
 1. Çalışma klasörü seçin.
 
@@ -92,7 +92,7 @@ Web API sunucuda keyfi diske yazmaz; yalnızca ZIP döner. Ayrıntı: [`WEBUI_SE
 | Sorun | Ne yapın |
 |--------|-----------|
 | Windows’ta `torqa-console` tanınmıyor | `pip` uyarısı: `.exe` dosyaları `...\Python\...\Scripts` altında ama **PATH’te değil**. **Hızlı çözüm:** proje kökünde `python -m webui` (aynı konsol). **Kalıcı:** PATH’e o `Scripts` klasörünü ekleyin veya tam yol: `& "C:\Users\<siz>\AppData\Local\Python\pythoncore-3.14-64\Scripts\torqa-console.exe"`. |
-| `torqa` / `torqa-desktop` aynı sebep | `python -m src.cli.main --help` veya `python -m desktop --tk` (kurulum kökünden). |
+| `torqa` / `torqa-desktop` aynı sebep | `python -m torqa --help` veya `python -m src.cli.main --help` · masaüstü: `python -m desktop_legacy --tk` (kurulum kökünden). |
 | `npm` yok | [Node.js LTS](https://nodejs.org/) kurun. |
 | ZIP’te `generated/webapp` yok | Daha zengin bir IR örneği kullanın (`valid_login_flow.json`). |
 | Port meşgul | Vite başka port önerir; çıktıyı okuyun. |

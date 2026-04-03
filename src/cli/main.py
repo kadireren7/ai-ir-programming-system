@@ -20,6 +20,7 @@ from src.control.patch_preview import build_patch_preview_report
 from src.diagnostics import codes as diag_codes
 from src.diagnostics.formal_phases import formal_phase_for_issue
 from src.diagnostics.report import build_full_diagnostic_report, build_ir_shape_error_report
+from src.diagnostics.summary import summarize_pipeline_stages
 from src.diagnostics.system_health import build_system_health_report
 from src.execution.engine_routing import run_rust_pipeline_with_fallback
 from src.ir.canonical_ir import ir_goal_from_json, ir_goal_to_json, validate_bundle_envelope
@@ -34,7 +35,7 @@ from src.projection.projection_strategy import ProjectionContext, explain_projec
 from src.evolution.ai_proposal_gate import evaluate_ai_proposal
 from src.language.authoring_prompt import language_reference_payload, minimal_valid_bundle_json
 from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
-from src.project_materialize import load_bundle_from_source, materialize_project
+from src.project_materialize import materialize_project, parse_stage, stabilize_projection_artifacts
 from src.diagnostics.user_hints import (
     augment_issue,
     format_tq_cli_error,
@@ -46,6 +47,12 @@ from src.diagnostics.user_hints import (
 )
 from src.packages.cli_hints import format_package_cli_error
 from src.torqa_self.suggested_next_merge_cap_ir import suggested_next_display_cap
+from src.torqa_self.validate_open_hints_ir import (
+    validate_open_hints_for_bad_extension,
+    validate_open_hints_for_bad_json,
+    validate_open_hints_for_not_dict,
+    validate_open_hints_for_tq_path,
+)
 
 
 def _load_bundle(path: Path) -> Dict[str, Any]:
@@ -85,10 +92,7 @@ def _open_json_bundle_file(path: Path) -> tuple[Dict[str, Any] | None, Dict[str,
             ],
             "warnings": [],
             "semantic_report": {"errors": [], "warnings": []},
-            "suggested_next": [
-                f"torqa surface {path} --out ir_bundle.json",
-                f"torqa build {path}",
-            ],
+            "suggested_next": validate_open_hints_for_tq_path(path),
         }
         return None, rep
     if suf != ".json":
@@ -109,10 +113,7 @@ def _open_json_bundle_file(path: Path) -> tuple[Dict[str, Any] | None, Dict[str,
             ],
             "warnings": [],
             "semantic_report": {"errors": [], "warnings": []},
-            "suggested_next": [
-                "torqa surface FILE.tq --out ir_bundle.json",
-                "torqa build FILE.tq",
-            ],
+            "suggested_next": validate_open_hints_for_bad_extension(),
         }
         return None, rep
     try:
@@ -133,7 +134,7 @@ def _open_json_bundle_file(path: Path) -> tuple[Dict[str, Any] | None, Dict[str,
             ],
             "warnings": [],
             "semantic_report": {"errors": [], "warnings": []},
-            "suggested_next": ["torqa language --minimal-json", "spec/IR_BUNDLE.schema.json"],
+            "suggested_next": validate_open_hints_for_bad_json(),
         }
         return None, rep
     if not isinstance(data, dict):
@@ -151,7 +152,7 @@ def _open_json_bundle_file(path: Path) -> tuple[Dict[str, Any] | None, Dict[str,
             ],
             "warnings": [],
             "semantic_report": {"errors": [], "warnings": []},
-            "suggested_next": ["torqa language --minimal-json"],
+            "suggested_next": validate_open_hints_for_not_dict(),
         }
         return None, rep
     return data, None
@@ -240,6 +241,20 @@ def _emit_project_payload(args: argparse.Namespace, payload: Dict[str, Any], str
         _emit(payload, args, stream=stream)
     else:
         stream.write(_project_payload_to_human(payload) + "\n")
+
+
+def _merge_pipeline_json(
+    payload: Dict[str, Any], args: argparse.Namespace, stages: List[Dict[str, Any]]
+) -> None:
+    """P19: optional ``pipeline_stage`` / ``pipeline_stages`` for ``torqa --json build|project``."""
+    if getattr(args, "json", False) and stages:
+        payload["pipeline_stages"] = list(stages)
+        payload["pipeline_stage"] = dict(stages[-1])
+        vdig = None
+        diag = payload.get("diagnostics")
+        if isinstance(diag, dict):
+            vdig = diag.get("summary")
+        payload["pipeline_summary"] = summarize_pipeline_stages(stages, vdig)
 
 
 def _project_load_suggested_next(exc: BaseException, resolved_src: Path) -> List[str]:
@@ -335,40 +350,45 @@ def cmd_project(args: argparse.Namespace) -> int:
     src_path = Path(src_arg)
     if not src_path.is_absolute():
         src_path = (Path.cwd() / src_path).resolve()
-    try:
-        bundle = load_bundle_from_source(src_path)
-    except (OSError, ValueError, json.JSONDecodeError, UnicodeDecodeError) as ex:
-        _emit_project_payload(
-            args,
-            {
+    pipeline_trace: List[Dict[str, Any]] | None = [] if getattr(args, "json", False) else None
+    bundle, perr, _parse_info = parse_stage(src_path)
+    if pipeline_trace is not None:
+        pipeline_trace.append(_parse_info)
+    if perr is not None:
+        if isinstance(perr, TQParseError):
+            extra = tq_parse_extras(perr.code)
+            payload = {
                 "written": [],
-                "errors": [str(ex)],
+                "errors": [str(perr)],
                 "ok": False,
-                "suggested_next": _project_load_suggested_next(ex, src_path),
-            },
-            sys.stderr,
-        )
-        return 1
-    except TQParseError as ex:
-        extra = tq_parse_extras(ex.code)
-        _emit_project_payload(
-            args,
-            {
-                "written": [],
-                "errors": [str(ex)],
-                "ok": False,
-                "code": ex.code,
+                "code": perr.code,
                 "hint": extra.get("hint"),
                 "doc": extra.get("doc"),
                 "source_path": str(src_path),
                 "suggested_next": suggested_next_for_surface_or_project_fail(),
-            },
-            sys.stderr,
-        )
+            }
+            _merge_pipeline_json(payload, args, pipeline_trace)
+            _emit_project_payload(args, payload, sys.stderr)
+            return 1
+        payload = {
+            "written": [],
+            "errors": [str(perr)],
+            "ok": False,
+            "suggested_next": _project_load_suggested_next(perr, src_path),
+        }
+        _merge_pipeline_json(payload, args, pipeline_trace)
+        _emit_project_payload(args, payload, sys.stderr)
         return 1
 
+    assert bundle is not None
+
     dest_root = Path(args.root).resolve() / Path(args.out)
-    ok, summary, _written = materialize_project(bundle, dest_root, engine_mode=args.engine_mode)
+    ok, summary, _written = materialize_project(
+        bundle,
+        dest_root,
+        engine_mode=args.engine_mode,
+        pipeline_trace=pipeline_trace,
+    )
     payload = {
         "ok": ok,
         "written": summary.get("written", []),
@@ -382,6 +402,10 @@ def cmd_project(args: argparse.Namespace) -> int:
     diag = summary.get("diagnostics")
     if diag is not None:
         payload["diagnostics"] = diag
+    if pipeline_trace is not None:
+        _merge_pipeline_json(payload, args, pipeline_trace)
+    if getattr(args, "json", False) and summary.get("projection_surfaces") is not None:
+        payload["projection_surfaces"] = summary["projection_surfaces"]
     if diag is not None and not diag.get("ok", False):
         _emit_project_payload(args, payload, sys.stderr)
         return 1
@@ -402,7 +426,27 @@ def cmd_build(args: argparse.Namespace) -> int:
     return cmd_project(inner)
 
 
-def cmd_demo(args: argparse.Namespace) -> int:
+def cmd_demo_print_path(args: argparse.Namespace) -> int:
+    """Print canonical flagship first-trial steps (same text as ``torqa-flagship``)."""
+    from src.benchmarks.flagship_demo_cli import HELP_TEXT
+
+    sys.stdout.write(HELP_TEXT)
+    return 0
+
+
+def cmd_demo_verify(args: argparse.Namespace) -> int:
+    from src.benchmarks.flagship_demo_cli import verify
+
+    return verify()
+
+
+def cmd_demo_benchmark(args: argparse.Namespace) -> int:
+    from src.benchmarks.flagship_demo_cli import demo_benchmark
+
+    return demo_benchmark(json_out=getattr(args, "json", False))
+
+
+def cmd_demo_emit(args: argparse.Namespace) -> int:
     """Write all projection surfaces (webapp + SQL + language stubs) for a tryable demo tree."""
     bundle = _load_bundle(Path(args.file))
     env_e = validate_bundle_envelope(bundle)
@@ -414,9 +458,11 @@ def cmd_demo(args: argparse.Namespace) -> int:
     root = Path(args.out)
     orch = SystemOrchestrator(g, context=ProjectionContext(), engine_mode=args.engine_mode)
     out = orch.run_v4() if hasattr(orch, "run_v4") else orch.run()
-    _write_artifacts(out.get("artifacts", []), root)
+    arts = list(out.get("artifacts", []))
+    stabilize_projection_artifacts(arts)
+    _write_artifacts(arts, root)
     surfaces = []
-    for art in out.get("artifacts") or []:
+    for art in arts:
         surfaces.append(
             {
                 "target_language": art.get("target_language"),
@@ -881,7 +927,7 @@ def main(argv: list[str] | None = None) -> int:
             "Primary:  build    -> one command: validate + materialize from .json / .tq / .pxir (default engine: python_only).\n"
             "Secondary: project -> same as build with optional --source and positional file.\n"
             "           surface -> compile .tq / .pxir to IR JSON; validate -> IR .json diagnostics only.\n\n"
-            "Other subcommands (demo, run, guided, check, ...) are advanced tooling. "
+            "demo: flagship path (no args) or demo verify / demo benchmark / demo emit; other subcommands (run, guided, check, …) are advanced tooling. "
             "For .tq files use build or project; validate expects bundle JSON only."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -893,7 +939,10 @@ def main(argv: list[str] | None = None) -> int:
         "  torqa bundle-lint examples/core/valid_minimal_flow.json\n"
         "  torqa guided examples/core/valid_minimal_flow.json --inputs-json '{\"username\":\"a\"}'\n"
         "  torqa check examples/core/valid_minimal_flow.json --inputs-json '{\"username\":\"a\"}'\n"
-        "  torqa demo\n"
+        "  torqa demo                    # flagship first-trial steps (same as torqa-flagship)\n"
+        "  torqa demo verify\n"
+        "  torqa demo benchmark\n"
+        "  torqa demo emit --out demo_out --engine-mode python_only\n"
         "  torqa surface examples/surface/minimal.pxir --out bundle.json\n"
         "  torqa project --root . --source examples/core/valid_minimal_flow.json\n"
         "  torqa language --minimal-json\n"
@@ -1026,11 +1075,27 @@ def main(argv: list[str] | None = None) -> int:
     pdemo = sub.add_parser(
         "demo",
         help=(
-            "Alternate demo writer: JSON bundle to flat --out tree (default sample bundle). "
-            "For normal materialize, prefer build or project."
+            "Public demo path: no subcommand prints canonical flagship steps; "
+            "'verify' sanity-checks assets; 'benchmark' prints flagship compression baseline; "
+            "'emit' writes a multi-surface IR bundle to --out."
         ),
     )
-    pdemo.add_argument(
+    demo_sub = pdemo.add_subparsers(dest="demo_action", required=False, metavar="ACTION")
+    p_demo_verify = demo_sub.add_parser(
+        "verify",
+        help="Sanity-check flagship files, gate proof expectations, and compression baseline (CI-style)",
+    )
+    p_demo_verify.set_defaults(func=cmd_demo_verify)
+    p_demo_benchmark = demo_sub.add_parser(
+        "benchmark",
+        help="Print flagship compression_baseline_report.json (human text; torqa --json demo benchmark for raw JSON)",
+    )
+    p_demo_benchmark.set_defaults(func=cmd_demo_benchmark)
+    p_demo_emit = demo_sub.add_parser(
+        "emit",
+        help="Materialize a demo IR bundle to a folder (default: demo_multi_surface_flow.json -> demo_out)",
+    )
+    p_demo_emit.add_argument(
         "file",
         type=str,
         nargs="?",
@@ -1038,9 +1103,10 @@ def main(argv: list[str] | None = None) -> int:
         default="examples/core/demo_multi_surface_flow.json",
         help="IR bundle JSON (default: examples/core/demo_multi_surface_flow.json)",
     )
-    pdemo.add_argument("--out", type=str, default="demo_out")
-    add_engine_mode(pdemo)
-    pdemo.set_defaults(func=cmd_demo)
+    p_demo_emit.add_argument("--out", type=str, default="demo_out")
+    add_engine_mode(p_demo_emit)
+    p_demo_emit.set_defaults(func=cmd_demo_emit)
+    pdemo.set_defaults(func=cmd_demo_print_path)
 
     pr = sub.add_parser("run", help="Engine pipeline from IR bundle JSON (Rust-preferred)")
     pr.add_argument("file", type=str, metavar="BUNDLE.json", help="IR bundle JSON path")

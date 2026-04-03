@@ -1,0 +1,12 @@
+# Branching: emit is guarded by run_audit. ip_address stays in requires (tq_v1 rule for emit).
+# Finer runtime gating lives in IR/bindings after materialize.
+
+module demo.automation.gated
+
+intent automation_gated_emit
+requires username, password, ip_address, run_audit
+result Gated automation completed
+
+flow:
+  create session
+  emit login_success when run_audit

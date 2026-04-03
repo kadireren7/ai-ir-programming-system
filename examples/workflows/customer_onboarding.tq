@@ -1,0 +1,11 @@
+# B2B customer onboarding: collect identity, company, and explicit policy acceptance.
+# tq_v1 flow: is empty here — map KYC steps, CRM hooks, and provisioning in IR after materialize.
+# Primary field is email (first non-password identifier) for the bundled verify_username path.
+
+module examples.workflows.onboarding
+
+intent customer_onboarding
+requires email, password, company_name, job_title, terms_version, terms_accepted_at
+result Profile captured; next stage is provisioning review
+
+flow:

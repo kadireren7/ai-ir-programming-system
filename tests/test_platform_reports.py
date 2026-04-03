@@ -31,3 +31,4 @@ def test_system_health_shape():
     assert "checkpoints" in rep
     assert "generation_quality" in rep
     assert "projection_strategy" in rep
+    assert "rust_core" in rep and "structural_validation" in rep["rust_core"]

@@ -49,7 +49,11 @@ except ImportError:
 
 EXAMPLES_DIR = REPO_ROOT / "examples" / "core"
 TQ_EXAMPLES_DIR = REPO_ROOT / "examples" / "torqa"
+BENCHMARK_FLAGSHIP_DIR = REPO_ROOT / "examples" / "benchmark_flagship"
+GATE_PROOF_MANIFEST = BENCHMARK_FLAGSHIP_DIR / "gate_invalid" / "manifest.json"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+SITE_DIR = STATIC_DIR / "site"
+CONSOLE_DIR = STATIC_DIR / "console"
 
 _LOG = logging.getLogger("torqa.webui")
 
@@ -96,8 +100,8 @@ class SystemHealthRequest(RunRequest):
 
 
 app = FastAPI(
-    title="TORQA Console",
-    description="TORQA: validate semantic core, execute (engine), generate projections.",
+    title="TORQA Web",
+    description="TORQA: product site (/), IR console (/console), desktop shell (/desktop), JSON APIs.",
     version="0.3.0",
     lifespan=lifespan,
 )
@@ -109,11 +113,21 @@ if STATIC_DIR.is_dir():
 
 
 @app.get("/")
-def index_page():
-    index = STATIC_DIR / "index.html"
-    if not index.is_file():
-        raise HTTPException(500, "static UI missing: webui/static/index.html")
-    return FileResponse(index)
+def site_home():
+    """P72: official product website (static bundle from ``website/`` build → ``webui/static/site/``); not the IR console."""
+    page = SITE_DIR / "index.html"
+    if not page.is_file():
+        raise HTTPException(500, "static UI missing: webui/static/site/index.html")
+    return FileResponse(page)
+
+
+@app.get("/console")
+def console_page():
+    """P36: browser IR lab — Monaco console, separate from marketing site."""
+    page = CONSOLE_DIR / "index.html"
+    if not page.is_file():
+        raise HTTPException(500, "static UI missing: webui/static/console/index.html")
+    return FileResponse(page)
 
 
 DESKTOP_STATIC = STATIC_DIR / "desktop"
@@ -162,6 +176,39 @@ def health():
         "canonical_ir_version": CANONICAL_IR_VERSION,
         "package_version": _package_version(),
     }
+
+
+@app.get("/api/demo/flagship-tq")
+def api_demo_flagship_tq():
+    """P34: canonical benchmark surface for demo UIs."""
+    path = BENCHMARK_FLAGSHIP_DIR / "app.tq"
+    if not path.is_file():
+        raise HTTPException(404, "flagship app.tq not found")
+    return {
+        "name": "app.tq",
+        "path": str(path.relative_to(REPO_ROOT)).replace("\\", "/"),
+        "source": path.read_text(encoding="utf-8"),
+    }
+
+
+@app.get("/api/demo/benchmark-report")
+def api_demo_benchmark_report():
+    """P32 baseline metrics JSON (repo fixture)."""
+    path = BENCHMARK_FLAGSHIP_DIR / "compression_baseline_report.json"
+    if not path.is_file():
+        return {"ok": False, "message": "compression_baseline_report.json not found"}
+    return {"ok": True, "report": json.loads(path.read_text(encoding="utf-8"))}
+
+
+@app.get("/api/demo/gate-proof-report")
+def api_demo_gate_proof_report():
+    """P33 gate proof summary (manifest-driven; safe repo paths only)."""
+    if not GATE_PROOF_MANIFEST.is_file():
+        return {"ok": False, "message": "gate proof manifest not found"}
+    from src.benchmarks.gate_proof import run_gate_proof_manifest
+
+    report = run_gate_proof_manifest(GATE_PROOF_MANIFEST)
+    return {"ok": True, "report": report}
 
 
 @app.get("/api/examples")

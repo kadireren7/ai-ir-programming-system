@@ -1,0 +1,19 @@
+# P29 — Non-blocking semantic advisory policy (TORQA bundle, separate from core IR invariants).
+# Python loads slugs from the surfaced bundle (examples/torqa/semantic_warning_policy_bundle.json):
+#   sem_warn_*              — optional warnings to emit (presence in requires = enabled for defaults)
+#   sem_advisory_max_transitions_N — soft cap; exceeding emits one advisory warning
+# Per-flow override: ir_goal.metadata.source_map.semantic_quiet, semantic_warnings_enabled,
+#   semantic_max_transitions_advisory (see src/semantics/torqa_semantic_policy.py).
+# Regenerate:
+#   torqa surface examples/torqa/semantic_warning_policy.tq --out examples/torqa/semantic_warning_policy_bundle.json
+
+module torqa.semantics.warning_policy
+
+intent semantic_warning_policy
+requires username, password, ip_address, sem_warn_empty_result_when_transitions, sem_warn_no_after_guarantees_with_result, sem_advisory_max_transitions_100
+
+result OK
+
+flow:
+  create session
+  emit login_success

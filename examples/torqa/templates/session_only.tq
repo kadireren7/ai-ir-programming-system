@@ -1,0 +1,12 @@
+# Session effect only (no emit login_success). ip_address not required here.
+# Pairs well with ensures session.created — postcondition ties to create session.
+
+module demo.session
+
+intent open_session
+requires username, password
+ensures session.created
+result Session opened
+
+flow:
+  create session

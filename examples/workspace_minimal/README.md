@@ -2,6 +2,8 @@
 
 **Start here if you have not installed yet:** [`docs/QUICKSTART.md`](../../docs/QUICKSTART.md).
 
+**More `.tq` patterns:** copy from [`examples/torqa/templates/`](../torqa/templates/) (minimal form, session-only, guarded, full login).
+
 From **repository root**, paths are `examples/workspace_minimal/app.tq` (see root [`README.md`](../../README.md)). From **this directory**, use `app.tq` below.
 
 **1)** Compile `.tq` to IR bundle JSON:

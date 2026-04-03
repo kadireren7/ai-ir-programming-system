@@ -1,6 +1,6 @@
-# Full sign-in shape: module, forbid, ensures, result, then flow: with two steps only.
+# Auth / login with session + audit: module, forbid, ensures, result, then two flow steps.
 # Each flow line = exactly two ASCII spaces + create session OR emit login_success (lowercase).
-# Rename module and result text; keep requires including ip_address if you use emit login_success.
+# requires must list ip_address when using emit login_success (audit arity).
 
 module your.namespace.here
 

@@ -1,0 +1,25 @@
+{
+  "benchmark_id": "p31_login_dashboard_shell_v1",
+  "estimator_id": "utf8_bytes_div_4_v1",
+  "metrics": {
+    "generated_output_measured": true,
+    "generated_output_token_estimate": 1460,
+    "generated_to_surface_ratio": 8.957055,
+    "ir_bundle_token_estimate": 489,
+    "semantic_compression_ratio": 2.969325,
+    "surface_to_ir_ratio": 3.0,
+    "task_prompt_token_estimate": 484,
+    "torqa_source_token_estimate": 163
+  },
+  "notes": [
+    "Ratios use max(1, denominator) for division safety.",
+    "semantic_compression_ratio = task_prompt_token_estimate / torqa_source_token_estimate (how many times larger the NL task is than the .tq surface).",
+    "surface_to_ir_ratio = ir_bundle_token_estimate / torqa_source_token_estimate."
+  ],
+  "paths": {
+    "benchmark_dir": "examples/benchmark_flagship",
+    "task_spec": "BENCHMARK_TASK.md",
+    "torqa_surface": "app.tq"
+  },
+  "schema_version": 1
+}

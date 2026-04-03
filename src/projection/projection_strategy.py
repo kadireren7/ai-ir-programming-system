@@ -5,6 +5,9 @@ Depends only on canonical IR + IR semantic report (+ optional IR execution summa
 No parser/CoreGoal/CLI coupling.
 """
 
+# TODO(P18+ / Rust concentration): Scoring and compatibility matrices are candidates for a Rust
+# core module; Python keeps strategy explain, context hooks, and codegen orchestration.
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Set, Tuple

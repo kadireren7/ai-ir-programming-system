@@ -7,7 +7,15 @@ Grouped entry points. **Normative** technical contracts are marked.
 | Document | Role |
 |----------|------|
 | [README.md](../README.md) | What / why / status + links to Quick Start |
+| [TRIAL_READINESS.md](TRIAL_READINESS.md) | **P37:** first-trial expectations — ready vs limited, canonical flagship path |
+| [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) | Trial vs production: readiness verdict, what is missing, preconditions |
+| [examples/trial_ready/README.md](../examples/trial_ready/README.md) | **Trial package:** `torqa demo` + `torqa demo benchmark` / console / scripts |
+| [FLAGSHIP_DEMO.md](FLAGSHIP_DEMO.md) | **P35:** one public walkthrough — benchmark, gate, metrics, web/desktop |
 | [QUICKSTART.md](QUICKSTART.md) | **Canonical** install + first build (5 min) |
+| [FIRST_REAL_DEMO.md](FIRST_REAL_DEMO.md) | **P25:** flagship `.tq` → generated website (end-to-end) |
+| [BENCHMARK_FLAGSHIP.md](BENCHMARK_FLAGSHIP.md) | **P31:** canonical benchmark demo + fixtures (P32–P35 baseline) |
+| [BENCHMARK_COMPRESSION.md](BENCHMARK_COMPRESSION.md) | **P32:** token compression metrics + `torqa-compression-bench` |
+| [VALIDATION_GATE.md](VALIDATION_GATE.md) | **P33:** hard gate — accepted vs rejected by stage; `torqa-gate-proof` |
 | [FIRST_PROJECT.md](FIRST_PROJECT.md) | After Quick Start: own a `.tq`, optional packages |
 | [examples/torqa_self/README.md](../examples/torqa_self/README.md) | **Self-host policy:** grouped `.tq` bundles (hints, caps, ordering, language ref); registry + drift |
 | [SELF_HOST_MAP.md](SELF_HOST_MAP.md) | **P17:** one-page map + `torqa --json language --self-host-catalog` |
@@ -18,9 +26,18 @@ Grouped entry points. **Normative** technical contracts are marked.
 | [PACKAGE_DISTRIBUTION.md](PACKAGE_DISTRIBUTION.md) | **Publish/fetch:** minimal registry, `ref:` lock forms, `torqa package` |
 | [examples/package_demo/README.md](../examples/package_demo/README.md) | Runnable tree for [USING_PACKAGES.md](USING_PACKAGES.md) |
 | [MAINTAINER_VERIFY.md](MAINTAINER_VERIFY.md) | Maintainer smoke commands |
+| [FAILURE_MODES.md](FAILURE_MODES.md) | Known failure modes: CLI, validation, web UI, desktop, gate/bench |
+| [SUPPORTED_SCOPE.md](SUPPORTED_SCOPE.md) | What TORQA supports: surfaces, tooling, projections, trial package, out-of-scope |
 | [CHANGELOG.md](../CHANGELOG.md) | Release notes |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Contribution process |
 | [DEMO_LOCALHOST.md](DEMO_LOCALHOST.md) | Run generated Vite app locally |
+| [DEMO_SURFACES.md](DEMO_SURFACES.md) | **P34:** Web UI + Desktop demo launch and what to show |
+| [desktop/README.md](../desktop/README.md) | **P71:** Official TORQA Desktop (Electron; `torqa-desktop`) |
+| [P71_DESKTOP_OFFICIAL.md](P71_DESKTOP_OFFICIAL.md) | Desktop parity audit + official vs legacy |
+| [desktop_legacy/README.md](../desktop_legacy/README.md) | Legacy Python/Tk desktop (`torqa-desktop-legacy`) |
+| [website/README.md](../website/README.md) | **P72:** Official product website source (`npm run build` → `webui/static/site/` → `GET /`) |
+| [P72_WEBSITE_OFFICIAL.md](P72_WEBSITE_OFFICIAL.md) | Website vs webui/console/desktop roles; no duplicate official site |
+| [UI_SURFACE_RULES.md](UI_SURFACE_RULES.md) | **P36:** Website vs Desktop vs `/console` — purpose and layout rules |
 
 ## Product direction (non-normative wire)
 
@@ -31,6 +48,8 @@ Grouped entry points. **Normative** technical contracts are marked.
 | [ROADMAP.md](../ROADMAP.md) | Staged milestones (EN) |
 | [AI_NATIVE_LANGUAGE_CHARTER.md](AI_NATIVE_LANGUAGE_CHARTER.md) | AI-native goals and boundaries |
 | [STATUS.md](../STATUS.md) | Short maturity snapshot |
+| [ARCHITECTURE_RULES.md](ARCHITECTURE_RULES.md) | **P18:** TORQA-first identity; Rust core vs Python tooling; P17.1 self-host lock reminder |
+| [SURFACE_CLASSIFICATION.md](SURFACE_CLASSIFICATION.md) | **P18:** repo paths → TORQA-primary / Rust-core / Python-tooling / transitional |
 
 ## Normative / technical contract
 

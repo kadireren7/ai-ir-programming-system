@@ -68,7 +68,55 @@ HINTS_BY_CODE: Dict[str, HintPayload] = {
     },
     # --- .tq surface (representative PX_TQ_*; unknown codes fall back to tq_parse_extras default) ---
     "PX_TQ_UNKNOWN_FLOW_STEP": {
-        "hint": "Use exactly two spaces then 'create session' or 'emit login_success'. See examples/torqa/canonical_session_flow.tq.",
+        "hint": "Use two spaces + create session, emit login_success, or emit login_success when/if <ident> (same guard; see docs/TQ_SURFACE_MAPPING.md P27).",
+        "doc": "docs/TQ_AUTHOR_CHEATSHEET.md",
+    },
+    "PX_TQ_WHEN_EMPTY": {
+        "hint": "Write emit login_success when ip_address or emit login_success if ip_address (single guard name).",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_TQ_WHEN_MALFORMED": {
+        "hint": "After when or if, the guard must be exactly one identifier (no spaces or extra tokens).",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_TQ_WHEN_UNKNOWN_IDENT": {
+        "hint": "Use ip_address or a name that appears in requires (add the input or fix spelling). when and if mean the same thing.",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_TQ_WHEN_UNSUPPORTED_STEP": {
+        "hint": "when/if … is only valid after emit login_success, not create session.",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_TQ_STUB_PATH_MALFORMED": {
+        "hint": "Use stub_path <lang> <one_path_token> after requires (e.g. stub_path rust generated/rust/main.rs).",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_TQ_STUB_PATH_INVALID": {
+        "hint": "Path must be relative (no leading /) and must not contain .. ; use ASCII letters, digits, ._/- only.",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_TQ_STUB_PATH_LANG": {
+        "hint": "Language must be rust, python, sql, typescript, go, kotlin, or cpp.",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_TQ_STUB_PATH_DUPLICATE": {
+        "hint": "At most one stub_path line per language.",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_TQ_REQUIRES_EMPTY": {
+        "hint": "requires must list at least one name after the keyword, comma-separated (e.g. requires username, password).",
+        "doc": "docs/TQ_AUTHOR_CHEATSHEET.md",
+    },
+    "PX_TQ_REQUIRES_MALFORMED": {
+        "hint": "Use commas between identifiers; no double commas; no spaces where a comma is needed.",
+        "doc": "docs/TQ_AUTHOR_CHEATSHEET.md",
+    },
+    "PX_TQ_FLOW_COLON": {
+        "hint": "The header is the two characters flow: (lowercase flow, ASCII colon).",
+        "doc": "docs/TQ_AUTHOR_CHEATSHEET.md",
+    },
+    "PX_TQ_FLOW_DUPLICATE_STEP": {
+        "hint": "List each flow step at most once (one create session; at most one emit login_success).",
         "doc": "docs/TQ_AUTHOR_CHEATSHEET.md",
     },
     "PX_TQ_LEGACY_FLOW_STEP": {
@@ -152,7 +200,7 @@ HINTS_BY_CODE: Dict[str, HintPayload] = {
         "doc": "docs/TQ_SURFACE_MAPPING.md",
     },
     "PX_TQ_INCLUDE_POSITION": {
-        "hint": "Use one include line after intent and before requires. See examples/torqa/example_include_user_login.tq.",
+        "hint": "Place include lines after intent and before requires (several distinct paths allowed). See examples/torqa/example_include_chained.tq.",
         "doc": "docs/TQ_SURFACE_MAPPING.md",
     },
     "PX_TQ_INCLUDE_NOT_FOUND": {
@@ -161,6 +209,14 @@ HINTS_BY_CODE: Dict[str, HintPayload] = {
     },
     "PX_TQ_INCLUDE_NESTED_FORBIDDEN": {
         "hint": "Included .tq files must not contain include.",
+        "doc": "docs/TQ_SURFACE_MAPPING.md",
+    },
+    "PX_IR_CANONICAL_ORDER": {
+        "hint": "Reorder preconditions, forbids, postconditions, or transitions so ids ascend numerically (c_req_0001, c_req_0002, …; t_0001, t_0002, …).",
+        "doc": "docs/FORMAL_CORE.md",
+    },
+    "PX_IR_TRANSITION_AMBIGUOUS": {
+        "hint": "Only one edge may go from before→after; chain further effects as after→after (see parse_tq session+emit ordering).",
         "doc": "docs/TQ_SURFACE_MAPPING.md",
     },
 }
@@ -217,10 +273,10 @@ def _tq_hint(code: str, message: str, *, tq_path: Optional[Path] = None) -> tupl
         )
     if code == "PX_TQ_INCLUDE_POSITION":
         return (
-            f"{_TQ_INCLUDE_NOT_IR} The parser only allows one include in a fixed header position.",
-            "Place exactly one line: after intent, before requires.",
-            'intent my_flow\ninclude "lib/part.tq"\nrequires username, password',
-            "examples/torqa/example_include_user_login.tq",
+            f"{_TQ_INCLUDE_NOT_IR} include lines must sit between intent and requires.",
+            "Put one or more include \"…\" lines after intent, then requires (same path only once).",
+            'intent my_flow\ninclude "lib/a.tq"\ninclude "lib/b.tq"\nrequires username, password',
+            "examples/torqa/example_include_chained.tq",
         )
     if code == "PX_TQ_INCLUDE_SYNTAX":
         return (
@@ -231,9 +287,9 @@ def _tq_hint(code: str, message: str, *, tq_path: Optional[Path] = None) -> tupl
         )
     if code == "PX_TQ_INCLUDE_DUPLICATE":
         return (
-            f"{_TQ_INCLUDE_NOT_IR} At most one include line is allowed per .tq file.",
-            "Merge snippets into one file or keep separate .tq sources without chaining include.",
-            "Single include line only between intent and requires",
+            f"{_TQ_INCLUDE_NOT_IR} The same include path cannot appear twice in one file.",
+            "Use distinct fragment files, or merge duplicate lines into one include target.",
+            'intent x\ninclude "lib/a.tq"\ninclude "lib/b.tq"\nrequires username, password',
             "docs/TQ_SURFACE_MAPPING.md",
         )
     if code == "PX_TQ_INCLUDE_NESTED_FORBIDDEN":

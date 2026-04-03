@@ -1,0 +1,12 @@
+# Two includes: shared inputs/forbid, then shared ensures (order: forbid before ensures).
+module examples.demo
+
+intent login_chained_includes
+include "modules/login_inputs.tq"
+include "modules/ensure_session_created.tq"
+
+result Chained includes OK
+
+flow:
+  create session
+  emit login_success

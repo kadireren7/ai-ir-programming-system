@@ -24,21 +24,37 @@ dev = [
     "httpx>=0.27.0",
     "jsonschema>=4.23.0",
 ]
-# Base desktop (Tk) needs no extra wheels. pywebview pulls pythonnet on Windows and
-# often fails to build (Python 3.14+, NuGet). Optional embedded browser:
-#   pip install -e ".[desktop-webview]"
+# Base desktop (Tk) needs no extra wheels.
+# pywebview depends on pythonnet on Windows; source builds often fail (nuget.exe / MSVC).
+# So ``desktop-webview`` only installs pywebview on non-Windows. On Windows use:
+#   python -m desktop_legacy --tk
+# or, if you need an embedded window after binary wheels exist for your Python:
+#   pip install pythonnet --only-binary :all:
+#   pip install pywebview
 desktop = []
 desktop-webview = [
-    "pywebview>=4.4",
+    "pywebview>=4.4; sys_platform != 'win32'",
 ]
 
 [project.scripts]
 torqa = "src.cli.main:main"
 torqa-console = "webui.__main__:main"
-torqa-desktop = "desktop.__main__:main"
+torqa-desktop = "src.torqa_desktop_launcher:main"
+torqa-desktop-legacy = "desktop_legacy.__main__:main"
+torqa-compression-bench = "src.benchmarks.cli:main"
+torqa-token-measure = "src.benchmarks.token_measurement_cli:main"
+torqa-benchmark-initial = "src.benchmarks.benchmark_initial_cli:main"
+torqa-validation-gate = "src.benchmarks.validation_gate_cli:main"
+torqa-retry-stats = "src.benchmarks.retry_stats_cli:main"
+torqa-failure-types = "src.benchmarks.failure_types_cli:main"
+torqa-gate-proof = "src.benchmarks.gate_proof_cli:main"
+# Legacy standalone script; same text as ``torqa demo`` / ``torqa demo verify``. Prefer the main CLI.
+torqa-flagship = "src.benchmarks.flagship_demo_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
+# ``desktop*`` includes the ``desktop_legacy`` Python package (Tk) until it is removed.
+# The Electron app under ``desktop/`` is launched via ``torqa-desktop`` (``src.torqa_desktop_launcher``), not as an installable Python package.
 include = ["src*", "webui*", "desktop*", "compat*", "torqa*"]
 
 [tool.pytest.ini_options]

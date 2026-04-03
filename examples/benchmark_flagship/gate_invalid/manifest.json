@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "description": "P33 gate proof cases: paths relative to this directory unless noted.",
+  "cases": [
+    {
+      "id": "control_valid_flagship",
+      "path": "../app.tq",
+      "expect_accepted": true,
+      "reject_at": null
+    },
+    {
+      "id": "tq_missing_result",
+      "path": "malformed_missing_result.tq",
+      "expect_accepted": false,
+      "reject_at": "parse"
+    },
+    {
+      "id": "json_decode_failure",
+      "path": "malformed_brace_only.json",
+      "expect_accepted": false,
+      "reject_at": "parse"
+    },
+    {
+      "id": "bundle_envelope_unknown_key",
+      "path": "bundle_envelope_unknown_key.json",
+      "expect_accepted": false,
+      "reject_at": "validate"
+    },
+    {
+      "id": "bundle_shape_preconditions_not_list",
+      "path": "bundle_shape_preconditions_not_list.json",
+      "expect_accepted": false,
+      "reject_at": "validate"
+    },
+    {
+      "id": "bundle_duplicate_input_names",
+      "path": "bundle_duplicate_input_names.json",
+      "expect_accepted": false,
+      "reject_at": "validate"
+    },
+    {
+      "id": "bundle_duplicate_condition_id",
+      "path": "bundle_duplicate_condition_id.json",
+      "expect_accepted": false,
+      "reject_at": "validate"
+    },
+    {
+      "id": "bundle_semantic_unknown_effect",
+      "path": "bundle_semantic_unknown_effect.json",
+      "expect_accepted": false,
+      "reject_at": "validate"
+    },
+    {
+      "id": "bundle_duplicate_transition_id",
+      "path": "bundle_duplicate_transition_id.json",
+      "expect_accepted": false,
+      "reject_at": "validate"
+    },
+    {
+      "id": "bundle_forbid_without_guarantee",
+      "path": "bundle_forbid_without_guarantee.json",
+      "expect_accepted": false,
+      "reject_at": "validate"
+    }
+  ]
+}

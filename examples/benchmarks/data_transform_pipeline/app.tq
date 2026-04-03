@@ -1,0 +1,8 @@
+# Benchmark: data transform pipeline — minimal surface; source_record models inbound row-like input.
+module benchmark.data_transform
+
+intent pipeline_run
+requires username, password, source_record
+result Staged
+
+flow:

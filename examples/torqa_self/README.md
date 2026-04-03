@@ -16,6 +16,8 @@ Specs expressed as TORQA (`.tq` → IR JSON) and consumed by Python (`src/torqa_
 | `cli_surface_project_fail_suffix_bundle.json` | Committed IR — **do not hand-edit**. |
 | `cli_report_suggested_next_order.tq` | Scan order for report-driven lines (`report_next_*`; predicates in Python). |
 | `cli_report_suggested_next_order_bundle.json` | Committed IR — **do not hand-edit**. |
+| `cli_validate_open_hints.tq` (P26) | Static `suggested_next` tails when `validate` rejects a path (wrong type / bad JSON). |
+| `cli_validate_open_hints_bundle.json` | Committed IR — **do not hand-edit**. |
 
 ---
 

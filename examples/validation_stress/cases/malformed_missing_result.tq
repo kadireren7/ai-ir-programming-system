@@ -1,0 +1,4 @@
+# Stress: valid-ish header but missing required result line before flow:
+intent broken_missing_result
+requires username, password
+flow:

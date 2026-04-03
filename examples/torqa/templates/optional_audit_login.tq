@@ -1,0 +1,13 @@
+# P27: optional audit — emit runs only when ip_address is listed in requires.
+# Same IR as session_only.tq when requires omits ip; full login_flow when ip is present.
+
+module demo.optional_audit
+
+intent login_optional_audit
+requires username, password
+result OK
+
+flow:
+  create session
+  # log_successful_login only if caller binds ip_address
+  emit login_success when ip_address

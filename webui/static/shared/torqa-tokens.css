@@ -1,0 +1,15 @@
+/**
+ * Shared TORQA brand tokens (P36).
+ * Surfaces import this first; each UI sets layout/density separately.
+ */
+:root {
+  --tq-brand: #3b82f6;
+  --tq-brand-2: #6366f1;
+  --tq-ok: #10b981;
+  --tq-warn: #f59e0b;
+  --tq-err: #ef4444;
+  --tq-radius-lg: 16px;
+  --tq-radius-md: 10px;
+  --tq-font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --tq-font-mono: "JetBrains Mono", ui-monospace, monospace;
+}

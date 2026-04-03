@@ -55,6 +55,8 @@ pub fn run_rust_pipeline(ir_bundle_json: &str) -> Result<Value, String> {
         (json!(exec_plan_pending), None)
     };
 
+    // P24: validate_ir is the narrow bridge surface for Rust structural validation (see Python
+    // src/bridge/rust_structural_validation.py). Full pipeline still runs the same checks first.
     if action == "validate_ir" {
         return Ok(json!({
             "ir_valid": val_errors.is_empty(),

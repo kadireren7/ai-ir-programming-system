@@ -27,6 +27,7 @@ def test_surface_project_fail_suggested_next_matches_legacy_merge():
         "torqa surface FILE.tq --out ir_bundle.json",
         "IR reuse (compose + lock): docs/USING_PACKAGES.md",
         "torqa language",
+        "Flagship website demo: docs/FIRST_REAL_DEMO.md",
     ]
 
 
@@ -38,6 +39,7 @@ def test_bundle_inputs_surface_fail_order_stable():
         "surface_fail_surface_cmd",
         "surface_fail_packages_doc",
         "surface_fail_language_cmd",
+        "surface_fail_first_real_demo",
     ]
 
 
@@ -55,4 +57,5 @@ def test_fallback_when_bundle_missing(tmp_path):
         "torqa surface FILE.tq --out ir_bundle.json",
         "IR reuse (compose + lock): docs/USING_PACKAGES.md",
         "torqa language",
+        "Flagship website demo: docs/FIRST_REAL_DEMO.md",
     ]

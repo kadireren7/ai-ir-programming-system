@@ -1,0 +1,9 @@
+# Pipeline step: filter row stream by conditions; failing rows to reject sink with reasons.
+# IR extension: forbids/postconditions for “no row passes without satisfying predicate_profile”.
+module examples.data_pipelines.filter
+
+intent filter_conditions
+requires username, password, record_batch, predicate_profile
+result Filtered batch produced
+
+flow:

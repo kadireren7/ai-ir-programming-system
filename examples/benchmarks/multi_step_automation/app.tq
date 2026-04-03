@@ -1,0 +1,8 @@
+# Benchmark: multi-step automation — minimal surface; empty flow: (steps expressed in IR elsewhere if extended).
+module benchmark.multi_step
+
+intent signup_automation
+requires username, password
+result AutomationComplete
+
+flow:

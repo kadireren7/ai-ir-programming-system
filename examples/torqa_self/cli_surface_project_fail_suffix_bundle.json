@@ -25,6 +25,10 @@
       {
         "name": "surface_fail_language_cmd",
         "type": "text"
+      },
+      {
+        "name": "surface_fail_first_real_demo",
+        "type": "text"
       }
     ],
     "preconditions": [
@@ -117,6 +121,20 @@
         "kind": "require",
         "expr": {
           "type": "call",
+          "name": "exists",
+          "arguments": [
+            {
+              "type": "identifier",
+              "name": "surface_fail_first_real_demo"
+            }
+          ]
+        }
+      },
+      {
+        "condition_id": "c_req_0008",
+        "kind": "require",
+        "expr": {
+          "type": "call",
           "name": "verify_username",
           "arguments": [
             {
@@ -127,7 +145,7 @@
         }
       },
       {
-        "condition_id": "c_req_0008",
+        "condition_id": "c_req_0009",
         "kind": "require",
         "expr": {
           "type": "call",

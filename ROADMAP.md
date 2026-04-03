@@ -27,7 +27,7 @@ See `docs/IMPLEMENTATION_STATUS.md` and `STATUS.md`.
 **What exists now**
 
 - **Web console** (`torqa-console` / Docker): browser UI, Monaco JSON editor, examples, Run, AI suggest (server needs `OPENAI_API_KEY`), no native “pick a folder on disk” workflow.
-- **CLI**: `torqa demo`, `project`, `guided`, `ai-suggest` — all path-based; no bundled graphical installer or VS Code–class shell.
+- **CLI**: `torqa demo` / `torqa demo emit`, `project`, `guided`, `ai-suggest` — all path-based; no bundled graphical installer or VS Code–class shell.
 
 **Gap vs a downloadable Cursor-like product**
 

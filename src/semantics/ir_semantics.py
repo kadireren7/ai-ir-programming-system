@@ -5,9 +5,19 @@ Operates only on canonical IR (IRGoal / IRExpr). No parser AST, tokens, or CLI.
 Acts as Python fallback/parity layer while Rust is preferred semantic engine.
 """
 
+# TODO(P18+ / Rust concentration): Heavy semantic walks are candidates for Rust core; Python
+# retains registry bridging, diagnostics shaping, and parity fallbacks.
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Set, Tuple
+
+from src.semantics.torqa_semantic_policy import (
+    WARNING_CODE_EMPTY_RESULT,
+    WARNING_CODE_NO_AFTER,
+    TorqaSemanticPolicy,
+    effective_semantic_policy,
+)
 
 from src.ir.canonical_ir import (
     IRBinary,
@@ -404,12 +414,19 @@ def _check_ir_expr(
 def validate_ir_semantics(
     ir_goal: IRGoal,
     function_registry: Dict[str, IRFunctionSignature],
+    *,
+    torqa_policy: Optional[TorqaSemanticPolicy] = None,
 ) -> Tuple[List[str], List[str]]:
     """
     IR-native semantic checks. Returns (errors, warnings).
+
+    **Errors** are invariant (schema-level guarantees, effects, identifiers); they ignore
+    ``torqa_policy``. **Warnings** for empty result / after-guarantees / transition soft cap are
+    driven by TORQA policy bundles and per-goal ``metadata.source_map`` (P29).
     """
     errors: List[str] = []
     warnings: List[str] = []
+    pol = torqa_policy if torqa_policy is not None else effective_semantic_policy(ir_goal)
 
     try:
         symbol_table = build_ir_symbol_table(ir_goal)
@@ -481,18 +498,30 @@ def validate_ir_semantics(
 
     if ir_goal.transitions:
         res = (ir_goal.result or "").strip()
-        if not res:
+        if not res and WARNING_CODE_EMPTY_RESULT in pol.enabled_warning_codes:
             warnings.append(
                 "IR semantics: transitions are defined but result text is empty or missing."
             )
 
     after_map = guarantee_table.get("after", {})
-    if (ir_goal.result or "").strip() and ir_goal.transitions:
-        if not any(after_map.values()):
-            warnings.append(
-                "IR semantics: success result and transitions exist but no after-state guarantees "
-                "are modeled (registry guarantees_after metadata)."
-            )
+    if (
+        (ir_goal.result or "").strip()
+        and ir_goal.transitions
+        and WARNING_CODE_NO_AFTER in pol.enabled_warning_codes
+        and not any(after_map.values())
+    ):
+        warnings.append(
+            "IR semantics: success result and transitions exist but no after-state guarantees "
+            "are modeled (registry guarantees_after metadata)."
+        )
+
+    cap = pol.max_transitions_advisory
+    if cap is not None and len(ir_goal.transitions) > cap:
+        warnings.append(
+            "IR semantics: advisory: transition count exceeds TORQA soft limit "
+            f"({len(ir_goal.transitions)} > {cap}); "
+            "policy from semantic_warning_policy bundle or metadata.source_map."
+        )
 
     return errors, warnings
 

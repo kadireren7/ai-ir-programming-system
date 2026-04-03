@@ -19,12 +19,14 @@ _LINE_BY_SURFACE_FAIL_SLUG = {
     "surface_fail_surface_cmd": "torqa surface FILE.tq --out ir_bundle.json",
     "surface_fail_packages_doc": "IR reuse (compose + lock): docs/USING_PACKAGES.md",
     "surface_fail_language_cmd": "torqa language",
+    "surface_fail_first_real_demo": "Flagship website demo: docs/FIRST_REAL_DEMO.md",
 }
 
 _FALLBACK_ORDER = (
     "surface_fail_surface_cmd",
     "surface_fail_packages_doc",
     "surface_fail_language_cmd",
+    "surface_fail_first_real_demo",
 )
 
 

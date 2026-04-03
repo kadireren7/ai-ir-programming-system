@@ -1,0 +1,14 @@
+# “Guard” pattern: forbid locked rejects the flow early (IR forbid precondition).
+# tq_v1 does not spell alternative branches in flow: — richer branching stays in IR / tooling.
+# After the guard, same session effect as session_only.tq.
+
+module demo.guarded
+
+intent guarded_login
+requires username, password
+forbid locked
+ensures session.created
+result OK
+
+flow:
+  create session

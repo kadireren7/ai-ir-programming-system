@@ -182,10 +182,30 @@ def test_cli_proposal_gate_minimal_ok():
     assert data.get("rejected") is False
 
 
+def test_cli_demo_prints_canonical_path():
+    r = _run("demo")
+    assert r.returncode == 0, r.stderr
+    out = r.stdout + r.stderr
+    assert "torqa demo verify" in out
+    assert "torqa demo benchmark" in out
+    assert "examples/benchmark_flagship/app.tq" in out
+
+
+def test_cli_demo_benchmark():
+    r = _run("demo", "benchmark")
+    assert r.returncode == 0, r.stderr
+    assert "semantic_compression_ratio" in r.stdout
+
+
+def test_cli_demo_verify_matches_flagship():
+    r = _run("demo", "verify")
+    assert r.returncode == 0, r.stderr
+
+
 def test_cli_demo_multi_surface():
     demo = REPO / "examples" / "core" / "demo_multi_surface_flow.json"
     with tempfile.TemporaryDirectory() as td:
-        r = _run("demo", str(demo), "--out", td, "--engine-mode", "python_only")
+        r = _run("demo", "emit", str(demo), "--out", td, "--engine-mode", "python_only")
         assert r.returncode == 0, r.stderr
         data = json.loads(r.stdout)
         assert data.get("ok") is True

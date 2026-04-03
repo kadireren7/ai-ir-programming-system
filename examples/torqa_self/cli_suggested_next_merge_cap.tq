@@ -1,7 +1,7 @@
 # TORQA-selected behavior for merged suggested_next (P15 + P15.1).
 # After session inputs:
-#   - sn_merge_cap_* → max deduped list length (Python int map)
-#   - sn_display_cap_* → max lines shown under human CLI "Next:" for .tq parse errors (Python int map)
+#   - sn_merge_cap_<N> → max deduped list length (N parsed from slug; P26)
+#   - sn_display_cap_<N> → max lines under human CLI "Next:" for .tq parse errors
 # Regenerate:
 #   torqa surface examples/torqa_self/cli_suggested_next_merge_cap.tq --out examples/torqa_self/cli_suggested_next_merge_cap_bundle.json
 

@@ -19,11 +19,13 @@ def test_parse_tq_result_line_overrides_default_result():
 
 
 def test_all_examples_torqa_tq_pass_diagnostics():
-    for path in sorted((REPO / "examples" / "torqa").glob("*.tq")):
+    root = REPO / "examples" / "torqa"
+    paths = sorted(root.glob("*.tq")) + sorted((root / "templates").glob("*.tq"))
+    for path in paths:
         bundle = parse_tq_source(path.read_text(encoding="utf-8"), tq_path=path)
         g = ir_goal_from_json(bundle)
         rep = build_full_diagnostic_report(g)
-        assert rep["ok"] is True, f"{path.name}: {rep}"
+        assert rep["ok"] is True, f"{path.relative_to(REPO)}: {rep}"
 
 
 def test_parse_auth_login_tq_passes_diagnostics():
@@ -124,6 +126,40 @@ flow:
     with pytest.raises(TQParseError) as ei:
         parse_tq_source(src)
     assert ei.value.code == "PX_TQ_HEADER_ORDER"
+
+
+def test_parse_tq_emit_login_success_if_same_as_when_optional_audit():
+    when_src = """
+intent x
+requires username, password
+result OK
+flow:
+  create session
+  emit login_success when ip_address
+"""
+    if_src = """
+intent x
+requires username, password
+result OK
+flow:
+  create session
+  emit login_success if ip_address
+"""
+    b_when = parse_tq_source(when_src)
+    b_if = parse_tq_source(if_src)
+    assert json.dumps(b_when["ir_goal"], sort_keys=True) == json.dumps(b_if["ir_goal"], sort_keys=True)
+
+
+def test_parse_tq_include_chained_expands_ordered_source_map():
+    path = REPO / "examples" / "torqa" / "example_include_chained.tq"
+    bundle = parse_tq_source(path.read_text(encoding="utf-8"), tq_path=path)
+    assert bundle["ir_goal"]["metadata"]["source_map"]["tq_includes"] == [
+        "modules/login_inputs.tq",
+        "modules/ensure_session_created.tq",
+    ]
+    g = ir_goal_from_json(bundle)
+    rep = build_full_diagnostic_report(g)
+    assert rep["ok"] is True, rep
 
 
 def test_parse_tq_include_expands_and_sets_source_map():

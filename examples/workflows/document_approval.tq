@@ -1,0 +1,11 @@
+# Controlled document release: approver attests to a specific revision before it ships.
+# requester_id + document_id tie into your DMS / ticket IR; flow: steps extend when projection adds effects.
+
+module examples.workflows.document_approval
+
+intent document_approval
+requires username, password, document_id, revision, approver_id, requester_id
+forbid locked
+result Approval decision logged for document
+
+flow:
