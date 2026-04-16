@@ -41,6 +41,6 @@ src/semantics/               # registry, semantic report, logic checks, policy
 tests/                       # End-to-end smoke tests
 ```
 
-## CI
+## Continuous integration
 
-`.github/workflows/ci.yml` installs `pip install -e ".[dev]"` and runs **pytest** on `main` for pushes and pull requests.
+There is **no** in-repository GitHub Actions workflow. Run **`pip install -e ".[dev]"`** and **`pytest`** locally (or wire the same commands into your own CI).
