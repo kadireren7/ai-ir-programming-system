@@ -1,7 +1,7 @@
 """
 Deterministic subset of `.tq` human surface → canonical ``ir_goal`` bundle.
 
-**tq_v1 (strict)** — see ``TQ_SURFACE.md`` at the repository root.
+**tq_v1 (strict)** — see ``docs/concepts.md`` at the repository root.
 
 Header order: optional ``module``, then ``intent``, ``requires``, at most one ``forbid locked``,
 optional ``ensures session.created``, required ``result`` / ``result …``, then ``flow:``.
@@ -14,6 +14,10 @@ or ``emit login_success when <ident>`` / ``emit login_success if <ident>`` (same
 Indented ``#`` full-line comments inside ``flow:`` are skipped. No legacy no-op steps. Lines after the flow
 block must be blank or full-line ``#`` comments only.
 
+**Meta block (optional):** after ``requires`` and before ``result``, a ``meta:`` header may introduce a
+small block of ``  key value`` lines (two-space indent, snake_case keys). Parsed entries are stored in
+IR ``metadata.surface_meta`` as strings for audit and tooling (not interpreted as effects).
+
 **Include (optional):** after ``intent``, before ``requires``, one or more lines
 ``include "relative/path.tq"`` (double quotes; each path once per file; order preserved). Nested
 ``include`` inside a fragment is still forbidden. Expanded text is parsed as a single document;
@@ -21,7 +25,7 @@ block must be blank or full-line ``#`` comments only.
 
 **stub_path (optional, P28):** after ``requires``, zero or more lines ``stub_path <lang> <relpath>`` (single
 path token, no ``..``). Sets ``metadata.source_map.projection_stub_paths`` for optional downstream tooling (see
-``EXAMPLES.md``).
+``docs/quickstart.md``).
 """
 
 from __future__ import annotations
@@ -75,7 +79,7 @@ def _parse_requires_clause(stripped: str, lineno: int) -> List[str]:
         raise TQParseError(
             "PX_TQ_UNRECOGNIZED_LINE",
             f"tq: unrecognized line outside flow: {stripped!r} (line {lineno})."
-            f"{_unrecognized_line_suffix(stripped)} See TQ_SURFACE.md.",
+            f"{_unrecognized_line_suffix(stripped)} See docs/concepts.md.",
         )
     parts = stripped.split(None, 1)
     if len(parts) < 2 or not parts[1].strip():
@@ -131,7 +135,7 @@ def _primary_login_field(input_names: List[str]) -> str:
         "PX_TQ_NO_LOGIN_FIELD",
         "tq: requires needs a login field (not only password/ip_address). "
         "Fix: put username or email first, e.g. requires username, password. "
-        "That first non-password field is the primary for verify_* (see TQ_SURFACE.md).",
+        "That first non-password field is the primary for verify_* (see docs/concepts.md).",
     )
 
 
@@ -160,6 +164,7 @@ def _unrecognized_line_suffix(stripped: str) -> str:
         "ensures",
         "result",
         "flow",
+        "meta",
         "include",
         "stub_path",
         "model",
@@ -258,7 +263,7 @@ def _parse_flow_step_surface(step: str, lineno: int) -> Tuple[str, Optional[str]
         "PX_TQ_UNKNOWN_FLOW_STEP",
         f"tq: unsupported flow step {step!r}. "
         "Allowed: create session — emit login_success — emit login_success when/if <ident>. "
-        "Fix: spelling; see EXAMPLES.md.",
+        "Fix: spelling; see docs/quickstart.md.",
     )
 
 
@@ -279,6 +284,19 @@ _INCLUDE_LINE_RE = re.compile(r'^\s*include\s+"([^"]*)"\s*$')
 # P28: optional ``stub_path <lang> <posix_relpath>`` after ``requires`` (before ``result`` / ``flow:``).
 _STUB_PATH_LANGS = frozenset({"rust", "python", "sql", "typescript", "go", "kotlin", "cpp"})
 _STUB_PATH_REL_RE = re.compile(r"^[A-Za-z0-9][-A-Za-z0-9_./]*$")
+# snake_case keys for optional ``meta:`` block (audit / ownership labels).
+_META_KEY_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+
+# Human-readable position in the strict tq_v1 header sequence (for PX_TQ_HEADER_ORDER).
+_PHASE_HINT: Dict[str, str] = {
+    "start": "at file start (expected: optional module, then intent)",
+    "need_intent": "after optional module (expected: intent)",
+    "need_requires": "after intent (expected: requires)",
+    "post_a": "after requires (expected: optional stub_path, meta:, forbid, ensures, then result, then flow:)",
+    "post_b": "after optional ensures (expected: result, then flow:)",
+    "post_c": "after result (expected: flow:)",
+    "in_flow": "inside flow: block",
+}
 
 
 def _tq_include_match(line: str) -> Optional[re.Match[str]]:
@@ -320,7 +338,7 @@ def expand_tq_includes(text: str, base_file: Path) -> Tuple[str, List[str]]:
             raise TQParseError(
                 "PX_TQ_INCLUDE_POSITION",
                 f"tq: include must appear after intent and before requires (line {lineno}). "
-                "See TQ_SURFACE.md",
+                "See docs/concepts.md",
             )
         rel = (m.group(1) or "").strip()
         if not rel:
@@ -415,12 +433,16 @@ def _parse_header_and_flow(text: str) -> _ParsedTqSurface:
     forbid_phrases: List[str] = []
     flow_steps: List[Tuple[str, Optional[str]]] = []
     stub_paths: Dict[str, str] = {}
+    surface_meta: Dict[str, str] = {}
     model_fields: List[Dict[str, Any]] = []
     validate_rules: List[Dict[str, Any]] = []
     effects_lines: List[str] = []
     rich_flow_nodes: List[Any] = []
     in_flow = False
     after_flow = False
+    flow_declared = False
+    flow_header_lineno: Optional[int] = None
+    result_lineno: Optional[int] = None
     singleton_headers: set[str] = set()
     # start | need_intent | need_requires | post_a | post_b | post_c
     phase = "start"
@@ -431,17 +453,18 @@ def _parse_header_and_flow(text: str) -> _ParsedTqSurface:
             raise TQParseError(
                 "PX_TQ_DUPLICATE_HEADER",
                 f"tq: duplicate {key!r} header (line {lineno}); use at most once before flow:.",
+                line=lineno,
             )
         singleton_headers.add(key)
 
     def _header_order(msg: str, lineno: int) -> TQParseError:
+        hint = _PHASE_HINT.get(phase, repr(phase))
         return TQParseError(
             "PX_TQ_HEADER_ORDER",
-            f"tq: {msg} (line {lineno}). Expected order: "
-            "module (optional), surface torqa_rich v0 (optional), intent, requires, "
-            "optional model:/validate:/effects:/stub_path, forbid locked (at most once), "
-            "ensures session.created (optional), result (required), flow:. "
-            "See TQ_SURFACE.md.",
+            f"tq: {msg} (line {lineno}). Current position in strict header sequence: {hint}. "
+            "Expected order: module (optional), intent, requires, optional stub_path/forbid/ensures, "
+            "result (required), flow:. See docs/concepts.md.",
+            line=lineno,
         )
 
     lines = text.splitlines()
@@ -461,6 +484,7 @@ def _parse_header_and_flow(text: str) -> _ParsedTqSurface:
                 "PX_TQ_CONTENT_AFTER_FLOW",
                 f"tq: nothing may follow the flow block except blank lines and # comments (line {lineno}). "
                 f"Got: {line!r}. Fix: remove this line or move it above flow:.",
+                line=lineno,
             )
 
         if in_flow:
@@ -571,6 +595,72 @@ def _parse_header_and_flow(text: str) -> _ParsedTqSurface:
                     f"tq: duplicate stub_path for {lang!r} (line {lineno}). At most one path per language.",
                 )
             stub_paths[lang] = path
+        elif stripped == "meta:":
+            if phase not in ("post_a", "post_b"):
+                raise _header_order("meta: must appear after requires (and optional lines) and before result", lineno)
+            if result_line is not None:
+                raise _header_order("meta: must appear before result", lineno)
+            _once("meta", lineno)
+            i += 1
+            while i < n:
+                raw_m = lines[i]
+                lineno_m = i + 1
+                line_m = raw_m.rstrip()
+                if not line_m.strip():
+                    raise TQParseError(
+                        "PX_TQ_META_BLANK",
+                        f"tq: blank line inside meta: is not allowed (line {lineno_m}). "
+                        "Fix: delete the empty line or add only `  key value` lines.",
+                        line=lineno_m,
+                    )
+                if not raw_m.startswith("  "):
+                    break
+                if len(raw_m) < 3 or raw_m[2] in (" ", "\t"):
+                    raise TQParseError(
+                        "PX_TQ_META_INDENT",
+                        f"tq: meta line must start with exactly two ASCII spaces (line {lineno_m}).",
+                        line=lineno_m,
+                    )
+                rest_m = raw_m[2:].rstrip()
+                if not rest_m:
+                    raise TQParseError(
+                        "PX_TQ_META_LINE",
+                        f"tq: empty meta line after indent (line {lineno_m}).",
+                        line=lineno_m,
+                    )
+                if rest_m.lstrip().startswith("#"):
+                    i += 1
+                    continue
+                parts_m = rest_m.split(None, 1)
+                if len(parts_m) < 2 or not parts_m[1].strip():
+                    raise TQParseError(
+                        "PX_TQ_META_LINE",
+                        f"tq: each meta line needs `  key value` (key is snake_case, value is rest of line) "
+                        f"(line {lineno_m}). Example: `  owner security_team`",
+                        line=lineno_m,
+                    )
+                mkey, mval = parts_m[0], parts_m[1].strip()
+                if not _META_KEY_RE.match(mkey):
+                    raise TQParseError(
+                        "PX_TQ_META_KEY",
+                        f"tq: meta key must be snake_case [a-z][a-z0-9_]* (line {lineno_m}); got {mkey!r}.",
+                        line=lineno_m,
+                    )
+                if mkey in surface_meta:
+                    raise TQParseError(
+                        "PX_TQ_META_DUPLICATE_KEY",
+                        f"tq: duplicate meta key {mkey!r} (line {lineno_m}).",
+                        line=lineno_m,
+                    )
+                surface_meta[mkey] = mval
+                i += 1
+            if not surface_meta:
+                raise TQParseError(
+                    "PX_TQ_META_EMPTY",
+                    "tq: meta: block must contain at least one `  key value` line after the header.",
+                    line=lineno,
+                )
+            continue
         elif stripped.startswith("ensures "):
             if phase != "post_a":
                 raise _header_order(
@@ -613,6 +703,7 @@ def _parse_header_and_flow(text: str) -> _ParsedTqSurface:
                 raise _header_order("result must come after requires (and optional forbid/ensures)", lineno)
             _once("result", lineno)
             result_line = "OK"
+            result_lineno = lineno
             phase = "post_c"
         elif stripped.startswith("result "):
             if phase not in ("post_a", "post_b", "post_c"):
@@ -620,6 +711,7 @@ def _parse_header_and_flow(text: str) -> _ParsedTqSurface:
             _once("result", lineno)
             parts = stripped.split(None, 1)
             result_line = parts[1].strip() if len(parts) > 1 else "OK"
+            result_lineno = lineno
             phase = "post_c"
         elif stripped == "flow:":
             if phase not in ("post_a", "post_b", "post_c"):
@@ -629,20 +721,25 @@ def _parse_header_and_flow(text: str) -> _ParsedTqSurface:
                     "PX_TQ_MISSING_RESULT",
                     f"tq: 'result' is required immediately before flow: (line {lineno}). "
                     "Fix: add e.g. `result OK` or `result Login Successful` on the previous line.",
+                    line=lineno,
                 )
             _once("flow", lineno)
+            flow_declared = True
+            flow_header_lineno = lineno
             in_flow = True
             phase = "in_flow"
         elif stripped == "flow":
             raise TQParseError(
                 "PX_TQ_FLOW_COLON",
                 f"tq: the flow header must be exactly `flow:` with a colon (line {lineno}).",
+                line=lineno,
             )
         else:
             raise TQParseError(
                 "PX_TQ_UNRECOGNIZED_LINE",
                 f"tq: unrecognized line outside flow: {stripped!r} (line {lineno})."
-                f"{_unrecognized_line_suffix(stripped)} See TQ_SURFACE.md.",
+                f"{_unrecognized_line_suffix(stripped)} See docs/concepts.md.",
+                line=lineno,
             )
         i += 1
 
@@ -650,21 +747,48 @@ def _parse_header_and_flow(text: str) -> _ParsedTqSurface:
         raise TQParseError(
             "PX_TQ_MISSING_INTENT",
             "tq: missing intent line. Fix: add `intent your_flow_name` after optional module. "
-            "See TQ_SURFACE.md",
+            "See docs/concepts.md",
         )
     if not requires:
         raise TQParseError(
             "PX_TQ_MISSING_REQUIRES",
             "tq: missing requires line. Fix: after intent, add e.g. `requires username, password`. "
-            "See EXAMPLES.md",
+            "See docs/quickstart.md",
         )
     if result_line is None:
         raise TQParseError(
             "PX_TQ_MISSING_RESULT",
             "tq: missing required 'result' line before flow:. Fix: add e.g. `result OK` above flow:. "
-            "See TQ_SURFACE.md",
+            "See docs/concepts.md",
         )
-    return module, intent, requires, ensures, result_line, forbid_phrases, flow_steps, stub_paths
+    if not flow_declared:
+        rl = result_lineno or 1
+        raise TQParseError(
+            "PX_TQ_MISSING_FLOW",
+            f"tq: missing required `flow:` block after result (result was set near line {rl}). "
+            "Fix: after `result ...`, add a line `flow:` then indented steps such as `  create session`. "
+            "See docs/concepts.md.",
+            line=result_lineno,
+        )
+    if not flow_steps:
+        fh = flow_header_lineno or 1
+        raise TQParseError(
+            "PX_TQ_FLOW_NO_STEPS",
+            f"tq: `flow:` at line {fh} must contain at least one step line (two spaces + create session or emit login_success). "
+            "Comments-only flow blocks are not allowed. See docs/quickstart.md.",
+            line=flow_header_lineno,
+        )
+    return (
+        module,
+        intent,
+        requires,
+        ensures,
+        result_line,
+        forbid_phrases,
+        flow_steps,
+        stub_paths,
+        surface_meta,
+    )
 
 
 def parse_tq_source(text: str, *, tq_path: Optional[Path] = None) -> Dict[str, Any]:
@@ -689,6 +813,7 @@ def parse_tq_source(text: str, *, tq_path: Optional[Path] = None) -> Dict[str, A
         forbid_phrases,
         flow_steps,
         stub_paths,
+        surface_meta,
     ) = _parse_header_and_flow(expanded)
     goal = _snake_to_pascal(intent)
     if not goal:
@@ -803,6 +928,8 @@ def parse_tq_source(text: str, *, tq_path: Optional[Path] = None) -> Dict[str, A
     if stub_paths:
         sm["projection_stub_paths"] = dict(sorted(stub_paths.items()))
     md["source_map"] = sm
+    if surface_meta:
+        md["surface_meta"] = dict(sorted(surface_meta.items()))
 
     postconditions: List[Dict[str, Any]] = []
     if ensures_clause is not None:

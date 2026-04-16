@@ -39,7 +39,7 @@ def migrate_ir_bundle(bundle: Dict[str, Any], from_version: str, to_version: str
     if from_version != CANONICAL_IR_VERSION:
         raise ValueError(
             f"No migration path implemented from {from_version!r} to {to_version!r}. "
-            "See CANONICAL_IR.md for versioning notes."
+            "See docs/concepts.md for versioning notes."
         )
     g = ir_goal_from_json(bundle)
     if g.metadata.get("ir_version") != from_version:

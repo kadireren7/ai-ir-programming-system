@@ -318,6 +318,7 @@ _CONDITION_ID_FORBID = re.compile(r"^c_forbid_\d{4}$")
 _CONDITION_ID_POST = re.compile(r"^c_post_\d{4}$")
 _TRANSITION_ID = re.compile(r"^t_\d{4}$")
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
+_SURFACE_META_KEY_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 
 
 def _stable_ir_expr_json(expr: IRExpr) -> str:
@@ -656,6 +657,48 @@ def validate_ir(ir_goal: IRGoal) -> List[str]:
     for key in ("ir_version", "source", "canonical_language"):
         if key not in ir_goal.metadata:
             errors.append(f"IR validation: metadata must include {key!r}.")
+        else:
+            mv = ir_goal.metadata[key]
+            if not isinstance(mv, str) or not str(mv).strip():
+                errors.append(
+                    f"IR validation: metadata.{key} must be a non-empty string, got {mv!r}."
+                )
+
+    sm = ir_goal.metadata.get("source_map")
+    if sm is not None and not isinstance(sm, dict):
+        errors.append("IR validation: metadata.source_map must be a dict if present.")
+
+    smeta = ir_goal.metadata.get("surface_meta")
+    if smeta is not None:
+        if not isinstance(smeta, dict):
+            errors.append("IR validation: metadata.surface_meta must be a dict if present.")
+        else:
+            for k, v in smeta.items():
+                if not isinstance(k, str) or not _SURFACE_META_KEY_RE.match(k):
+                    errors.append(
+                        f"IR validation: metadata.surface_meta has invalid key {k!r} "
+                        "(expected snake_case [a-z][a-z0-9_]*)."
+                    )
+                if not isinstance(v, str) or not str(v).strip():
+                    errors.append(
+                        f"IR validation: metadata.surface_meta[{k!r}] must be a non-empty string."
+                    )
+
+    if not ir_goal.inputs:
+        errors.append("IR validation: inputs must be non-empty.")
+
+    if ir_goal.transitions:
+        r = ir_goal.result
+        if r is None or (isinstance(r, str) and not str(r).strip()):
+            errors.append(
+                "IR validation: result must be a non-empty string when transitions are present."
+            )
+
+    triples = [(t.effect_name, t.from_state, t.to_state) for t in ir_goal.transitions]
+    if len(triples) != len(set(triples)):
+        errors.append(
+            "IR validation: duplicate transition (effect_name, from_state, to_state) is not allowed."
+        )
 
     if ir_goal.metadata.get("ir_version") != CANONICAL_IR_VERSION:
         errors.append(

@@ -5,11 +5,43 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "torqa"
 version = "0.1.0"
-description = "Torqa: human-readable workflow surface (.tq) and canonical JSON intermediate representation (IR)."
+description = "Canonical workflow IR (ir_goal), structural and semantic validation, strict .tq surface, and CLI—spec core only, no runtime."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
+keywords = [
+    "workflow",
+    "specification",
+    "intermediate-representation",
+    "validation",
+    "ir",
+    "json-schema",
+    "automation",
+    "tq",
+    "ai-native",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/kadireren7/ai-ir-programming-system"
+Documentation = "https://github.com/kadireren7/ai-ir-programming-system#readme"
+Repository = "https://github.com/kadireren7/ai-ir-programming-system"
+Issues = "https://github.com/kadireren7/ai-ir-programming-system/issues"
+Changelog = "https://github.com/kadireren7/ai-ir-programming-system/blob/main/CHANGELOG.md"
+
+[project.scripts]
+torqa = "src.torqa_cli.main:main"
 
 [project.optional-dependencies]
 dev = [
