@@ -1,10 +1,10 @@
 # Torqa
 
-**Torqa is a canonical and verifiable workflow specification core for AI-native automation.**
+**Torqa is a canonical, verifiable workflow specification core with a built-in workflow trust layer.**
 
-**Torqa Core** is the **versioned JSON intermediate representation** (`ir_goal` in a bundle) plus **structural and semantic validation**—a single **contract** you can store, diff in review, run in CI, and hand off to other systems. This repository ships the **IR model**, **validators**, **JSON Schema**, and a **reference Python** implementation; it does not execute workflows.
+Human-authored or **generated** workflow specs should **not** be executed blindly. Torqa **validates** structure and semantics, then **trust-checks** and **risk-scores** the same canonical **`ir_goal`**—deterministic **policy** rules, **risk** tier and **reasons**, and optional **trust profiles** (`default` / `strict` / `review-heavy` via **`--profile`**) so teams can apply different **evaluation strictness** without forking the parser. **Execution stays external**: this repository does not run your workflows, call remote APIs, or embed a model.
 
-**`.tq`** is an **optional, ergonomic text layer** for authoring that maps to the same bundle. The shipped **reference parser** turns strict `.tq` into IR; bundle JSON from your own importer targets the **same** contract—**validation is the shared gate** either way.
+**Torqa Core** is the **versioned JSON intermediate representation** (`ir_goal` in a bundle) plus **structural validation**, **semantic validation**, and **`build_policy_report`** (policy, risk, profile id)—a single **contract** you can store, diff in review, run in CI, and hand off to other systems. The shipped **reference parser** maps strict **`.tq`** to that bundle; bundle JSON from importers or generators targets the **same** contract.
 
 ## Get started
 
@@ -19,18 +19,22 @@ If the `torqa` command is not found (common on Windows when Python’s **Scripts
 Then:
 
 1. **[First run](docs/first-run.md)** — Shortest path: two files, one command, what “success” looks like.  
-2. **[Quickstart](docs/quickstart.md)** — CLI (`torqa`), parse, validate, semantic report.  
+2. **[Quickstart](docs/quickstart.md)** — CLI (`torqa`), parse, validate, trust output.  
 3. **[Examples](docs/examples.md)** — Patterns (CI, imports, audit metadata).  
 4. **[CHANGELOG](CHANGELOG.md)** — What shipped in each version.  
 5. **[Early release notes](RELEASE_NOTES_v0.md)** — Scope, limits, and how to give feedback.
 
 ## Flagship Demo
 
-**[Flagship demo](docs/flagship-demo.md)** — One end-to-end story: author `.tq` or JSON, validate with `torqa`, and treat the checked IR as the handoff artifact (same contract, no runtime in-repo).
+**[Flagship demo](docs/flagship-demo.md)** — Draft (human or tool-produced) → **`torqa validate`** → trusted **`ir_goal`** artifact → hand off to **external** execution—same contract whether input is `.tq` or bundle JSON, no runtime in-repo.
+
+## AI Guardrail Demo
+
+**[AI Workflow Guardrail Demo](docs/guardrail-demo.md)** — End-to-end: valid vs broken specs, **policy / risk / profiles**, **`torqa validate`** / **`torqa inspect`**, same gate for **`.tq`** and JSON. No fake integrations—only shipped CLI and examples.
 
 ## Starter use cases
 
-**[Use cases](docs/use-cases.md)** — What the runnable files in **[`examples/`](examples/)** show (approval metadata, generated JSON, CI validation). Start there for copy-paste commands.
+**[Use cases](docs/use-cases.md)** — **`examples/`** walkthrough: **AI workflow trust gate** first, then **CI, review, and policy-based approval**. **[`examples/ai_guardrail.md`](examples/ai_guardrail.md)** lists commands and trust framing.
 
 ## Architecture at a Glance
 
@@ -38,39 +42,43 @@ Pipeline, in-repo vs external boundaries, and comparison visuals: **[Diagrams](d
 
 ## Why Torqa exists
 
-Workflow intent shows up as prose, one-off JSON, or vendor-locked formats. That makes it hard to **verify** the same definition everywhere, **diff** or **review** it as a **contract**, or **hand it off** cleanly to whatever runtime you use. Torqa puts **trust** in a **canonical IR** and **explicit validation**—not in ad-hoc blobs—so bad specs fail before execution, with stable semantics you can rely on across tools.
+Workflow intent shows up as prose, one-off JSON, vendor-locked formats, or **model-generated drafts**. Torqa concentrates **verification** and **trust** on a **canonical IR**: explicit structure and semantics, then **policy** and **risk**—so bad or non-compliant specs fail **before** execution. **[Trust layer](docs/trust-layer.md)** explains how this goes beyond parsing.
 
 ## The core workflow
 
-1. **Obtain a bundle** — Today: parse **`.tq`** with the reference parser, or load **`ir_goal` JSON** that matches the envelope (your importer or generator is responsible for shape). Additional input paths may be added over time; they still converge on the **same** validated IR.
+1. **Obtain a bundle** — Parse **`.tq`** with the reference parser, or load **`ir_goal` JSON** (importer, template, or **generator**). One contract for every source.
 2. **Canonical IR** — **`ir_goal`**: typed inputs, conditions, transitions, metadata (including **`ir_version`**).
 3. **Structural validation** — `validate_ir` rejects malformed or inconsistent IR before semantics.
-4. **Semantic validation** — A default effect registry and workflow logic checks produce a report (`semantic_ok` / errors); unknown effects and impossible stories are **errors**, not silent acceptance.
-5. **Handoff** — Validated IR is the artifact for **your** executor, orchestrator, or codegen—outside this repo.
+4. **Semantic validation** — Default effect registry and workflow logic (`semantic_ok` / `logic_ok`).
+5. **Trust evaluation** — **`build_policy_report`**: **`policy_ok`**, **`review_required`**, deterministic **`risk_level`** and **`reasons`**, **`trust_profile`** from **`--profile`**. Heuristics are not ML.
+6. **Handoff** — Validated IR for **your** executor, orchestrator, or codegen—**outside** this repo.
 
 ## What Torqa is
 
-- **The contract:** canonical **`ir_goal`** + **validation** (structural + semantic) for portable, reviewable workflow specs.
-- **Trust and portability:** one IR shape and schema-backed wire format so different teams and tools can agree on what “valid” means.
-- **Reference tooling in this repo:** **`canonical_ir`**, **`validate_ir`**, **`build_ir_semantic_report`**, **`spec/IR_BUNDLE.schema.json`**, and an optional **`.tq` → bundle** parser for human-friendly authoring.
+- **The contract:** canonical **`ir_goal`** + validation + **trust** (policy, risk, profiles) for portable, reviewable workflow specs.
+- **Trust and portability:** one IR shape and schema-backed wire format; teams can agree what “passes” means under a chosen **profile**.
+- **Reference tooling:** **`canonical_ir`**, **`validate_ir`**, **`build_ir_semantic_report`**, **`build_policy_report`**, **`spec/IR_BUNDLE.schema.json`**, optional **`.tq` → bundle** parser.
 
 ## What Torqa is not
 
 - Not a **workflow runtime**, **orchestration engine**, or **no-code / low-code UI**.
 - Not a **hosted service**, **IDE product**, or **LLM API**.
-- Not limited to a single file format for all time—the **core** is IR + checks; **`.tq`** is one supported authoring path today.
+- Not limited to a single file format for all time—the **core** is IR + checks + trust evaluation; **`.tq`** is one supported authoring path today.
 
 ## Why Now
 
-More automation is **generated** and **composed across tools**; teams need **reviewable** process definitions and **safer handoff** to execution—not only faster runtimes. **[Why now?](docs/why-now.md)** lays out that shift and the **specification gap** Torqa addresses—without overselling the current core.
+More automation is **generated** and **composed across tools**; teams need **reviewable** definitions and **trust gates**, not only faster runtimes. **[Why now?](docs/why-now.md)** — including why **syntax-only** checks are insufficient for **AI-generated** workflows.
 
 ## Minimal example (`.tq` → validate)
 
-`example.tq`:
+`example.tq` (include **`meta:`** for **`torqa validate`** — policy expects owner and severity; see [Trust policies](docs/trust-policies.md)):
 
 ```text
 intent example_flow
 requires username, password, ip_address
+meta:
+  owner example_owner
+  severity low
 result Done
 flow:
   create session
@@ -94,25 +102,30 @@ report = build_ir_semantic_report(goal, default_ir_function_registry())
 assert report.get("semantic_ok") is True
 ```
 
-The **same** `validate_ir` / semantic steps apply if you construct or import a conforming **`ir_goal`** without `.tq`.
+The **same** `validate_ir` / semantic steps apply if you construct or import a conforming **`ir_goal`** without `.tq`. Full **CLI** trust output requires **`torqa validate`** (see [Quickstart](docs/quickstart.md)).
 
-## Why this matters for AI-native automation
+## Why this matters when specs are generated
 
-Models and templates can emit content at volume; without a **canonical, checkable IR**, every consumer reinvents validation or accepts inconsistent JSON. Torqa anchors **trust** in the spec: explicit structural and semantic gates, and an IR you can **audit** independent of any single runtime or authoring surface.
+Volume-generated content needs the **same** structural and semantic gates **plus** **policy** and **risk** before handoff. Torqa anchors trust in the spec layer—**audit metadata**, **profiles**, deterministic **reasons**—independent of any single runtime. Nothing here calls an LLM.
 
 ## Current project status
 
-**Early core (v0.x).** Python modules under `src/`, `spec/IR_BUNDLE.schema.json`, and tests. For new text authoring use **`.tq`**; a transitional **`.pxir`** parser remains for migration only. The **`torqa`** CLI accepts **`.tq` or `.json`** (bundle or bare `ir_goal`) on one validation path. In scope: **IR**, validation, reference loaders—not execution.
+**Early core (v0.x).** Python modules under `src/`, `spec/IR_BUNDLE.schema.json`, and tests. For new text authoring use **`.tq`**; a transitional **`.pxir`** parser remains for migration only. The **`torqa`** CLI accepts **`.tq` or `.json`** on one path. In scope: **IR**, validation, **trust** evaluation—not execution.
 
 ## Documentation
 
 - [Overview](docs/overview.md) — scope and positioning  
+- [Trust layer](docs/trust-layer.md) — workflow trust layer (policy, risk, profiles)  
 - [Starter use cases](docs/use-cases.md) — `examples/` walkthrough  
 - [Flagship demo](docs/flagship-demo.md) — one guided `.tq` / JSON path  
+- [AI Workflow Guardrail Demo](docs/guardrail-demo.md) — guardrail + trust walkthrough  
 - [Why now?](docs/why-now.md) — context and who benefits  
 - [First run](docs/first-run.md) — minimal successful run  
 - [Quickstart](docs/quickstart.md) — install, CLI, validate  
 - [Concepts](docs/concepts.md) — IR, validation, `.tq` surface  
+- [Trust policies](docs/trust-policies.md) — validation vs semantics vs policy  
+- [Trust risk scoring](docs/trust-scoring.md) — deterministic risk tier and reasons  
+- [Trust profiles](docs/trust-profiles.md) — built-in evaluation modes (`default`, `strict`, `review-heavy`)  
 - [Examples](docs/examples.md) — CI, metadata, migration patterns  
 - [Architecture](docs/architecture.md) — layout and pipeline  
 - [Diagrams](docs/diagrams.md) — core flow and boundaries  
@@ -124,11 +137,11 @@ Models and templates can emit content at volume; without a **canonical, checkabl
 ## Design principles
 
 - **Canonical IR first** — One **`ir_goal`** shape (versioned bundle) as the interchange **contract**.
-- **Validation as the product gate** — Structure and semantics are checked deliberately; outcomes are visible in APIs and reports.
+- **Validation and trust as gates** — Structure, semantics, policy, and risk are deliberate; outcomes are visible in APIs and CLI output.
 - **Portability** — IR is **runtime-agnostic**; execution stays outside this layer.
 - **Optional ergonomic authoring** — **`.tq`** is strict so text maps deterministically to IR when you use it.
 - **No silent ambiguity** — Invalid or unknown constructs surface as errors with stable codes (e.g. `PX_TQ_*` for surface parse), not best-effort acceptance.
-- **Thin core** — Verifiable spec machinery, not a platform.
+- **Thin core** — Verifiable spec and trust machinery, not a platform.
 
 ## License
 

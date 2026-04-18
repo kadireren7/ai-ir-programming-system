@@ -4,7 +4,7 @@ Torqa fits wherever you need a **single, checkable workflow spec**: generated dr
 
 For a single guided walkthrough (`.tq` and JSON, same validation path), see **[Flagship demo](flagship-demo.md)**.
 
-For **three runnable starter files** in the repo (`examples/approval_flow.tq`, `examples/ai_generated.json`, CI notes in `examples/ci_check.md`), see **[Starter use cases](use-cases.md)**.
+For **starter examples**—**[`examples/ai_guardrail.md`](../examples/ai_guardrail.md)** (guardrail narrative and commands), runnable **`examples/approval_flow.tq`** and **`examples/ai_generated.json`**, and CI notes in **`examples/ci_check.md`**—see **[Starter use cases](use-cases.md)**.
 
 These scenarios are **illustrative**: they describe how teams typically wrap the core. This repository does not include LLM clients, vendor importers, or runtimes—only the parser, IR, and validators.
 

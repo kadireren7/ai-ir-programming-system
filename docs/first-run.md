@@ -23,6 +23,9 @@ Run that from the repository root.
 ```text
 intent example_flow
 requires username, password, ip_address
+meta:
+  owner local_dev
+  severity low
 result Done
 flow:
   create session
@@ -73,6 +76,7 @@ If you see that, Torqa parsed and validated your first spec.
 | `FileNotFoundError: demo.tq` | Run `python demo.py` from the directory that **contains** `demo.tq`. |
 | `PX_TQ_*` parse error | Check **two spaces** before `create session` / `emit login_success` (no tabs). Keep header order: `intent` → `requires` → `result` → `flow:`. |
 | `PX_TQ_MISSING_IP` | Include **`ip_address`** in `requires` when using `emit login_success` in this minimal flow. |
+| `Policy validation: FAIL` / missing owner or severity | Add a **`meta:`** block with **`owner`** and **`severity`** (see `demo.tq` above) so the CLI can pass **trust policy**; see [Trust policies](trust-policies.md). |
 | Old Python | Use **Python 3.10+** (`python --version`). |
 
 Next: [Quickstart](quickstart.md) for the full walkthrough, or [Examples](examples.md) for context.

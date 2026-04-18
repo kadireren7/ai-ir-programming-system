@@ -26,7 +26,7 @@ The **`torqa`** command picks the loader by **file extension**:
 - **`.tq`** — reference text parser (`parse_tq_source`).
 - **`.json`** — UTF-8 JSON: either a **bundle** `{"ir_goal": {...}}` (optional `library_refs`) validated with **`validate_bundle_envelope`**, or a **bare `ir_goal`** object whose top-level keys match the wire shape (required fields per schema; optional `result`).
 
-After load, **`ir_goal_from_json`**, **`validate_ir`**, and **`build_ir_semantic_report`** run the same way for both. **`torqa inspect`** prints only JSON on **stdout** (path and a short note on **stderr** so pipes stay clean).
+After load, **`ir_goal_from_json`**, **`validate_ir`**, and **`build_ir_semantic_report`** run the same way for both. **`torqa validate`** also runs **`build_policy_report`** when structure and semantics pass (policy gates plus deterministic **risk level** and **reasons**). **`torqa validate`** reports **handoff readiness** (or that the spec is **blocked**) including policy and risk; **`torqa inspect`** prints only JSON on **stdout**, with **stderr** describing the artifact for tooling, review, and pipelines (no execution). See [Trust policies](trust-policies.md) and [Trust risk scoring](trust-scoring.md).
 
 Parse errors for **wrong header order** use code **`PX_TQ_HEADER_ORDER`** and name the **expected next header** (tq_v1 sequence: optional `module` → `intent` → `requires` → … → `result` → `flow:`). Unknown **`flow:`** steps use **`PX_TQ_UNKNOWN_FLOW_STEP`** with the allowed step names spelled out.
 

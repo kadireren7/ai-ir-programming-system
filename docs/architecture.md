@@ -18,14 +18,17 @@ This layer is **pure data**: no network, no execution.
 
 ## 4. Validators
 
-Two phases:
+Three layers (CLI runs structural and semantic first; policy only if both succeed):
 
-| Phase | API | Question it answers |
+| Layer | API | Question it answers |
 |-------|-----|---------------------|
 | Structural | `validate_ir(goal)` | Is the IR well-formed? |
 | Semantic | `build_ir_semantic_report(goal, registry)` | Is it coherent under the effect registry and logic rules? |
+| Policy + risk | `build_policy_report(goal)` | Trust rules (`policy_ok`) and deterministic **risk** tier + **reasons** ([Trust risk scoring](trust-scoring.md)) |
 
 **`src.semantics`** supplies the default registry, logic validation (`ir_logic_validation`), and optional warning policy (`semantic_warning_policy_bundle.json` at repo root). Core **errors** are not disabled by policy.
+
+**`src.policy`** implements deterministic trust checks and built-in **profiles**; see [Trust policies](trust-policies.md) and [Trust profiles](trust-profiles.md).
 
 ## 5. Handoff layer (external)
 
@@ -37,7 +40,8 @@ Two phases:
 spec/IR_BUNDLE.schema.json   # JSON Schema for the bundle envelope
 src/surface/                 # .tq / .pxir → bundle
 src/ir/                      # IR types, validate_ir, migrate, explain helpers
-src/semantics/               # registry, semantic report, logic checks, policy
+src/semantics/               # registry, semantic report, logic checks
+src/policy/                  # trust policy report (built-in rules)
 tests/                       # End-to-end smoke tests
 ```
 

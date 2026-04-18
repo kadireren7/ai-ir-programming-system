@@ -44,9 +44,9 @@ After install, prefer **`torqa`** when it is on your `PATH`; otherwise use **`py
 
 | Command | What it does |
 |---------|----------------|
-| `torqa validate FILE` | **`.tq`:** parse → `validate_ir` → semantic + logic checks. **`.json`:** load bundle or bare `ir_goal` → same path. Prints a short, line-oriented report; **exit 0** only on full pass. |
-| `torqa inspect FILE` | **Stdout:** full canonical **`ir_goal` JSON** (the handoff artifact). **Stderr:** `Input type`, `File:`, and a one-line note that stdout is for piping / tools (e.g. `jq`), not for reading as the primary UX. |
-| `torqa doctor FILE` | Human-readable sections: Input, Parse/Load, Structure, Semantics, Summary. |
+| `torqa validate FILE` | **`.tq`:** parse → `validate_ir` → semantic + logic → **policy** (`build_policy_report`). **`.json`:** load bundle or bare `ir_goal` → same path. Optional **`--profile default|strict|review-heavy`**. On full pass, states the artifact is **ready for external handoff** (nothing runs here); on failure, **blocked before execution**. **Exit 0** only when structure, semantics, and policy all pass. |
+| `torqa inspect FILE` | **Stdout:** full canonical **`ir_goal` JSON** only (pipelines, diffs). **Stderr:** `Input type`, `File:`, and notes that stdout is the machine-readable artifact for tooling, review, and pipelines — **no execution**. |
+| `torqa doctor FILE` | Human-readable sections: Input, Parse/Load, Structure, Semantics, **Policy**, Summary — plus **readiness / trust** lines when checks pass. Optional **`--profile`**. |
 | `torqa version` | One line: package version and canonical IR version (e.g. `torqa 0.1.0 · canonical IR 1.4`). |
 
 **File types:** extension **`.tq`** uses the reference text parser; **`.json`** accepts either a **full bundle** `{"ir_goal": {...}}` (optional `library_refs`) or a **bare `ir_goal`** object with the required top-level keys (see `spec/IR_BUNDLE.schema.json`). Malformed JSON or envelope errors fail with a clear message.
@@ -62,8 +62,18 @@ Structural validation: PASS
 Semantic validation: PASS
 Logic validation: PASS
 
+Trust profile: default
+Policy validation: PASS
+Review required: no
+Risk level: low
+Why:
+  - Within current heuristics: owner and severity present, at most five transitions, severity not high.
+
 Result: PASS
+Handoff: validated artifact ready for external handoff.
 ```
+
+Files without **`meta:`** / `surface_meta.owner`+`severity` fail **policy** while still passing structure and semantics—see [Trust policies](trust-policies.md).
 
 Examples (replace `torqa` with `python -m src.torqa_cli` if needed):
 
@@ -86,11 +96,16 @@ In the **repository root**, create **`demo.tq`** with this exact content (two sp
 ```text
 intent example_flow
 requires username, password, ip_address
+meta:
+  owner local_dev
+  severity low
 result Done
 flow:
   create session
   emit login_success
 ```
+
+The **`meta:`** block supplies `surface_meta` so **`torqa validate`** passes **policy** checks (see [Trust policies](trust-policies.md)).
 
 ## Run demo.py
 

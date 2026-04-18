@@ -1,59 +1,57 @@
 # Starter use cases
 
-Three runnable artifacts under [`examples/`](../examples/) show how Torqa helps **today** with the **shipped** strict `.tq` surface, JSON bundles, and the `torqa` CLI. Nothing here executes business workflows—only **parse, load, validate**.
+Runnable artifacts under [`examples/`](../examples/) show how Torqa helps **today** with the **shipped** strict `.tq` surface, JSON bundles, and the `torqa` CLI. Nothing here executes business workflows—only **parse, load, validate**, then **policy, risk, and profile** evaluation on the same IR.
 
 ---
 
-## 1. `examples/approval_flow.tq` — Human-authored spec + audit metadata
+## 1. AI workflow trust gate
 
-**Demonstrates:** Strict `.tq` with **`meta:`** (`owner`, `severity`) carried into `metadata.surface_meta` for review and policy tooling, using the **reference flow vocabulary** (`create session`, `emit login_success`).
+**What it is:** A single pipeline for **any** workflow-shaped input—human **`.tq`**, **bundle JSON** from a template, importer, or **generator**—with **no** separate “AI bypass.” After load, Torqa runs **structural validation**, **semantic validation**, then **`build_policy_report`** (policy gates, deterministic **risk level**, **`reasons`**, optional **`--profile`**). See **[Trust layer](trust-layer.md)** for how this differs from parse-only checks.
 
-**Who uses it:** Teams that want **ownership and risk labels** on the same validated IR they already commit to git.
+**Demonstrates:** Do **not** promote generated or pasted bytes to “the spec we run” until **`torqa validate`** exits **0**: same **trust bar** for human or generated input.
+
+**Who uses it:** Teams that need a **deterministic gate** between draft and execution—not a bundled model, but real checks on **`.tq`** and JSON the repo already supports.
 
 **How to run:**
+
+```bash
+torqa validate examples/ai_generated.json
+torqa validate --profile strict examples/ai_generated.json
+torqa inspect examples/ai_generated.json
+```
+
+```bash
+torqa validate examples/approval_flow.tq
+```
+
+**Expected value:** Invalid structure, unknown effects (for the default registry), **policy** failures (e.g. missing audit metadata), or **strict** profile rules surface as **errors or non-zero exit**—not silent acceptance. **`Risk level:`** and **`Why:`** explain the classification under current heuristics.
+
+**Honest limit:** Torqa does **not** call external models; it **evaluates** artifacts you save or generate elsewhere. Extending **`tq_v1`** vocabulary or effect registries is **your** work; this layer still supplies **verification and trust signals** at the boundary.
+
+**See:** [`examples/ai_guardrail.md`](../examples/ai_guardrail.md), [AI Workflow Guardrail Demo](guardrail-demo.md).
+
+---
+
+## 2. CI, review, and policy-based approval
+
+**CI — block bad specs before merge:** Run **`torqa validate`** (optionally with **`--profile strict`** for stricter gates) on committed **`.tq`** and bundle JSON so drift fails the build. Patterns: [`examples/ci_check.md`](../examples/ci_check.md).
+
+**Review — canonical artifact, not only prose:** Use **`torqa inspect`** to emit **`ir_goal`** JSON for diff, tooling, or attach to review threads. Failed validation is a hard stop; passing output is the **same contract** whether the file was typed or imported.
+
+**Policy-oriented approval — audit metadata on the IR:** [`examples/approval_flow.tq`](../examples/approval_flow.tq) shows **`meta:`** (`owner`, **`severity`**) carried into **`metadata.surface_meta`** for policy and **`review_required`** / risk behavior. It illustrates **ownership and risk labels** on the validated IR you commit—not a full BPM engine; the reference **`tq_v1`** flow body remains the small shipped vocabulary.
 
 ```bash
 torqa validate examples/approval_flow.tq
 torqa inspect examples/approval_flow.tq
 ```
 
-**Expected value:** A **single file** that passes the same structural and semantic gates as the rest of the core; metadata is **honest strings**—not new effects.
-
-**Honest limit:** The business story is “approval handoff”; the **step text** is still the small `tq_v1` set. Broader approval stages require **your** surface/registry extensions—Torqa still gives you **validation discipline** at the boundary.
-
----
-
-## 2. `examples/ai_generated.json` — Tool or model output as bundle JSON
-
-**Demonstrates:** A **full bundle** `{"ir_goal": …}` in the same shape as **`parse_tq_source`** output—what an importer or generator would hand to the repo. Validation is identical whether the bytes came from `.tq` or JSON.
-
-**Who uses it:** Pipelines that **emit JSON** (templates, migrations, assistants) and need a **checkable artifact** before execution.
-
-**How to run:**
-
-```bash
-torqa validate examples/ai_generated.json
-torqa inspect examples/ai_generated.json
-```
-
-**Expected value:** **No second-class input**: JSON hits **`load` → `ir_goal_from_json` → `validate_ir` → semantics**, same as text.
-
----
-
-## 3. `examples/ci_check.md` — Gate specs in CI
-
-**Demonstrates:** How to run **`torqa validate`** over committed files in **bash** or **PowerShell**, and why that catches spec drift early.
-
-**Who uses it:** Maintainers wiring **lint jobs** or **pre-merge checks** without adding a workflow runtime.
-
-**How to run:** Follow the commands in [`examples/ci_check.md`](../examples/ci_check.md).
-
-**Expected value:** **Deterministic** failures on bad specs; reviewers see **intent**, not surprise parse errors at release time.
+**Expected value:** **Deterministic** failures on bad specs; reviewers work from **intent + IR + trust output**, not surprise parse errors at release time.
 
 ---
 
 ## See also
 
-- [Examples (patterns)](examples.md) — Broader scenarios (migration, multi-runtime).
-- [Flagship demo](flagship-demo.md) — One narrative across `.tq` and JSON.
-- [Quickstart](quickstart.md) — Install and CLI reference.
+- [Trust layer](trust-layer.md) — narrative for policy, risk, and profiles  
+- [Examples (patterns)](examples.md) — migration, multi-runtime  
+- [Flagship demo](flagship-demo.md) — guided `.tq` / JSON path  
+- [Quickstart](quickstart.md) — install and CLI reference  

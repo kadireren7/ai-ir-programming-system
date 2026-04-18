@@ -132,6 +132,10 @@
         "available": true,
         "prototype_only": true,
         "surface": "tq_v1"
+      },
+      "surface_meta": {
+        "owner": "fixture_generator",
+        "severity": "low"
       }
     }
   }

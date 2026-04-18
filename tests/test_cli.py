@@ -13,6 +13,17 @@ from src.torqa_cli.main import main
 
 VALID_TQ = """intent example_flow
 requires username, password, ip_address
+meta:
+  owner test_team
+  severity low
+result Done
+flow:
+  create session
+  emit login_success
+"""
+
+MINIMAL_TQ_NO_META = """intent example_flow
+requires username, password, ip_address
 result Done
 flow:
   create session
@@ -36,9 +47,43 @@ def test_cli_validate_passes_on_good_file(tmp_path: Path, capsys):
     out = capsys.readouterr().out
     assert "Input type: tq" in out
     assert "Result: PASS" in out
+    assert "Handoff: validated artifact ready for external handoff." in out
+    assert "Trust profile: default" in out
+    assert "Policy validation: PASS" in out
+    assert "Review required: no" in out
+    assert "Risk level: low" in out
+    assert "Why:" in out
+    assert "Within current heuristics" in out
     assert "Semantic validation: PASS" in out
     assert "Logic validation: PASS" in out
     assert "Parse: OK" in out
+
+
+def test_cli_validate_policy_fails_without_surface_meta(tmp_path: Path, capsys):
+    p = tmp_path / "no_meta.tq"
+    p.write_text(MINIMAL_TQ_NO_META, encoding="utf-8")
+    code = main(["validate", str(p)])
+    assert code == 1
+    out = capsys.readouterr().out
+    assert "Policy validation: FAIL" in out
+    assert "Policy errors:" in out
+    assert "owner is required" in out
+    assert "severity is required" in out
+    assert "Risk level: high" in out
+    assert "Why:" in out
+
+
+def test_cli_validate_high_severity_marks_review_required(tmp_path: Path, capsys):
+    tq = VALID_TQ.replace("severity low", "severity high")
+    p = tmp_path / "high.tq"
+    p.write_text(tq, encoding="utf-8")
+    code = main(["validate", str(p)])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "Policy validation: PASS" in out
+    assert "Review required: yes" in out
+    assert "Risk level: high" in out
+    assert "severity label is high" in out
 
 
 def test_cli_validate_fails_on_parse_error(tmp_path: Path, capsys):
@@ -53,6 +98,7 @@ def test_cli_validate_fails_on_parse_error(tmp_path: Path, capsys):
     assert "Parse: FAIL" in out
     assert "PX_TQ_MISSING_FLOW" in out or "PX_TQ_" in out
     assert "Result: FAIL" in out
+    assert "Guardrail: spec blocked before execution." in out
 
 
 def test_cli_inspect_prints_json(tmp_path: Path, capsys):
@@ -60,7 +106,11 @@ def test_cli_inspect_prints_json(tmp_path: Path, capsys):
     p.write_text(VALID_TQ, encoding="utf-8")
     code = main(["inspect", str(p)])
     assert code == 0
-    out = capsys.readouterr().out
+    captured = capsys.readouterr()
+    out = captured.out
+    err = captured.err
+    assert "machine-readable artifact for tooling" in err
+    assert "does not execute workflows" in err.lower()
     data = json.loads(out)
     assert "ir_goal" in data
     assert data["ir_goal"]["goal"] == "ExampleFlow"
@@ -76,6 +126,10 @@ def test_cli_doctor_ok(tmp_path: Path, capsys):
     assert "Status: OK" in out
     assert "Summary" in out
     assert "Status: PASS" in out
+    assert "Trust profile: default" in out
+    assert "Risk level: low" in out
+    assert "Why:" in out
+    assert "Trust: handoff-ready under structural, semantic, and policy checks" in out
 
 
 def test_cli_doctor_fails_on_bad_file(tmp_path: Path, capsys):
@@ -85,6 +139,7 @@ def test_cli_doctor_fails_on_bad_file(tmp_path: Path, capsys):
     assert code == 1
     out = capsys.readouterr().out
     assert "Status: FAIL" in out
+    assert "Readiness: blocked" in out
 
 
 def test_cli_validate_missing_file(capsys):

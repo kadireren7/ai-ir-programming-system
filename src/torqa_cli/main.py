@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from src.ir.canonical_ir import CANONICAL_IR_VERSION, ir_goal_from_json, ir_goal_to_json, validate_ir
+from src.policy import build_policy_report
 from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 from src.surface.parse_tq import TQParseError, parse_tq_source
 from src.torqa_cli.bundle_load import load_bundle_from_json_path
@@ -19,6 +20,10 @@ try:
     from importlib.metadata import version as pkg_version
 except ImportError:  # pragma: no cover
     from importlib_metadata import version as pkg_version  # type: ignore
+
+# Human-oriented CLI lines (deterministic; stdout for inspect remains JSON-only).
+_MSG_VALIDATE_HANDOFF_OK = "Handoff: validated artifact ready for external handoff."
+_MSG_VALIDATE_BLOCKED = "Guardrail: spec blocked before execution."
 
 LoadErr = Union[str, TQParseError, None]
 
@@ -86,6 +91,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
             print(f"Error: {err}")
         print()
         print("Result: FAIL")
+        print(_MSG_VALIDATE_BLOCKED)
         return 1
 
     assert bundle is not None
@@ -97,6 +103,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
         print(f"Error: {gerr}")
         print()
         print("Result: FAIL")
+        print(_MSG_VALIDATE_BLOCKED)
         return 1
 
     load_word = "Parse" if input_type == "tq" else "Load"
@@ -111,6 +118,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
             print(f"  - {line}")
         print()
         print("Result: FAIL")
+        print(_MSG_VALIDATE_BLOCKED)
         return 1
 
     print("Structural validation: PASS")
@@ -135,10 +143,39 @@ def cmd_validate(args: argparse.Namespace) -> int:
             print(f"  - {w}")
 
     print()
-    if sem_ok and logic_ok:
+    if not sem_ok or not logic_ok:
+        print("Result: FAIL")
+        print(_MSG_VALIDATE_BLOCKED)
+        return 1
+
+    profile = getattr(args, "profile", "default")
+    policy_rep = build_policy_report(goal, profile=profile)
+    pok = bool(policy_rep["policy_ok"])
+    print(f"Trust profile: {policy_rep['trust_profile']}")
+    print(f"Policy validation: {'PASS' if pok else 'FAIL'}")
+    print(f"Review required: {'yes' if policy_rep['review_required'] else 'no'}")
+    if policy_rep["errors"]:
+        print("Policy errors:")
+        for e in policy_rep["errors"]:
+            print(f"  - {e}")
+    if policy_rep["warnings"]:
+        print("Policy warnings:")
+        for w in policy_rep["warnings"]:
+            print(f"  - {w}")
+    rl = str(policy_rep.get("risk_level", "low"))
+    print(f"Risk level: {rl}")
+    pr_reasons = list(policy_rep.get("reasons") or [])
+    if pr_reasons:
+        print("Why:")
+        for line in pr_reasons:
+            print(f"  - {line}")
+    print()
+    if pok:
         print("Result: PASS")
+        print(_MSG_VALIDATE_HANDOFF_OK)
         return 0
     print("Result: FAIL")
+    print(_MSG_VALIDATE_BLOCKED)
     return 1
 
 
@@ -172,7 +209,11 @@ def cmd_inspect(args: argparse.Namespace) -> int:
     print(f"Input type: {input_type}", file=sys.stderr)
     print(f"File: {path.resolve()}", file=sys.stderr)
     print(
-        "Stdout: full canonical ir_goal JSON (pipe to jq, redirect to a file, or diff).",
+        "Stdout: full canonical ir_goal JSON — machine-readable artifact for tooling, review, and pipelines.",
+        file=sys.stderr,
+    )
+    print(
+        "Redirect or pipe as needed (e.g. jq); Torqa does not execute workflows.",
         file=sys.stderr,
     )
     out = ir_goal_to_json(goal)
@@ -198,6 +239,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         print()
         print("Summary")
         print("  Status: FAIL (unsupported input type)")
+        print("  Readiness: blocked — cannot assess handoff safety.")
         return 1
 
     print("Input")
@@ -225,6 +267,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         print()
         print("Summary")
         print("  Status: FAIL — fix load/parse, then re-run torqa validate.")
+        print("  Readiness: blocked — spec stopped before structural checks.")
         return 1
 
     assert bundle is not None
@@ -242,6 +285,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         print()
         print("Summary")
         print("  Status: FAIL")
+        print("  Readiness: blocked — invalid IR payload.")
         return 1
 
     load_word = "Parse" if input_type == "tq" else "Load"
@@ -278,11 +322,48 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             print(f"    - {w}")
     print()
 
-    print("Summary")
     if struct or not sem_ok or not logic_ok:
+        print("Policy")
+        print("  Status: (not reached)")
+        print()
+        print("Summary")
         print("  Status: FAIL — see Structure and Semantics above.")
+        print("  Readiness: blocked — not safe for handoff until resolved.")
         return 1
-    print("  Status: PASS (default effect registry)")
+
+    profile = getattr(args, "profile", "default")
+    policy_rep = build_policy_report(goal, profile=profile)
+    pok = bool(policy_rep["policy_ok"])
+    print("Policy")
+    print(f"  Trust profile: {policy_rep['trust_profile']}")
+    print(f"  Policy validation: {'PASS' if pok else 'FAIL'}")
+    print(f"  Review required: {'yes' if policy_rep['review_required'] else 'no'}")
+    if policy_rep["errors"]:
+        print("  Errors:")
+        for e in policy_rep["errors"]:
+            print(f"    - {e}")
+    if policy_rep["warnings"]:
+        print("  Warnings:")
+        for w in policy_rep["warnings"]:
+            print(f"    - {w}")
+    print(f"  Risk level: {policy_rep.get('risk_level', 'low')}")
+    pr_reasons = list(policy_rep.get("reasons") or [])
+    if pr_reasons:
+        print("  Why:")
+        for line in pr_reasons:
+            print(f"    - {line}")
+    print()
+
+    print("Summary")
+    if not pok:
+        print("  Status: FAIL — policy checks failed.")
+        print("  Readiness: blocked — not safe for handoff until resolved.")
+        return 1
+    print("  Status: PASS (default effect registry + policy + profile)")
+    print(
+        "  Trust: handoff-ready under structural, semantic, and policy checks — "
+        "Torqa validates only; it does not execute workflows."
+    )
     return 0
 
 
@@ -309,16 +390,30 @@ def _build_parser() -> argparse.ArgumentParser:
 
     pv = sub.add_parser(
         "validate",
-        help="Validate a .tq or JSON file (structural + semantic)",
-        description="Exit 0 only if load succeeds, validate_ir passes, and semantic_ok is true.",
+        help="Validate a .tq or JSON file (structural + semantic + policy + risk)",
+        description=(
+            "Exit 0 only if load succeeds, validate_ir passes, semantic_ok is true, and built-in policy checks pass. "
+            "Prints deterministic risk level and reasons (heuristics, not ML). "
+            "On success, reports that the artifact is ready for external handoff (nothing is executed here)."
+        ),
     )
     pv.add_argument("file", type=Path, metavar="FILE", help=file_help)
+    pv.add_argument(
+        "--profile",
+        default="default",
+        choices=["default", "strict", "review-heavy"],
+        metavar="PROFILE",
+        help="Built-in trust profile for policy and risk evaluation (default: default).",
+    )
     pv.set_defaults(func=cmd_validate)
 
     pi = sub.add_parser(
         "inspect",
         help="Print canonical IR JSON from a .tq or JSON file",
-        description="Pretty-print the ir_goal envelope after load and normalization.",
+        description=(
+            "Pretty-print the ir_goal envelope after load and normalization. "
+            "Stdout is JSON only for pipelines; stderr explains context (no execution)."
+        ),
     )
     pi.add_argument("file", type=Path, metavar="FILE", help=file_help)
     pi.set_defaults(func=cmd_inspect)
@@ -326,9 +421,19 @@ def _build_parser() -> argparse.ArgumentParser:
     pd = sub.add_parser(
         "doctor",
         help="Human-friendly diagnostics for a .tq or JSON file",
-        description="Summarize load, structural, and semantic health.",
+        description=(
+            "Summarize load, structural, semantic, policy, and deterministic risk output, "
+            "and handoff readiness (validation only)."
+        ),
     )
     pd.add_argument("file", type=Path, metavar="FILE", help=file_help)
+    pd.add_argument(
+        "--profile",
+        default="default",
+        choices=["default", "strict", "review-heavy"],
+        metavar="PROFILE",
+        help="Built-in trust profile for policy and risk evaluation (default: default).",
+    )
     pd.set_defaults(func=cmd_doctor)
 
     pver = sub.add_parser("version", help="Show torqa package and IR versions")

@@ -13,6 +13,9 @@ from src.torqa_cli.main import main
 
 VALID_TQ = """intent example_flow
 requires username, password, ip_address
+meta:
+  owner test_team
+  severity low
 result Done
 flow:
   create session
@@ -33,6 +36,12 @@ def test_cli_validate_full_bundle_json(tmp_path: Path, capsys, sample_bundle):
     out = capsys.readouterr().out
     assert "Input type: json" in out
     assert "Result: PASS" in out
+    assert "Handoff: validated artifact ready for external handoff." in out
+    assert "Trust profile: default" in out
+    assert "Policy validation: PASS" in out
+    assert "Review required: no" in out
+    assert "Risk level: low" in out
+    assert "Why:" in out
     assert "Load: OK" in out
 
 
@@ -52,6 +61,7 @@ def test_cli_validate_invalid_json_syntax(tmp_path: Path, capsys):
     assert code == 1
     out = capsys.readouterr().out
     assert "Load: FAIL" in out
+    assert "Guardrail: spec blocked before execution." in out
     assert "invalid JSON" in out.lower() or "Error:" in out
 
 
@@ -73,7 +83,8 @@ def test_cli_inspect_json_stdout_pure(tmp_path: Path, capsys, sample_bundle):
     captured = capsys.readouterr()
     assert "Input type: json" in captured.err
     assert "File:" in captured.err
-    assert "canonical ir_goal json" in captured.err.lower()
+    assert "machine-readable artifact for tooling" in captured.err.lower()
+    assert "does not execute workflows" in captured.err.lower()
     assert captured.out.strip().startswith("{")
     data = json.loads(captured.out)
     assert data["ir_goal"]["goal"] == "ExampleFlow"
@@ -88,6 +99,12 @@ def test_cli_doctor_json(tmp_path: Path, capsys, sample_bundle):
     assert "Type: json" in out
     assert "Load" in out
     assert "Status: OK" in out
+    assert "Trust profile: default" in out
+    assert "Policy validation: PASS" in out
+    assert "Review required: no" in out
+    assert "Risk level: low" in out
+    assert "Why:" in out
+    assert "Trust: handoff-ready under structural, semantic, and policy checks" in out
 
 
 def test_cli_unsupported_extension(tmp_path: Path, capsys):
