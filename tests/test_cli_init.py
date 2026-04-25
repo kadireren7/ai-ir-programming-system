@@ -110,8 +110,12 @@ def test_init_interactive_wizard_defaults(monkeypatch: pytest.MonkeyPatch, tmp_p
     assert code == 0
     p = tmp_path / "user_login.tq"
     assert p.is_file()
+
     assert main(["validate", str(p)]) == 0
-    assert "Wrote" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "Torqa init" in out
+    assert "Result: PASS" in out
+    assert "Handoff:" in out
 
 
 def test_cli_init_help_exits_zero():
