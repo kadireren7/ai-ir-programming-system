@@ -1,6 +1,6 @@
 # Torqa Supabase backend
 
-SQL migrations define the **first Torqa cloud** data model: profiles, organizations, projects, policies, validation runs, and reports, with **row level security** aligned to org membership.
+SQL migrations define the **first Torqa cloud** data model: profiles, organizations, projects, policies, validation runs, reports, and **per-user dashboard scan history** (`scan_history`), with **row level security** aligned to org membership (and self-only access for `scan_history`).
 
 ## Prerequisites
 
