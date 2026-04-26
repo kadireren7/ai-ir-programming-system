@@ -6,11 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.ir.canonical_ir import ir_goal_from_json
-from src.policy import build_policy_report, normalize_trust_profile
-from src.policy.profiles import BUILTIN_PROFILES
-from src.surface.parse_tq import parse_tq_source
-from src.torqa_cli.main import main
+from torqa.ir.canonical_ir import ir_goal_from_json
+from torqa.policy import build_policy_report, normalize_trust_profile
+from torqa.policy.profiles import BUILTIN_PROFILES
+from torqa.surface.parse_tq import parse_tq_source
+from torqa.cli.main import main
 
 TQ_META = """intent example_flow
 requires username, password, ip_address

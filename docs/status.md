@@ -37,7 +37,7 @@ These are **typical** prerequisites for a **stable 1.0** (semver contract, suppo
 ## Final status (this snapshot)
 
 - **Shippable today:** Reference Python core, CLI, JSON + `.tq` paths, trust evaluation, schema, contributor docs.
-- **Best for:** Teams who want a **checkable spec artifact** and are willing to read honest limits ([RELEASE_NOTES_v0](../RELEASE_NOTES_v0.md), [FAQ](faq.md)).
+- **Best for:** Teams who want a **checkable spec artifact** and are willing to read honest limits ([RELEASE_NOTES_v0](reports/RELEASE_NOTES_v0.md), [FAQ](faq.md)).
 - **Not yet:** Consumer-grade packaging, enterprise support matrix, or a frozen semver story beyond current `0.1.x` early release.
 
 For version-to-version code changes, see **[CHANGELOG](../CHANGELOG.md)**.

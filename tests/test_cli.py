@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from src.ir.canonical_ir import CANONICAL_IR_VERSION
-from src.torqa_cli.main import main
+from torqa.ir.canonical_ir import CANONICAL_IR_VERSION
+from torqa.cli.main import main
 
 VALID_TQ = """intent example_flow
 requires username, password, ip_address
@@ -168,12 +168,12 @@ def test_cli_check_subcommand_help():
 
 
 def test_cli_module_runnable():
-    """``python -m src.torqa_cli`` runs with PYTHONPATH=repo root."""
+    """``python -m torqa`` runs with PYTHONPATH=repo root."""
     import subprocess
 
     root = Path(__file__).resolve().parents[1]
     r = subprocess.run(
-        [sys.executable, "-m", "src.torqa_cli", "version"],
+        [sys.executable, "-m", "torqa", "version"],
         cwd=root,
         capture_output=True,
         text=True,

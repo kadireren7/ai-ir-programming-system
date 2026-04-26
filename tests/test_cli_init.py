@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from src.torqa_cli.init_cmd import sanitize_flow_name
-from src.torqa_cli.main import main
+from torqa.cli.init_cmd import sanitize_flow_name
+from torqa.cli.main import main
 
 
 def test_sanitize_flow_name():

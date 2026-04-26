@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from src.surface.parse_tq import parse_tq_source
-from src.torqa_cli.main import main
+from torqa.surface.parse_tq import parse_tq_source
+from torqa.cli.main import main
 
 VALID_TQ = """intent example_flow
 requires username, password, ip_address

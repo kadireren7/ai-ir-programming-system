@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 
-from src.torqa_cli.bundle_load import load_bundle_from_json_bytes
+from torqa.cli.bundle_load import load_bundle_from_json_bytes
 
 
 def test_empty_array_rejected() -> None:

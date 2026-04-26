@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import copy
 
-from src.ir.canonical_ir import ir_goal_from_json
-from src.policy import build_policy_report
-from src.surface.parse_tq import parse_tq_source
+from torqa.ir.canonical_ir import ir_goal_from_json
+from torqa.policy import build_policy_report
+from torqa.surface.parse_tq import parse_tq_source
 
 TQ_WITH_META = """intent example_flow
 requires username, password, ip_address

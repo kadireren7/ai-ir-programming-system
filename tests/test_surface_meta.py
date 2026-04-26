@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.ir.canonical_ir import ir_goal_from_json, validate_ir
-from src.surface.parse_tq import TQParseError, parse_tq_source
+from torqa.ir.canonical_ir import ir_goal_from_json, validate_ir
+from torqa.surface.parse_tq import TQParseError, parse_tq_source
 
 WITH_META = """
 intent example_flow

@@ -31,7 +31,7 @@ You should see a **PASS** validation and a version line. Then run a directory sc
 torqa scan examples/templates --profile default
 ```
 
-**Windows:** if `torqa` is not on `PATH`, use `python -m src.torqa_cli …` instead ([Quickstart — Windows](docs/quickstart.md#if-torqa-is-not-found-often-on-windows)).
+**Windows:** if `torqa` is not on `PATH`, use `python -m torqa …` instead ([Quickstart — Windows](docs/quickstart.md#if-torqa-is-not-found-often-on-windows)).
 
 ### See it (screenshots)
 
@@ -78,7 +78,7 @@ torqa scan examples/templates --profile default
 | **From Git** | `pip install "git+https://github.com/kadireren7/Torqa.git@main"` |
 | **Contributors** | `pip install -e ".[dev]"` (includes `torqa[test]`, **Ruff**, `pytest`, `jsonschema`) |
 
-Use **pip 21.2+** (or **pipx** / **uv**) so extras resolve. **Imports** today use the historical **`src.*`** layout; the supported entrypoints are the **`torqa`** CLI and **`python -m src.torqa_cli`**. Versioning & releases: [Releasing](docs/releasing.md).
+Use **pip 21.2+** (or **pipx** / **uv**) so extras resolve. The installable Python package is **`torqa`** (under `src/torqa/`); use the **`torqa`** CLI or **`python -m torqa`**. Versioning & releases: [Releasing](docs/releasing.md).
 
 Full command matrix and JSON shapes: **[Quickstart](docs/quickstart.md)** · shortest success path: **[First run](docs/first-run.md)**.
 
@@ -110,7 +110,7 @@ The **[`examples/`](examples/)** folder is the fastest way to go from clone to r
 
 ### n8n workflow exports (static review)
 
-Torqa **does not execute n8n** and does not call your n8n instance. It only reads **exported workflow JSON**. **n8n support is an adapter layer** under `src/integrations/n8n/`: exports are converted to the same **`ir_goal`** bundle the rest of the CLI validates. Because canonical IR forbids duplicate effect/state transition triples, the adapter uses **one** `integration_external_step` transition; **node-level** detail and static findings live in **`metadata.integration.findings`** and **`metadata.integration.transition_to_node`** (including **`n8n_nodes_ordered`**). **`torqa scan … --source n8n --json`** adds an **`integration`** object whose **`findings`** map issues back to **n8n node ids and names**.
+Torqa **does not execute n8n** and does not call your n8n instance. It only reads **exported workflow JSON**. **n8n support is an adapter layer** under `src/torqa/integrations/n8n/`: exports are converted to the same **`ir_goal`** bundle the rest of the CLI validates. Because canonical IR forbids duplicate effect/state transition triples, the adapter uses **one** `integration_external_step` transition; **node-level** detail and static findings live in **`metadata.integration.findings`** and **`metadata.integration.transition_to_node`** (including **`n8n_nodes_ordered`**). **`torqa scan … --source n8n --json`** adds an **`integration`** object whose **`findings`** map issues back to **n8n node ids and names**.
 
 Details: **[`docs/integrations/n8n.md`](docs/integrations/n8n.md)**.
 
@@ -150,7 +150,7 @@ We welcome **issues** and **PRs** that respect the spec-core boundary.
 
 - **[CHANGELOG.md](CHANGELOG.md)** — Keep a Changelog  
 - **[Releasing](docs/releasing.md)** — SemVer + PyPI automation  
-- **[Early release notes](RELEASE_NOTES_v0.md)** — what “v0” means today  
+- **[Early release notes](docs/reports/RELEASE_NOTES_v0.md)** — what “v0” means today  
 
 ---
 
@@ -177,9 +177,9 @@ flow:
 ```python
 from pathlib import Path
 
-from src.surface.parse_tq import parse_tq_source
-from src.ir.canonical_ir import ir_goal_from_json, validate_ir
-from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
+from torqa.surface.parse_tq import parse_tq_source
+from torqa.ir.canonical_ir import ir_goal_from_json, validate_ir
+from torqa.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 
 bundle = parse_tq_source(
     Path("example.tq").read_text(encoding="utf-8"),

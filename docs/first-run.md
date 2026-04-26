@@ -21,10 +21,10 @@ Run that from the repository root.
 **Option A — generate `demo.tq`** (from the repo root, non-interactive):
 
 ```bash
-python -m src.torqa_cli init login --output demo.tq
+python -m torqa init login --output demo.tq
 ```
 
-Or run **`python -m src.torqa_cli init`** for the interactive wizard (requires a TTY).
+Or run **`python -m torqa init`** for the interactive wizard (requires a TTY).
 
 **`demo.tq`** — or copy exactly below (indent with **two spaces** in the `flow:` block):
 
@@ -44,9 +44,9 @@ flow:
 
 ```python
 from pathlib import Path
-from src.surface.parse_tq import parse_tq_source
-from src.ir.canonical_ir import ir_goal_from_json, validate_ir
-from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
+from torqa.surface.parse_tq import parse_tq_source
+from torqa.ir.canonical_ir import ir_goal_from_json, validate_ir
+from torqa.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 
 bundle = parse_tq_source(Path("demo.tq").read_text(encoding="utf-8"), tq_path=Path("demo.tq"))
 goal = ir_goal_from_json(bundle)
@@ -79,7 +79,7 @@ If you see that, Torqa parsed and validated your first spec.
 
 | Problem | Fix |
 |--------|-----|
-| `torqa` is not recognized (Windows) | Use `python -m src.torqa_cli validate demo.tq` or `python -m src.torqa_cli check demo.tq` from the repo root, or add Python’s **Scripts** folder to your `PATH` (see [Quickstart](quickstart.md#if-torqa-is-not-found-often-on-windows)). |
+| `torqa` is not recognized (Windows) | Use `python -m torqa validate demo.tq` or `python -m torqa check demo.tq` from the repo root, or add Python’s **Scripts** folder to your `PATH` (see [Quickstart](quickstart.md#if-torqa-is-not-found-often-on-windows)). |
 | `ModuleNotFoundError: src` | Run `pip install -e ".[dev]"` from the **repo root**, then run `python demo.py` again from the same folder. |
 | `FileNotFoundError: demo.tq` | Run `python demo.py` from the directory that **contains** `demo.tq`. |
 | `PX_TQ_*` parse error | Check **two spaces** before `create session` / `emit login_success` (no tabs). Keep header order: `intent` → `requires` → `result` → `flow:`. |

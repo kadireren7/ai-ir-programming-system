@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from src.surface.parse_tq import parse_tq_source
-from src.torqa_cli.main import main
-from src.torqa_cli.project_config import (
+from torqa.surface.parse_tq import parse_tq_source
+from torqa.cli.main import main
+from torqa.cli.project_config import (
     TorqaConfigError,
     find_torqa_toml,
     load_torqa_project_config,

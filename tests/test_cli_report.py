@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from src.surface.parse_tq import parse_tq_source
-from src.torqa_cli.main import main
+from torqa.surface.parse_tq import parse_tq_source
+from torqa.cli.main import main
 
 VALID_TQ = """intent example_flow
 requires username, password, ip_address
@@ -165,7 +165,7 @@ def test_report_md_default_output_cwd(tmp_path: Path, monkeypatch: pytest.Monkey
 
 
 def test_evaluate_trust_gate_includes_reason(tmp_path: Path):
-    from src.torqa_cli.check_cmd import evaluate_trust_gate
+    from torqa.cli.check_cmd import evaluate_trust_gate
 
     p = tmp_path / "ok.tq"
     p.write_text(VALID_TQ, encoding="utf-8")

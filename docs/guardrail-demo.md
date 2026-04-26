@@ -2,7 +2,7 @@
 
 This page is one **end-to-end** path through the guardrail story: a workflow-shaped spec exists (from a human, a template, or any system that emits `.tq` or bundle JSON). **Torqa treats it as a workflow trust layer**—not just parsing—running **structural validation**, **semantic validation**, then **policy**, **deterministic risk**, and optional **trust profiles** before any external execution step. Nothing here calls an LLM or a remote API, and nothing in this repository runs your business workflows.
 
-**Prerequisite:** from the repository root, `pip install -e ".[dev]"`. Use `torqa` if it is on your `PATH`; otherwise `python -m src.torqa_cli` (see [Quickstart](quickstart.md#if-torqa-is-not-found-often-on-windows)).
+**Prerequisite:** from the repository root, `pip install -e ".[dev]"`. Use `torqa` if it is on your `PATH`; otherwise `python -m torqa` (see [Quickstart](quickstart.md#if-torqa-is-not-found-often-on-windows)).
 
 ---
 

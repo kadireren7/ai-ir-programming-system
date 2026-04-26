@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.torqa_cli.readiness import format_readiness_line, readiness_score_100
+from torqa.cli.readiness import format_readiness_line, readiness_score_100
 
 
 def test_format_readiness_line():

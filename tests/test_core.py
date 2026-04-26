@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from src.ir.canonical_ir import CANONICAL_IR_VERSION, ir_goal_from_json, validate_ir
-from src.ir.migrate import migrate_ir_bundle
-from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
-from src.surface.parse_tq import TQParseError, parse_tq_source
+from torqa.ir.canonical_ir import CANONICAL_IR_VERSION, ir_goal_from_json, validate_ir
+from torqa.ir.migrate import migrate_ir_bundle
+from torqa.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
+from torqa.surface.parse_tq import TQParseError, parse_tq_source
 
 REPO = Path(__file__).resolve().parents[1]
 

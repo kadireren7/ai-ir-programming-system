@@ -3,7 +3,7 @@
 ## What this is (and is not)
 
 - Torqa **does not execute** n8n workflows, does not call the n8n API, and does not need a running n8n instance. It only reads **offline exported JSON**.
-- **n8n support is an adapter layer** (`src/integrations/n8n/`): exports are converted into the same **`ir_goal`** bundle as other inputs, then validated by the **source-agnostic** core (`validate_ir`, semantics, policy, trust scoring).
+- **n8n support is an adapter layer** (`src/torqa/integrations/n8n/`): exports are converted into the same **`ir_goal`** bundle as other inputs, then validated by the **source-agnostic** core (`validate_ir`, semantics, policy, trust scoring).
 - The **canonical IR** uses **one** synthetic transition (`integration_external_step`, id `t_0001`) so the bundle satisfies IR rules that forbid duplicate `(effect, from_state, to_state)` triples. **Per-node** information is **not** lost: it lives in **`metadata.integration.findings`** (static rules with n8n node ids and names) and **`metadata.integration.transition_to_node.t_0001.n8n_nodes_ordered`** (ordered id / name / type list).
 - **`torqa scan --source n8n --json`** adds an **`integration`** field on each row: **`findings`** map Torqa rule hits back to **n8n node identifiers and display names**; **`transition_to_node`** carries the IR-side mapping above.
 

@@ -26,8 +26,8 @@ pip install -e ".[dev]"
 **Option A — use the module (no PATH change)** from the **repository root**:
 
 ```bash
-python -m src.torqa_cli validate demo.tq
-python -m src.torqa_cli --help
+python -m torqa validate demo.tq
+python -m torqa --help
 ```
 
 Use the same pattern for `check`, `compare`, `doctor`, `explain`, `inspect`, `init`, `report`, `scan`, and `version`.
@@ -44,7 +44,7 @@ Add that folder to your **user** environment `Path`, then open a **new** termina
 
 ## CLI (terminal)
 
-After install, prefer **`torqa`** when it is on your `PATH`; otherwise use **`python -m src.torqa_cli`** as above.
+After install, prefer **`torqa`** when it is on your `PATH`; otherwise use **`python -m torqa`** as above.
 
 Optional **`torqa.toml`** in the project tree sets defaults for **`profile`**, **`fail_on_warning`**, and **`report_format`** when you omit the matching flags. See [Project config](project-config.md).
 
@@ -87,7 +87,7 @@ Handoff: validated artifact ready for external handoff.
 
 Files without **`meta:`** / `surface_meta.owner`+`severity` fail **policy** while still passing structure and semantics—see [Trust policies](trust-policies.md).
 
-Examples (replace `torqa` with `python -m src.torqa_cli` if needed):
+Examples (replace `torqa` with `python -m torqa` if needed):
 
 ```bash
 torqa validate demo.tq
@@ -141,9 +141,9 @@ In the same directory as `demo.tq`, create **`demo.py`**:
 ```python
 from pathlib import Path
 
-from src.surface.parse_tq import parse_tq_source
-from src.ir.canonical_ir import ir_goal_from_json, validate_ir
-from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
+from torqa.surface.parse_tq import parse_tq_source
+from torqa.ir.canonical_ir import ir_goal_from_json, validate_ir
+from torqa.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 
 text = Path("demo.tq").read_text(encoding="utf-8")
 bundle = parse_tq_source(text, tq_path=Path("demo.tq"))
@@ -190,7 +190,7 @@ From Python you can dump a bundle and re-check it with the CLI:
 ```python
 import json
 from pathlib import Path
-from src.surface.parse_tq import parse_tq_source
+from torqa.surface.parse_tq import parse_tq_source
 
 bundle = parse_tq_source(Path("demo.tq").read_text(encoding="utf-8"), tq_path=Path("demo.tq"))
 Path("bundle.json").write_text(json.dumps(bundle, indent=2), encoding="utf-8")

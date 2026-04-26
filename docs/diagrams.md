@@ -45,9 +45,9 @@ flowchart TB
   subgraph REPO["Inside this repository"]
     direction TB
     S[Authoring surface — `.tq` rules documented + parser]
-    P[Core parser — `src/surface`]
-    I[IR model — `src/ir`, bundle JSON Schema]
-    V[Validators — structural + semantic — `src/semantics`]
+    P[Core parser — `torqa.surface`]
+    I[IR model — `torqa.ir`, bundle JSON Schema]
+    V[Validators — structural + semantic — `torqa.semantics`]
     D[Docs, tests, `spec/`]
   end
 

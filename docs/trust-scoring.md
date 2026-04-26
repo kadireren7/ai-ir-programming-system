@@ -39,7 +39,7 @@ The policy API returns one structure (extend [Trust policies](trust-policies.md)
 
 **`default`** and **`review-heavy`** share the same risk tier table below for the graph size and severity signals; **`strict`** uses a lower transition threshold and treats large graphs as **high** risk (see [Trust profiles](trust-profiles.md)).
 
-Implemented in `src/policy/report.py`:
+Implemented in `src/torqa/policy/report.py`:
 
 | Signal | Effect on risk | Notes |
 |--------|----------------|--------|

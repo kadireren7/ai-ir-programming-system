@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from src.torqa_cli.main import main
+from torqa.cli.main import main
 
 VALID_TQ = """intent example_flow
 requires username, password, ip_address

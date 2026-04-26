@@ -8,7 +8,7 @@ Real workflows—approvals, branching, reusable playbooks—often need **more au
 
 ## Current surface supports
 
-What the reference parser actually implements today (see `src/surface/parse_tq.py`):
+What the reference parser actually implements today (see `src/torqa/surface/parse_tq.py`):
 
 - **Strict `tq_v1`:** Fixed header sequence (`module` optional, `intent`, `requires`, optional `forbid locked`, optional `ensures session.created`, `result`, `flow:`). Lowercase keywords only.
 - **Flow body (strict):** Exactly two spaces + **`create session`** or **`emit login_success`**, or guarded **`emit login_success when/if <ident>`**. At most one create and one emit in the common profile; `#` comments allowed inside `flow:`.

@@ -1,6 +1,6 @@
 # CI: validate committed `.tq` specs
 
-Run from the **repository root** after `pip install -e ".[dev]"`. Use `torqa` if it is on your `PATH`; on Windows, if the command is not found, use `python -m src.torqa_cli` instead (see [Quickstart](../docs/quickstart.md#if-torqa-is-not-found-often-on-windows)).
+Run from the **repository root** after `pip install -e ".[dev]"`. Use `torqa` if it is on your `PATH`; on Windows, if the command is not found, use `python -m torqa` instead (see [Quickstart](../docs/quickstart.md#if-torqa-is-not-found-often-on-windows)).
 
 ## Bash / Git Bash (Linux, macOS, WSL)
 
@@ -29,10 +29,10 @@ torqa validate examples/*.tq
 Get-ChildItem examples\*.tq | ForEach-Object { torqa validate $_.FullName }
 ```
 
-If `torqa` is not recognized, use the same loop with `python -m src.torqa_cli`:
+If `torqa` is not recognized, use the same loop with `python -m torqa`:
 
 ```powershell
-Get-ChildItem examples\*.tq | ForEach-Object { python -m src.torqa_cli validate $_.FullName }
+Get-ChildItem examples\*.tq | ForEach-Object { python -m torqa validate $_.FullName }
 ```
 
 ## Why this helps teams

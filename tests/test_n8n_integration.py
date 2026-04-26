@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.integrations.n8n.analysis import analyze_n8n_workflow
-from src.integrations.n8n.convert import n8n_export_to_bundle, n8n_workflow_to_bundle
-from src.integrations.n8n.parser import parse_n8n_export
-from src.ir.canonical_ir import ir_goal_from_json, validate_ir
-from src.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
-from src.torqa_cli.io import load_input
+from torqa.integrations.n8n.analysis import analyze_n8n_workflow
+from torqa.integrations.n8n.convert import n8n_export_to_bundle, n8n_workflow_to_bundle
+from torqa.integrations.n8n.parser import parse_n8n_export
+from torqa.ir.canonical_ir import ir_goal_from_json, validate_ir
+from torqa.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
+from torqa.cli.io import load_input
 
 REPO = Path(__file__).resolve().parents[1]
 FIX = REPO / "tests" / "fixtures" / "n8n"
@@ -73,7 +73,7 @@ def test_cli_scan_json_n8n_source_includes_integration(tmp_path: Path, monkeypat
     dst = tmp_path / "w.json"
     dst.write_bytes((FIX / "minimal_chain.json").read_bytes())
     r = subprocess.run(
-        [sys.executable, "-m", "src.torqa_cli", "scan", str(dst), "--source", "n8n", "--json"],
+        [sys.executable, "-m", "torqa", "scan", str(dst), "--source", "n8n", "--json"],
         cwd=str(REPO),
         capture_output=True,
         text=True,
@@ -96,7 +96,7 @@ def test_cli_import_n8n(tmp_path: Path):
         [
             sys.executable,
             "-m",
-            "src.torqa_cli",
+            "torqa",
             "import",
             "n8n",
             str(FIX / "minimal_chain.json"),

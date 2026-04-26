@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from src.ir.canonical_ir import ir_goal_from_json
-from src.policy import build_policy_report
-from src.surface.parse_tq import parse_tq_source
+from torqa.ir.canonical_ir import ir_goal_from_json
+from torqa.policy import build_policy_report
+from torqa.surface.parse_tq import parse_tq_source
 
 TQ_BASE = """intent example_flow
 requires username, password, ip_address
@@ -104,7 +104,7 @@ def test_high_severity_and_many_transitions_lists_both_reasons():
 
 def test_trust_scoring_surfaces_when_advanced_analysis_raises(monkeypatch):
     """Regression: advanced analysis must not fail silently inside trust scoring."""
-    from src.policy import risk_engine as risk_engine_mod
+    from torqa.policy import risk_engine as risk_engine_mod
 
     def _boom(*args, **kwargs):
         raise RuntimeError("simulated advanced analysis failure")

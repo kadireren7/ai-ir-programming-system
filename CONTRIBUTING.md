@@ -29,7 +29,7 @@ Verify the CLI:
 
 ```bash
 torqa version
-# or: python -m src.torqa_cli version
+# or: python -m torqa version
 ```
 
 Run the full test suite before opening a PR:
@@ -39,7 +39,7 @@ python -m pytest
 ruff check src tests
 ```
 
-On Windows, if `torqa` is not on `PATH`, use `python -m src.torqa_cli` (see [Quickstart — Windows](docs/quickstart.md#if-torqa-is-not-found-often-on-windows)).
+On Windows, if `torqa` is not on `PATH`, use `python -m torqa` (see [Quickstart — Windows](docs/quickstart.md#if-torqa-is-not-found-often-on-windows)).
 
 Optional: `jsonschema` is pulled in via **`[test]`** / **`[dev]`** for schema-related checks in tests.
 

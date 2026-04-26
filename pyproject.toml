@@ -54,7 +54,7 @@ Releasing = "https://github.com/kadireren7/Torqa/blob/main/docs/releasing.md"
 Security = "https://github.com/kadireren7/Torqa/security/policy"
 
 [project.scripts]
-torqa = "src.torqa_cli.main:main"
+torqa = "torqa.cli.main:main"
 
 [project.optional-dependencies]
 # Minimal deps to run the test suite (CI, contributors who skip full dev tools)
@@ -75,15 +75,15 @@ release = [
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
+where = ["src"]
+include = ["torqa*"]
 
 [tool.setuptools.package-data]
-src = ["py.typed"]
+torqa = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = ["src"]
 addopts = "-q"
 
 [tool.ruff]

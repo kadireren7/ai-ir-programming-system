@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.torqa_cli.suggestions import (
+from torqa.cli.suggestions import (
     suggestion_for_parse_code,
     suggestion_for_policy_line,
     suggested_fix_when_policy_passes,

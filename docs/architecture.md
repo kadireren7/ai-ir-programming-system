@@ -8,11 +8,11 @@ Humans or tools produce **`.tq`** text (strict line format). Legacy **`.pxir`** 
 
 ## 2. Parser
 
-**`src.surface`** — `parse_tq_source` reads strings and returns a **bundle** dict (`ir_goal` as JSON-compatible data). Failures are **`TQParseError`** with stable **`PX_TQ_*`** codes. The parser does not validate full IR semantics; it builds the bundle shape.
+**`torqa.surface`** — `parse_tq_source` reads strings and returns a **bundle** dict (`ir_goal` as JSON-compatible data). Failures are **`TQParseError`** with stable **`PX_TQ_*`** codes. The parser does not validate full IR semantics; it builds the bundle shape.
 
 ## 3. Canonical IR
 
-**`src.ir.canonical_ir`** — `ir_goal_from_json` turns bundle data into **`IRGoal`** (typed expressions, transitions, metadata). **`CANONICAL_IR_VERSION`** in metadata marks the contract version. **`migrate_ir_bundle`** updates saved JSON when migrations exist.
+**`torqa.ir.canonical_ir`** — `ir_goal_from_json` turns bundle data into **`IRGoal`** (typed expressions, transitions, metadata). **`CANONICAL_IR_VERSION`** in metadata marks the contract version. **`migrate_ir_bundle`** updates saved JSON when migrations exist.
 
 This layer is **pure data**: no network, no execution.
 
@@ -26,9 +26,9 @@ Three layers (CLI runs structural and semantic first; policy only if both succee
 | Semantic | `build_ir_semantic_report(goal, registry)` | Is it coherent under the effect registry and logic rules? |
 | Policy + risk | `build_policy_report(goal)` | Trust rules (`policy_ok`) and deterministic **risk** tier + **reasons** ([Trust risk scoring](trust-scoring.md)) |
 
-**`src.semantics`** supplies the default registry, logic validation (`ir_logic_validation`), and optional warning policy (`semantic_warning_policy_bundle.json` at repo root). Core **errors** are not disabled by policy.
+**`torqa.semantics`** supplies the default registry, logic validation (`ir_logic_validation`), and optional warning policy (`semantic_warning_policy_bundle.json` at repo root). Core **errors** are not disabled by policy.
 
-**`src.policy`** implements deterministic trust checks and built-in **profiles**; see [Trust policies](trust-policies.md) and [Trust profiles](trust-profiles.md).
+**`torqa.policy`** implements deterministic trust checks and built-in **profiles**; see [Trust policies](trust-policies.md) and [Trust profiles](trust-profiles.md).
 
 ## 5. Handoff layer (external)
 
@@ -38,10 +38,11 @@ Three layers (CLI runs structural and semantic first; policy only if both succee
 
 ```text
 spec/IR_BUNDLE.schema.json   # JSON Schema for the bundle envelope
-src/surface/                 # .tq / .pxir → bundle
-src/ir/                      # IR types, validate_ir, migrate, explain helpers
-src/semantics/               # registry, semantic report, logic checks
-src/policy/                  # trust policy report (built-in rules)
+src/torqa/surface/           # .tq / .pxir → bundle
+src/torqa/ir/               # IR types, validate_ir, migrate, explain helpers
+src/torqa/semantics/        # registry, semantic report, logic checks
+src/torqa/policy/           # trust policy report (built-in rules)
+src/torqa/cli/              # torqa CLI, bundle load, I/O helpers
 tests/                       # End-to-end smoke tests
 ```
 
@@ -57,12 +58,12 @@ These notes are for **contributors** deciding where to edit. They are not a subs
 
 | Layer | Location | Expectations |
 |-------|----------|--------------|
-| **Surface / `.tq`** | `src/surface/` | Parse errors use stable **`PX_TQ_*`** codes; behavior changes need tests under `tests/`. |
-| **Canonical IR** | `src/ir/` | Wire shape and `CANONICAL_IR_VERSION` are the contract. Changes that alter on-disk JSON usually need a **migration** (`migrate_ir_bundle`) and schema sync (`spec/IR_BUNDLE.schema.json`). Discuss non-trivial changes in an issue first. |
-| **Semantics & registry** | `src/semantics/` | New or changed **effects** affect every spec that references them; keep the default registry small and explicit. |
-| **Policy & trust** | `src/policy/` | Rules stay **deterministic**; align with [Trust policies](trust-policies.md) and [Trust profiles](trust-profiles.md). |
-| **CLI** | `src/torqa_cli/` | Exit codes and stream usage (`stdout` vs `stderr`) matter for scripts; extend `tests/test_cli_*.py` when behavior is user-visible. |
-| **Bundle / JSON load** | `src/torqa_cli/bundle_load.py`, `io.py` | Error strings often include **path hints**; keep them stable where tests assert substrings. |
+| **Surface / `.tq`** | `src/torqa/surface/` | Parse errors use stable **`PX_TQ_*`** codes; behavior changes need tests under `tests/`. |
+| **Canonical IR** | `src/torqa/ir/` | Wire shape and `CANONICAL_IR_VERSION` are the contract. Changes that alter on-disk JSON usually need a **migration** (`migrate_ir_bundle`) and schema sync (`spec/IR_BUNDLE.schema.json`). Discuss non-trivial changes in an issue first. |
+| **Semantics & registry** | `src/torqa/semantics/` | New or changed **effects** affect every spec that references them; keep the default registry small and explicit. |
+| **Policy & trust** | `src/torqa/policy/` | Rules stay **deterministic**; align with [Trust policies](trust-policies.md) and [Trust profiles](trust-profiles.md). |
+| **CLI** | `src/torqa/cli/` | Exit codes and stream usage (`stdout` vs `stderr`) matter for scripts; extend `tests/test_cli_*.py` when behavior is user-visible. |
+| **Bundle / JSON load** | `src/torqa/cli/bundle_load.py`, `io.py` | Error strings often include **path hints**; keep them stable where tests assert substrings. |
 
 **Docs:** If users can observe a change (CLI, JSON acceptance, trust output), update the relevant doc or example.
 

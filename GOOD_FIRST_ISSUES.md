@@ -21,8 +21,8 @@ If you are new, start with **documentation** or **tests**; they teach you the re
 
 | Area | Why | Hints |
 |------|-----|--------|
-| **`.tq` surface** (`src/surface/`) | Parser changes affect all authors; errors use stable **`PX_TQ_*`** codes | Read nearby tests; avoid changing codes without a strong reason. |
-| **CLI** (`src/torqa_cli/`) | Users script against stdout/stderr and exit codes | Add tests; check [docs/quickstart.md](docs/quickstart.md). |
+| **`.tq` surface** (`src/torqa/surface/`) | Parser changes affect all authors; errors use stable **`PX_TQ_*`** codes | Read nearby tests; avoid changing codes without a strong reason. |
+| **CLI** (`src/torqa/cli/`) | Users script against stdout/stderr and exit codes | Add tests; check [docs/quickstart.md](docs/quickstart.md). |
 | **Policy / semantics** | Rules are deterministic and documented in `docs/trust-*.md` | Prefer an issue to agree on behavior before large edits. |
 
 ---

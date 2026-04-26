@@ -42,7 +42,7 @@ Use when automation should **flag more specs for human review** without failing 
 
 ## Limits
 
-- Profiles are **code-defined** in `src/policy/report.py` and `src/policy/profiles.py`; there is no user-facing config file yet.
+- Profiles are **code-defined** in `src/torqa/policy/report.py` and `src/torqa/policy/profiles.py`; there is no user-facing config file yet.
 - Behavior stays **deterministic** and **test-backed**; extend by adding a new branch and tests, not by runtime flags beyond **`--profile`**.
 
 See also: [Trust policies](trust-policies.md), [Trust risk scoring](trust-scoring.md), [Quickstart](quickstart.md).

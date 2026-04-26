@@ -86,4 +86,4 @@ Documented in the README **Install** section:
 
 ## Import layout note
 
-The installable Python namespace is **`src.*`** (historical layout). The supported public entry for end users is the **`torqa`** console script and **`python -m src.torqa_cli`** as documented. A future **1.x** may introduce a top-level `torqa` package alias; that would be a planned migration with a deprecation window.
+The installable Python package is **`torqa`** (under `src/torqa/` on disk). Library code imports **`torqa.ir`**, **`torqa.surface`**, etc. End users typically use the **`torqa`** console script or **`python -m torqa`** as documented.

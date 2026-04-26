@@ -55,7 +55,7 @@ Path B is the **same** contract: either a full bundle `{"ir_goal": …}` or a ba
 import json
 from pathlib import Path
 
-from src.surface.parse_tq import parse_tq_source
+from torqa.surface.parse_tq import parse_tq_source
 
 text = Path("lead_intake.tq").read_text(encoding="utf-8")
 bundle = parse_tq_source(text, tq_path=Path("lead_intake.tq"))

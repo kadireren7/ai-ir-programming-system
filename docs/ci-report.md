@@ -29,7 +29,7 @@ torqa report examples --format md -o torqa-report.md
 ```yaml
 - name: Torqa trust report (Markdown)
   run: |
-    python -m src.torqa_cli report examples --format md -o torqa-report.md
+    python -m torqa report examples --format md -o torqa-report.md
   env:
     PYTHONPATH: ${{ github.workspace }}
 
@@ -47,7 +47,7 @@ After generating **`torqa-report.md`**, append it to **`$GITHUB_STEP_SUMMARY`** 
 ```yaml
 - name: Torqa report to step summary
   run: |
-    python -m src.torqa_cli report examples --format md -o torqa-report.md
+    python -m torqa report examples --format md -o torqa-report.md
     cat torqa-report.md >> "$GITHUB_STEP_SUMMARY"
   env:
     PYTHONPATH: ${{ github.workspace }}

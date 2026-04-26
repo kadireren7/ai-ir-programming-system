@@ -14,7 +14,7 @@ Policies are **not** a runtime, do not call the network, and do not execute work
 
 ## Built-in policy rules (current)
 
-Evaluated in `src/policy/report.py` (profile **`default`**; **`strict`** / **`review-heavy`** adjust rules — see [Trust profiles](trust-profiles.md)):
+Evaluated in `src/torqa/policy/report.py` (profile **`default`**; **`strict`** / **`review-heavy`** adjust rules — see [Trust profiles](trust-profiles.md)):
 
 1. **`metadata.surface_meta.owner`** — must be present and a non-empty string. Missing ⇒ policy error.
 2. **`metadata.surface_meta.severity`** — must be present and a non-empty string. Missing ⇒ policy error.

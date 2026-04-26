@@ -5,12 +5,12 @@ from __future__ import annotations
 import copy
 
 
-from src.analysis.engine import run_advanced_analysis
-from src.analysis.rules.impossible_conditions import rule_impossible_conditions
-from src.analysis.types import RuleFinding
-from src.ir.canonical_ir import ir_goal_from_json
-from src.semantics.ir_semantics import default_ir_function_registry
-from src.surface.parse_tq import parse_tq_source
+from torqa.analysis.engine import run_advanced_analysis
+from torqa.analysis.rules.impossible_conditions import rule_impossible_conditions
+from torqa.analysis.types import RuleFinding
+from torqa.ir.canonical_ir import ir_goal_from_json
+from torqa.semantics.ir_semantics import default_ir_function_registry
+from torqa.surface.parse_tq import parse_tq_source
 
 
 def _id(name: str) -> dict:
@@ -57,7 +57,7 @@ flow:
     ]
     goal = ir_goal_from_json(b)
     ctx_goal = goal
-    from src.analysis.context import AnalysisContext
+    from torqa.analysis.context import AnalysisContext
 
     ctx = AnalysisContext(ir_goal=ctx_goal, function_registry=default_ir_function_registry())
     fs = rule_impossible_conditions(ctx)
@@ -98,7 +98,7 @@ flow:
 """
     )
     goal = ir_goal_from_json(b)
-    from src.semantics.ir_semantics import build_ir_semantic_report
+    from torqa.semantics.ir_semantics import build_ir_semantic_report
 
     rep = build_ir_semantic_report(goal, default_ir_function_registry())
     assert "advanced_findings" in rep

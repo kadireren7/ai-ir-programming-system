@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- **Packaging:** library and CLI code now live under the **`torqa`** Python package (`src/torqa/`). Imports use **`torqa.*`** (replacing **`src.*`**). Console script and **`python -m torqa`** entrypoint: **`torqa.cli.main:main`**.
+- **Docs:** moved early release and self-test reports to **`docs/reports/`** (`RELEASE_NOTES_v0.md`, `SELF_TEST_REPORT.md`).
+
+### Removed
+
+- **Chore:** removed unused root **`templates/`** placeholder directories (`.gitkeep` only).
+
 ## [0.1.1] — 2026-04-26
 
 ### Added
