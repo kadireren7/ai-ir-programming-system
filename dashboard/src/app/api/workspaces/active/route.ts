@@ -5,6 +5,15 @@ import { ACTIVE_ORG_COOKIE, isUuid } from "@/lib/workspace-cookie";
 
 export const runtime = "nodejs";
 
+export async function GET() {
+  const store = await cookies();
+  const value = store.get(ACTIVE_ORG_COOKIE)?.value ?? null;
+  if (!value || !isUuid(value)) {
+    return NextResponse.json({ organizationId: null });
+  }
+  return NextResponse.json({ organizationId: value });
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) {

@@ -18,13 +18,19 @@ export const dynamic = "force-dynamic";
 
 type ScanRow = {
   id: string;
+  user_id: string;
   source: string;
   workflow_name: string | null;
+  organization_id: string | null;
   created_at: string;
   result: unknown;
 };
 
-export default async function ScanHistoryPage() {
+export default async function ScanHistoryPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   if (!isSupabaseConfigured()) {
     return (
       <div className="space-y-6">
@@ -48,8 +54,16 @@ export default async function ScanHistoryPage() {
     return null;
   }
 
+  const params = (await searchParams) ?? {};
+  const scopeRaw = Array.isArray(params.scope) ? params.scope[0] : params.scope;
+  const memberRaw = Array.isArray(params.member) ? params.member[0] : params.member;
+  const scope = scopeRaw === "workspace" || scopeRaw === "all" || scopeRaw === "mine" ? scopeRaw : "workspace";
+
   const activeOrg = await getActiveOrganizationId();
-  let historyQuery = supabase.from("scan_history").select("id, source, workflow_name, created_at, result");
+  let historyQuery = supabase
+    .from("scan_history")
+    .select("id, user_id, source, workflow_name, organization_id, created_at, result");
+  let members: Array<{ user_id: string; email: string }> = [];
   if (activeOrg) {
     const { data: membership } = await supabase
       .from("organization_members")
@@ -57,11 +71,27 @@ export default async function ScanHistoryPage() {
       .eq("organization_id", activeOrg)
       .eq("user_id", user.id)
       .maybeSingle();
-    historyQuery = membership
-      ? historyQuery.eq("organization_id", activeOrg)
-      : historyQuery.is("organization_id", null);
+    if (membership) {
+      if (scope === "mine") {
+        historyQuery = historyQuery.eq("user_id", user.id);
+      } else if (scope === "all") {
+        historyQuery = historyQuery.or(`organization_id.eq.${activeOrg},and(user_id.eq.${user.id},organization_id.is.null)`);
+      } else {
+        historyQuery = historyQuery.eq("organization_id", activeOrg);
+      }
+      if (memberRaw && /^[0-9a-f-]{36}$/i.test(memberRaw)) {
+        historyQuery = historyQuery.eq("organization_id", activeOrg).eq("user_id", memberRaw);
+      }
+      const { data: m } = await supabase.rpc("workspace_members", { p_organization_id: activeOrg });
+      members =
+        (m as Array<{ user_id: string; email: string }> | null)?.filter(
+          (row) => typeof row.user_id === "string" && typeof row.email === "string"
+        ) ?? [];
+    } else {
+      historyQuery = historyQuery.is("organization_id", null).eq("user_id", user.id);
+    }
   } else {
-    historyQuery = historyQuery.is("organization_id", null);
+    historyQuery = historyQuery.is("organization_id", null).eq("user_id", user.id);
   }
 
   const { data: rows, error } = await historyQuery.order("created_at", { ascending: false }).limit(100);
@@ -102,6 +132,64 @@ export default async function ScanHistoryPage() {
 
       <Card className="border-border/80 shadow-sm">
         <CardHeader>
+          <CardTitle className="text-base">Visibility filters</CardTitle>
+          <CardDescription>Mine / workspace / all, with optional member filter in active workspace scope.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form method="get" className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <label htmlFor="scope" className="text-xs font-medium text-muted-foreground">
+                Scope
+              </label>
+              <select
+                id="scope"
+                name="scope"
+                defaultValue={scope}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="mine">Mine</option>
+                <option value="workspace">Workspace</option>
+                <option value="all">All</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="member" className="text-xs font-medium text-muted-foreground">
+                Member
+              </label>
+              <select
+                id="member"
+                name="member"
+                defaultValue={typeof memberRaw === "string" ? memberRaw : ""}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">Any member</option>
+                {members.map((m) => (
+                  <option key={m.user_id} value={m.user_id}>
+                    {m.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end gap-2">
+              <button
+                type="submit"
+                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"
+              >
+                Apply
+              </button>
+              <Link
+                href="/scan/history"
+                className="inline-flex h-9 items-center justify-center rounded-md border border-input px-3 text-sm"
+              >
+                Reset
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/80 shadow-sm">
+        <CardHeader>
           <CardTitle className="text-lg">Saved scans</CardTitle>
           <CardDescription>
             Most recent first. Uses your{" "}
@@ -117,7 +205,8 @@ export default async function ScanHistoryPage() {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="pl-6">When</TableHead>
-                  <TableHead>Source</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Member</TableHead>
                   <TableHead>Workflow</TableHead>
                   <TableHead>Outcome</TableHead>
                   <TableHead className="pr-6 text-right">Open</TableHead>
@@ -126,7 +215,7 @@ export default async function ScanHistoryPage() {
               <TableBody>
                 {list.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="px-6 py-10 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={6} className="px-6 py-10 text-center text-sm text-muted-foreground">
                       No saved scans yet. Run a scan from <Link href="/scan" className="text-primary underline">/scan</Link>
                       .
                     </TableCell>
@@ -144,6 +233,9 @@ export default async function ScanHistoryPage() {
                           <Badge variant="secondary" className="font-normal capitalize">
                             {row.source}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {row.user_id === user.id ? "Me" : members.find((m) => m.user_id === row.user_id)?.email ?? "Member"}
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate text-sm">
                           {row.workflow_name ?? "—"}

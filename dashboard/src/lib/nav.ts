@@ -27,6 +27,7 @@ export const mainNav: NavItem[] = [
   { title: "Validation", href: "/validation", icon: History },
   { title: "Policies", href: "/policy", icon: Shield },
   { title: "Workspace", href: "/workspace", icon: Users },
+  { title: "Workspace activity", href: "/workspace/activity", icon: History },
   { title: "Notifications", href: "/notifications", icon: Bell },
   { title: "User API", href: "/settings/api", icon: KeyRound },
 ];
@@ -41,6 +42,7 @@ export function titleForPath(pathname: string): string {
   if (pathname.startsWith("/workflow-library")) return "Workflow library";
   if (pathname.startsWith("/validation")) return "Validation";
   if (pathname.startsWith("/policy")) return "Policies";
+  if (pathname.startsWith("/workspace/activity")) return "Workspace activity";
   if (pathname.startsWith("/workspace")) return "Workspace";
   if (pathname.startsWith("/settings/api")) return "User API";
   if (pathname.startsWith("/settings/notifications")) return "Alert settings";

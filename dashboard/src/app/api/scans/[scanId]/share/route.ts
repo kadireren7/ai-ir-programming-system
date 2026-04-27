@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logWorkspaceActivity, notifyWorkspaceMembers } from "@/lib/workspace-activity";
 
 export const runtime = "nodejs";
 
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ scanId
 
   const { data: row, error: selErr } = await supabase
     .from("scan_history")
-    .select("id, share_id")
+    .select("id, share_id, organization_id")
     .eq("id", scanId)
     .maybeSingle();
 
@@ -61,5 +62,15 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ scanId
 
   const origin = absoluteOrigin(request);
   const shareUrl = `${origin}/share/${shareId}`;
+  const orgId = typeof row.organization_id === "string" ? row.organization_id : null;
+  await logWorkspaceActivity(supabase, orgId, "report.shared", scanId, { shareId, reused: Boolean(existing) });
+  await notifyWorkspaceMembers(
+    supabase,
+    orgId,
+    "Scan report shared",
+    "A scan report public share link was generated.",
+    "warning",
+    { scanId, shareId, reused: Boolean(existing) }
+  );
   return NextResponse.json({ shareUrl, shareId, reused: Boolean(existing) });
 }

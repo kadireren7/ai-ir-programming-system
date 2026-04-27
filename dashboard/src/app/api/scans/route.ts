@@ -4,6 +4,7 @@ import { isScanApiSuccess } from "@/lib/scan-api-guards";
 import type { ScanSource } from "@/lib/scan-engine";
 import { getActiveOrganizationId } from "@/lib/workspace-scope";
 import { isPlainObject } from "@/lib/json-guards";
+import { logWorkspaceActivity, notifyWorkspaceMembers } from "@/lib/workspace-activity";
 
 export const runtime = "nodejs";
 
@@ -79,6 +80,20 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  await logWorkspaceActivity(supabase, organizationId, "scan.created", data.id as string, {
+    source,
+    workflowName: name,
+    status: result.status,
+  });
+  await notifyWorkspaceMembers(
+    supabase,
+    organizationId,
+    "Scan created",
+    `A new ${source} scan was saved${name ? ` for "${name}"` : ""}.`,
+    result.status === "FAIL" ? "warning" : "info",
+    { scanId: data.id, status: result.status }
+  );
 
   return NextResponse.json({ id: data.id as string });
 }

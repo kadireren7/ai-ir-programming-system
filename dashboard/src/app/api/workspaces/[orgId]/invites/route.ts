@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logWorkspaceActivity, notifyWorkspaceMembers } from "@/lib/workspace-activity";
 
 export const runtime = "nodejs";
 
@@ -87,6 +88,16 @@ export async function POST(request: Request, context: Ctx) {
   if (!row?.token) {
     return NextResponse.json({ error: "Invite failed" }, { status: 500 });
   }
+
+  await logWorkspaceActivity(supabase, orgId, "invite.sent", email.trim(), { role });
+  await notifyWorkspaceMembers(
+    supabase,
+    orgId,
+    "Workspace invite sent",
+    `An invite was sent to ${email.trim()} as ${role}.`,
+    "info",
+    { email: email.trim(), role }
+  );
 
   return NextResponse.json({
     token: row.token,

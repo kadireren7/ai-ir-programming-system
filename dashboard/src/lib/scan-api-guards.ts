@@ -8,7 +8,7 @@ export function isScanApiSuccess(data: unknown): data is ScanApiSuccess {
   const totals = t as Record<string, unknown>;
   const statusOk = o.status === "PASS" || o.status === "NEEDS REVIEW" || o.status === "FAIL";
   const sourceOk = o.source === "n8n" || o.source === "generic";
-  const engineOk = o.engine === "server-preview" || o.engine === "hosted-python";
+  const engineOk = o.engine === "server-preview" || o.engine === "server-v1" || o.engine === "hosted-python";
   return (
     engineOk &&
     typeof o.riskScore === "number" &&

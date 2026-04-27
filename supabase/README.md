@@ -32,5 +32,6 @@ select public.create_organization('My team', 'my-team');
 5. **Team workspaces:** apply `20260426210000_workspace_shared_scans_invites.sql` so dashboard scans and workflow templates can attach to `organizations.id` (`organization_id` columns + invites). Use **`/workspace`** in the app to create an org and set the active-workspace cookie.
 6. **Scan notifications:** apply `20260426220000_scan_notifications.sql` for `notification_preferences` + `in_app_notifications` (alerts after **`POST /api/scan`** when signed in).
 7. **Public API keys:** apply `20260426223000_api_keys.sql` for hashed key storage (`api_keys`) and audit logs (`api_key_usage_logs`) used by **`POST /api/public/scan`**.
+8. **Workspace collaboration v2:** apply `20260427200000_workspace_collaboration_v2.sql` for `workspace_activity_logs`, role/ownership/settings RPCs, and workspace-wide in-app notification fanout helpers.
 
 Design details, RLS model, and API layout: **[Cloud backend](../docs/cloud-backend.md)**.

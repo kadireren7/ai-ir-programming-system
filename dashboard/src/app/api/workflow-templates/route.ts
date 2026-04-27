@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ScanSource } from "@/lib/scan-engine";
 import { getActiveOrganizationId } from "@/lib/workspace-scope";
 import { isPlainObject } from "@/lib/json-guards";
+import { logWorkspaceActivity, notifyWorkspaceMembers } from "@/lib/workspace-activity";
 
 export const runtime = "nodejs";
 
@@ -126,6 +127,18 @@ export async function POST(request: Request) {
   }
 
   const row = data as DbRow;
+  await logWorkspaceActivity(supabase, organizationId, "workflow.uploaded", row.id, {
+    name: row.name,
+    source: row.source,
+  });
+  await notifyWorkspaceMembers(
+    supabase,
+    organizationId,
+    "Workflow uploaded",
+    `A new workflow template "${row.name}" was uploaded.`,
+    "info",
+    { templateId: row.id, source: row.source }
+  );
   return NextResponse.json({
     id: row.id,
     name: row.name,

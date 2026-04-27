@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/workspace-cookie";
+import { logWorkspaceActivity, notifyWorkspaceMembers } from "@/lib/workspace-activity";
 
 export const runtime = "nodejs";
 
@@ -38,5 +39,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  return NextResponse.json({ organizationId: data as string });
+  const orgId = data as string;
+  await logWorkspaceActivity(supabase, orgId, "member.joined", user.id, {});
+  await notifyWorkspaceMembers(
+    supabase,
+    orgId,
+    "New member joined",
+    "A user accepted an invite and joined the workspace.",
+    "info",
+    { userId: user.id }
+  );
+
+  return NextResponse.json({ organizationId: orgId });
 }

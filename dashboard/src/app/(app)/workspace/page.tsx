@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, Check, Copy, Loader2, Mail, Plus, Shield, Users } from "lucide-react";
+import { Building2, Check, Copy, Crown, Loader2, Mail, Plus, Shield, ShieldAlert, Trash2, UserMinus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasPublicSupabaseUrl } from "@/lib/env";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 type WorkspaceRow = { id: string; name: string; slug: string; role: string };
 type MemberRow = { user_id: string; email: string; role: string; created_at: string };
@@ -40,6 +41,7 @@ export default function WorkspacePage() {
   const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
   const [lastInviteUrl, setLastInviteUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [renameName, setRenameName] = useState("");
 
   const refreshWorkspaces = useCallback(async () => {
     if (!useCloud) return;
@@ -209,6 +211,150 @@ export default function WorkspacePage() {
 
   const selected = workspaces.find((w) => w.id === selectedId);
   const isAdmin = selected?.role === "owner" || selected?.role === "admin";
+  const isOwner = selected?.role === "owner";
+
+  useEffect(() => {
+    setRenameName(selected?.name ?? "");
+  }, [selected?.name]);
+
+  const initialsForEmail = (email: string) => {
+    const local = (email.split("@")[0] ?? "?").replace(/[^a-z0-9]/gi, "");
+    return local.slice(0, 2).toUpperCase() || "?";
+  };
+
+  const updateMemberRole = async (memberUserId: string, nextRole: "admin" | "member") => {
+    if (!selectedId) return;
+    if (!confirm(`Change member role to ${nextRole}?`)) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspaces/${selectedId}/members/${memberUserId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: nextRole }),
+      });
+      const j = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(j.error ?? "Role update failed");
+        return;
+      }
+      await loadMembersAndInvites(selectedId);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeMember = async (memberUserId: string, email: string) => {
+    if (!selectedId) return;
+    if (!confirm(`Remove ${email} from this workspace?`)) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspaces/${selectedId}/members/${memberUserId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const j = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(j.error ?? "Remove member failed");
+        return;
+      }
+      await loadMembersAndInvites(selectedId);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const transferOwnership = async (newOwnerUserId: string, email: string) => {
+    if (!selectedId) return;
+    if (!confirm(`Transfer ownership to ${email}? This action is high impact.`)) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspaces/${selectedId}/ownership`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newOwnerUserId }),
+      });
+      const j = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(j.error ?? "Ownership transfer failed");
+        return;
+      }
+      await refreshWorkspaces();
+      await loadMembersAndInvites(selectedId);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const renameWorkspace = async () => {
+    if (!selectedId || !renameName.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspaces/${selectedId}/settings`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: renameName.trim() }),
+      });
+      const j = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(j.error ?? "Rename failed");
+        return;
+      }
+      await refreshWorkspaces();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const leaveWorkspace = async () => {
+    if (!selectedId) return;
+    if (!confirm("Leave this workspace? You will lose shared scan/template visibility.")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspaces/${selectedId}/leave`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const j = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(j.error ?? "Leave workspace failed");
+        return;
+      }
+      await refreshWorkspaces();
+      setSelectedId("");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteWorkspace = async () => {
+    if (!selectedId) return;
+    if (!confirm("Delete this workspace permanently? This cannot be undone.")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspaces/${selectedId}/settings`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const j = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(j.error ?? "Delete workspace failed");
+        return;
+      }
+      await refreshWorkspaces();
+      setSelectedId("");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   if (!useCloud) {
     return (
@@ -336,19 +482,69 @@ export default function WorkspacePage() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="pl-6">Email</TableHead>
+                    <TableHead className="pl-6">Member</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Controls</TableHead>
                     <TableHead className="pr-6 text-right">Since</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {members.map((m) => (
                     <TableRow key={m.user_id}>
-                      <TableCell className="pl-6 font-mono text-xs">{m.email}</TableCell>
+                      <TableCell className="pl-6">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-7 w-7 border border-border">
+                            <AvatarFallback className="text-[10px]">{initialsForEmail(m.email)}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-mono text-xs">{m.email}</span>
+                        </div>
+                      </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="capitalize">
+                        <Badge variant={m.role === "owner" ? "default" : "outline"} className="capitalize">
+                          {m.role === "owner" ? <Crown className="mr-1 h-3 w-3" /> : null}
                           {m.role}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {isAdmin && m.role !== "owner" ? (
+                          <div className="flex flex-wrap gap-2">
+                            <select
+                              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                              value={m.role === "admin" ? "admin" : "member"}
+                              onChange={(e) => void updateMemberRole(m.user_id, e.target.value as "admin" | "member")}
+                              disabled={busy}
+                            >
+                              <option value="member">member</option>
+                              <option value="admin">admin</option>
+                            </select>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-8"
+                              onClick={() => void removeMember(m.user_id, m.email)}
+                              disabled={busy}
+                            >
+                              <UserMinus className="mr-1 h-3.5 w-3.5" />
+                              Remove
+                            </Button>
+                            {isOwner ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-8"
+                                onClick={() => void transferOwnership(m.user_id, m.email)}
+                                disabled={busy}
+                              >
+                                <Crown className="mr-1 h-3.5 w-3.5" />
+                                Transfer ownership
+                              </Button>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No actions</span>
+                        )}
                       </TableCell>
                       <TableCell className="pr-6 text-right text-xs text-muted-foreground">
                         {new Date(m.created_at).toLocaleDateString()}
@@ -433,6 +629,59 @@ export default function WorkspacePage() {
         </>
       )}
 
+      {selectedId && (
+        <Card className="border-border/80 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <ShieldAlert className="h-4 w-4" aria-hidden />
+              Workspace settings
+            </CardTitle>
+            <CardDescription>
+              Owner/admin can rename workspaces. Owner can transfer ownership or delete workspace. Members can leave.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+              <div className="space-y-2">
+                <Label htmlFor="ws-rename">Workspace name</Label>
+                <Input
+                  id="ws-rename"
+                  value={renameName}
+                  onChange={(e) => setRenameName(e.target.value)}
+                  disabled={!isAdmin || busy}
+                />
+              </div>
+              <Button type="button" onClick={() => void renameWorkspace()} disabled={!isAdmin || busy || !renameName.trim()}>
+                Rename
+              </Button>
+            </div>
+
+            <div className="rounded-md border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
+              <p>
+                <strong className="text-foreground">Workspace ID:</strong> {selectedId}
+              </p>
+              <p className="mt-1">
+                Shared scans and templates are visible to all workspace members. Owners have the final authority on
+                roles and destructive actions.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => void leaveWorkspace()} disabled={busy || isOwner}>
+                Leave workspace
+              </Button>
+              <Button type="button" variant="destructive" onClick={() => void deleteWorkspace()} disabled={busy || !isOwner}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete workspace
+              </Button>
+              <Button type="button" variant="outline" asChild>
+                <Link href="/workspace/activity">Open activity feed</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <p className="text-xs text-muted-foreground">
         <Link href="/scan/history" className="text-primary underline-offset-2 hover:underline">
           Scan history
@@ -441,7 +690,11 @@ export default function WorkspacePage() {
         <Link href="/workflow-library" className="text-primary underline-offset-2 hover:underline">
           Workflow library
         </Link>{" "}
-        follow the active workspace scope.
+        follow the active workspace scope. For accountability and governance, see{" "}
+        <Link href="/workspace/activity" className="text-primary underline-offset-2 hover:underline">
+          workspace activity
+        </Link>
+        .
       </p>
     </div>
   );

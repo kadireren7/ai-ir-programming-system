@@ -34,10 +34,16 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/api/workflow-templates` | **GET** (authenticated) — list templates; **POST** — create `{ name, source, content }` |
 | `/api/workflow-templates/[id]` | **GET** / **PATCH** (rename) / **DELETE** — own row only (RLS) |
 | `/api/workspaces` | **GET** list memberships · **POST** create `{ name, slug }` (RPC `create_organization`) |
-| `/api/workspaces/active` | **POST** `{ organizationId }` \| `null` — httpOnly **`torqa_active_org`** cookie scopes scans / history / library / home metrics |
+| `/api/workspaces/active` | **GET** current active workspace id · **POST** `{ organizationId }` \| `null` — httpOnly **`torqa_active_org`** cookie scopes scans / history / library / home metrics |
 | `/api/workspaces/[orgId]/members` | **GET** — RPC `workspace_members` (emails + roles) |
 | `/api/workspaces/[orgId]/invites` | **GET** pending · **POST** `{ email, role }` — `invite_organization_member` |
+| `/api/workspaces/[orgId]/members/[userId]` | **PATCH** `{ role }` (admin/member) · **DELETE** remove member |
+| `/api/workspaces/[orgId]/ownership` | **POST** transfer ownership (owner only) |
+| `/api/workspaces/[orgId]/settings` | **PATCH** rename workspace · **DELETE** delete workspace (owner only) |
+| `/api/workspaces/[orgId]/leave` | **POST** leave workspace (non-owner) |
+| `/api/workspaces/[orgId]/activity` | **GET** workspace activity feed |
 | `/api/invites/accept` | **POST** `{ token }` — `accept_organization_invite` (signed-in email must match invite) |
+| `/workspace/activity` | Workspace collaboration activity feed (joins, invites, role changes, scans, shares, API keys, etc.) |
 | `/notifications` | **In-app notifications** — scan alerts (FAIL / high-risk); localStorage when Supabase is off |
 | `/settings/notifications` | **Scan alert settings** — toggles, trust-score threshold, email + Slack webhook placeholders |
 | `/settings/api` | **User API** — generate/revoke API keys, copy one-time secret, and inspect usage logs |
