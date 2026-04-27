@@ -100,6 +100,16 @@ export type HomeRecentScan = {
   createdAt: string;
 };
 
+/** Counts for first-run checklist on Overview (cloud session only). */
+export type HomeOnboardingCounts = {
+  integrations: number;
+  workflowTemplates: number;
+  workspacePolicies: number;
+  alertDestinations: number;
+  /** Org workspace member rows; 0 when not in a shared workspace. */
+  organizationMembers: number;
+};
+
 export type HomeDashboardData = {
   mode: HomeDashboardMode;
   totalScans30d: number;
@@ -112,4 +122,6 @@ export type HomeDashboardData = {
   recentScans: HomeRecentScan[];
   /** Stacked daily counts: PASS → safe, NEEDS REVIEW → needsReview, FAIL → blocked (chart keys unchanged). */
   outcomeTrend: RiskTrendPoint[];
+  /** Populated in cloud mode for onboarding checklist; null in demo / offline. */
+  onboarding: HomeOnboardingCounts | null;
 };

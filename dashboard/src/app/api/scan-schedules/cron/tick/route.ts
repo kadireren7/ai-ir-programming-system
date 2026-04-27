@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { timingSafeStringEqual } from "@/lib/secure-compare";
+import { apiJsonError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
 
@@ -10,12 +12,13 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   const secret = process.env.TORQA_CRON_SECRET?.trim();
   if (!secret) {
-    return NextResponse.json({ error: "TORQA_CRON_SECRET is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "TORQA_CRON_SECRET is not configured", "service_unavailable");
   }
 
-  const auth = request.headers.get("authorization")?.trim();
-  if (auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = request.headers.get("authorization")?.trim() ?? "";
+  const expected = `Bearer ${secret}`;
+  if (!timingSafeStringEqual(auth, expected)) {
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   return NextResponse.json({

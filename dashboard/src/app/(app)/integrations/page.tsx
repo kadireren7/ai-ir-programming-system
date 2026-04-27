@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BadgeCheck, Cable, GitBranch, Loader2, Pencil, Plug, Puzzle, Trash2, Workflow } from "lucide-react";
+import { BadgeCheck, Cable, Cloud, GitBranch, Loader2, Pencil, Plug, Puzzle, Trash2, Workflow } from "lucide-react";
+import { EmptyStateCta } from "@/components/onboarding/empty-state-cta";
+import { GovernanceJourneyStrip } from "@/components/onboarding/governance-journey-strip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -183,33 +185,33 @@ export default function IntegrationsPage() {
 
   if (!useCloud) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 py-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
-        <p className="text-sm text-muted-foreground">
-          Connect Supabase to enable saved integrations. Torqa is moving from manual uploads toward connected workflow
-          governance.
-        </p>
-        <Card className="border-border/80">
-          <CardHeader>
-            <CardTitle className="text-base">Available now</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            n8n integration foundation is available in cloud mode. GitHub, Zapier, and Make are planned.
-          </CardContent>
-        </Card>
+      <div className="mx-auto max-w-2xl space-y-6 py-8">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Link n8n and other tools after you enable cloud mode.</p>
+        </div>
+        <EmptyStateCta
+          icon={Cloud}
+          title="Cloud mode off"
+          description="Connect Supabase and sign in to save integrations and team data."
+          primary={{ href: "/workspace", label: "Workspace & setup" }}
+          secondary={{ href: "/scan", label: "Try scan (local)" }}
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="border-b border-border/60 pb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Connected governance</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Integrations</h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          Native integrations are the path from manual upload scanning to continuous workflow governance. n8n is
-          available now in MVP placeholder mode.
-        </p>
+      <div className="space-y-5 border-b border-border/60 pb-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Connect</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Integrations</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Start with n8n — register your instance, then build schedules and scans on top.
+          </p>
+        </div>
+        <GovernanceJourneyStrip />
       </div>
 
       {error ? <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">{error}</p> : null}
@@ -237,16 +239,13 @@ export default function IntegrationsPage() {
         })}
       </section>
 
-      <Card className="border-border/80 shadow-sm">
+      <Card id="create-n8n" className="border-border/80 shadow-sm scroll-mt-24">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Cable className="h-4 w-4" aria-hidden />
             Create n8n integration
           </CardTitle>
-          <CardDescription>
-            For this MVP foundation, Torqa stores connection metadata and only masked API-key hints. Real n8n API sync
-            comes next.
-          </CardDescription>
+          <CardDescription>Stores URL + masked key hint only. Full sync is on the roadmap.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-2">
@@ -283,7 +282,7 @@ export default function IntegrationsPage() {
       <Card className="border-border/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Saved integrations</CardTitle>
-          <CardDescription>Connected scans and ingestion jobs are the next milestone on top of this foundation.</CardDescription>
+          <CardDescription>Registered n8n targets for your workspace.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
@@ -291,7 +290,14 @@ export default function IntegrationsPage() {
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </p>
           ) : n8nRows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No integrations yet.</p>
+            <EmptyStateCta
+              icon={Cable}
+              title="No integrations yet"
+              description="Add your n8n base URL in the form below, then attach it to a schedule."
+              primary={{ href: "#create-n8n", label: "Add n8n" }}
+              secondary={{ href: "/schedules", label: "Schedules" }}
+              className="border-none bg-transparent py-6"
+            />
           ) : (
             n8nRows.map((row) => (
               <div key={row.id} className="rounded-lg border border-border/60 bg-muted/20 p-3">
@@ -326,8 +332,7 @@ export default function IntegrationsPage() {
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        Next: secure token vaulting + validated n8n API health checks + webhook/pull sync for continuous scan triggers.
-        In the meantime, you can keep scanning manually at <Link href="/scan" className="text-primary hover:underline">/scan</Link>.
+        Manual scans: <Link href="/scan" className="text-primary hover:underline">Workflow scan</Link>
       </p>
     </div>
   );

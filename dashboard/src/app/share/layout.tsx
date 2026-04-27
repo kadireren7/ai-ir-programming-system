@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Shared report",
+  description: "A Torqa workflow scan shared with you.",
+  robots: { index: false, follow: false },
+};
 
 export default function ShareLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +18,9 @@ export default function ShareLayout({ children }: { children: React.ReactNode })
           <span className="text-xs text-muted-foreground">Shared report</span>
         </div>
       </header>
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">{children}</div>
+      <div id="main-content" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+        {children}
+      </div>
     </div>
   );
 }

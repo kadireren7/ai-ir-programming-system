@@ -13,6 +13,7 @@ import {
   CalendarClock,
   Megaphone,
   LineChart,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,6 +37,7 @@ export const mainNav: NavItem[] = [
   { title: "Workspace", href: "/workspace", icon: Users },
   { title: "Workspace activity", href: "/workspace/activity", icon: History },
   { title: "Notifications", href: "/notifications", icon: Bell },
+  { title: "Alert settings", href: "/settings/notifications", icon: SlidersHorizontal },
   { title: "Alerts", href: "/alerts", icon: Megaphone },
   { title: "User API", href: "/settings/api", icon: KeyRound },
 ];

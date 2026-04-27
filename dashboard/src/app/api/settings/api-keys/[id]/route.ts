@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { apiJsonDatabaseError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
 
@@ -46,7 +47,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     .is("revoked_at", null);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   return NextResponse.json({ ok: true });

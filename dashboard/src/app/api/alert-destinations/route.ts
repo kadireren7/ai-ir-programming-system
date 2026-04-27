@@ -3,19 +3,21 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveListOrganizationId } from "@/lib/workspace-scope";
 import { isPlainObject } from "@/lib/json-guards";
 import { isAlertDestinationType, toDestinationApi } from "@/lib/alerts";
+import { validateWebhookUrlForDestination } from "@/lib/webhook-ssrf";
+import { apiJsonDatabaseError, apiJsonError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "Supabase is not configured", "service_unavailable");
   }
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   const organizationId = await resolveListOrganizationId(supabase, user.id);
@@ -31,7 +33,7 @@ export async function GET() {
 
   const { data, error } = await q;
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const destinations = (data ?? [])
@@ -44,23 +46,23 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "Supabase is not configured", "service_unavailable");
   }
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return apiJsonError(request, 400, "Invalid JSON body", "bad_request");
   }
   if (!isPlainObject(body)) {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    return apiJsonError(request, 400, "Invalid body", "bad_request");
   }
 
   const name = typeof body.name === "string" ? body.name.trim() : "";
@@ -69,10 +71,10 @@ export async function POST(request: Request) {
   const configIn = isPlainObject(body.config) ? body.config : {};
 
   if (!name) {
-    return NextResponse.json({ error: "name is required" }, { status: 400 });
+    return apiJsonError(request, 400, "name is required", "bad_request");
   }
   if (!isAlertDestinationType(type)) {
-    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+    return apiJsonError(request, 400, "Invalid type", "bad_request");
   }
 
   const organizationId = await resolveListOrganizationId(supabase, user.id);
@@ -80,15 +82,16 @@ export async function POST(request: Request) {
   const config: Record<string, unknown> = { ...configIn };
   if (type === "slack" || type === "discord") {
     const url = typeof config.webhookUrl === "string" ? config.webhookUrl.trim() : "";
-    if (!url.startsWith("https://")) {
-      return NextResponse.json({ error: "webhookUrl must be an https URL" }, { status: 400 });
+    const v = validateWebhookUrlForDestination(type, url);
+    if (!v.ok) {
+      return apiJsonError(request, 400, v.message, "invalid_webhook_url");
     }
     config.webhookUrl = url;
   }
   if (type === "email") {
     const addr = typeof config.address === "string" ? config.address.trim() : "";
     if (!addr) {
-      return NextResponse.json({ error: "config.address is required for email" }, { status: 400 });
+      return apiJsonError(request, 400, "config.address is required for email", "bad_request");
     }
     config.address = addr;
   }
@@ -110,12 +113,12 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const destination = toDestinationApi((data ?? {}) as Record<string, unknown>);
   if (!destination) {
-    return NextResponse.json({ error: "Invalid row" }, { status: 500 });
+    return apiJsonError(request, 500, "Invalid row", "internal_error");
   }
   return NextResponse.json({ destination });
 }

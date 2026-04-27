@@ -9,19 +9,21 @@ import {
   toRunApi,
   toScheduleApi,
 } from "@/lib/scan-schedules";
+import { isLikelyUuid } from "@/lib/policy-input-limits";
+import { apiJsonDatabaseError, apiJsonError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "Supabase is not configured", "service_unavailable");
   }
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   const organizationId = await resolveListOrganizationId(supabase, user.id);
@@ -39,7 +41,7 @@ export async function GET() {
 
   const { data: rows, error } = await query;
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const schedules = (rows ?? [])
@@ -76,13 +78,13 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "Supabase is not configured", "service_unavailable");
   }
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   let body: unknown;
@@ -109,6 +111,9 @@ export async function POST(request: Request) {
   }
   if (!scopeId) {
     return NextResponse.json({ error: "scopeId is required" }, { status: 400 });
+  }
+  if (!isLikelyUuid(scopeId.trim())) {
+    return NextResponse.json({ error: "scopeId must be a valid UUID" }, { status: 400 });
   }
   if (!isScanScheduleFrequency(frequencyRaw)) {
     return NextResponse.json({ error: "Invalid frequency" }, { status: 400 });
@@ -206,7 +211,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const schedule = toScheduleApi((data ?? {}) as Record<string, unknown>);

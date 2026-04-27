@@ -3,7 +3,7 @@ import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveOrganizationId } from "@/lib/workspace-scope";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { HomeDashboardData, HomeRecentScan, RiskTrendPoint } from "./types";
+import type { HomeDashboardData, HomeOnboardingCounts, HomeRecentScan, RiskTrendPoint } from "./types";
 import { MOCK_HOME_DASHBOARD } from "./home-mock";
 
 type ScanHistoryRow = {
@@ -108,6 +108,59 @@ function aggregateRows(rows: ScanHistoryRow[], since14: string) {
   };
 }
 
+function scopedCountQuery(
+  supabase: SupabaseClient,
+  table: "integrations" | "workflow_templates" | "workspace_policies" | "alert_destinations",
+  userId: string,
+  orgId: string | null
+) {
+  let q = supabase.from(table).select("*", { count: "exact", head: true });
+  if (orgId) {
+    q = q.eq("organization_id", orgId);
+  } else {
+    q = q.is("organization_id", null).eq("user_id", userId);
+  }
+  return q;
+}
+
+async function fetchOnboardingCounts(
+  supabase: SupabaseClient,
+  userId: string,
+  orgId: string | null
+): Promise<HomeOnboardingCounts> {
+  try {
+    const [intRes, tplRes, polRes, destRes] = await Promise.all([
+      scopedCountQuery(supabase, "integrations", userId, orgId),
+      scopedCountQuery(supabase, "workflow_templates", userId, orgId),
+      scopedCountQuery(supabase, "workspace_policies", userId, orgId),
+      scopedCountQuery(supabase, "alert_destinations", userId, orgId),
+    ]);
+    let organizationMembers = 0;
+    if (orgId) {
+      const { count } = await supabase
+        .from("organization_members")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", orgId);
+      organizationMembers = count ?? 0;
+    }
+    return {
+      integrations: intRes.count ?? 0,
+      workflowTemplates: tplRes.count ?? 0,
+      workspacePolicies: polRes.count ?? 0,
+      alertDestinations: destRes.count ?? 0,
+      organizationMembers,
+    };
+  } catch {
+    return {
+      integrations: 0,
+      workflowTemplates: 0,
+      workspacePolicies: 0,
+      alertDestinations: 0,
+      organizationMembers: 0,
+    };
+  }
+}
+
 async function resolvedWorkspaceScope(
   supabase: SupabaseClient,
   userId: string
@@ -177,7 +230,12 @@ export async function getHomeDashboardData(): Promise<HomeDashboardData> {
       ? rowsBase.is("organization_id", null).order("created_at", { ascending: false }).limit(2000)
       : rowsBase.eq("organization_id", scope.value).order("created_at", { ascending: false }).limit(2000);
 
-  const [allCountRes, d30CountRes, rowsRes] = await Promise.all([headAll, head30, rowsQuery]);
+  const [allCountRes, d30CountRes, rowsRes, onboarding] = await Promise.all([
+    headAll,
+    head30,
+    rowsQuery,
+    fetchOnboardingCounts(supabase, user.id, scope.value),
+  ]);
 
   if (allCountRes.error || d30CountRes.error || rowsRes.error) {
     return { ...MOCK_HOME_DASHBOARD, mode: "mock" };
@@ -198,6 +256,7 @@ export async function getHomeDashboardData(): Promise<HomeDashboardData> {
       reviewCount: 0,
       recentScans: [],
       outcomeTrend: emptyTrend14(),
+      onboarding,
     };
   }
 
@@ -223,5 +282,6 @@ export async function getHomeDashboardData(): Promise<HomeDashboardData> {
     reviewCount,
     recentScans,
     outcomeTrend,
+    onboarding,
   };
 }

@@ -209,11 +209,16 @@ export function ScanPageClient() {
         return;
       }
       if (!res.ok) {
+        const errObj = data && typeof data === "object" ? (data as { error?: unknown; requestId?: unknown }) : null;
         const msg =
-          data && typeof data === "object" && typeof (data as { error?: unknown }).error === "string"
-            ? (data as { error: string }).error
+          errObj && typeof errObj.error === "string"
+            ? errObj.error
             : `Scan failed (${res.status}).`;
-        setError(msg);
+        const ref =
+          errObj && typeof errObj.requestId === "string" && errObj.requestId.trim()
+            ? ` Reference: ${errObj.requestId.trim()}`
+            : "";
+        setError(`${msg}${ref}`);
         return;
       }
       if (!isScanApiSuccess(data)) {

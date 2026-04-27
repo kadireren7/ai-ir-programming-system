@@ -16,6 +16,7 @@ const useCloud = hasPublicSupabaseUrl();
 
 export default function NotificationSettingsPage() {
   const [prefs, setPrefs] = useState<NotificationPrefsShape>({ ...DEFAULT_NOTIFICATION_PREFS });
+  const [slackFieldTouched, setSlackFieldTouched] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -31,8 +32,13 @@ export default function NotificationSettingsPage() {
     try {
       const res = await fetch("/api/settings/notifications", { credentials: "include" });
       const j = (await res.json()) as { preferences?: NotificationPrefsShape; error?: string };
-      if (res.ok && j.preferences) setPrefs(j.preferences);
-      else setMessage(j.error ?? "Could not load settings");
+      if (res.ok && j.preferences) {
+        setPrefs({
+          ...j.preferences,
+          slackWebhookUrl: j.preferences.slackWebhookUrl ?? null,
+        });
+        setSlackFieldTouched(false);
+      } else setMessage(j.error ?? "Could not load settings");
     } catch {
       setMessage("Network error");
     } finally {
@@ -55,18 +61,34 @@ export default function NotificationSettingsPage() {
       return;
     }
     try {
+      const body: Record<string, unknown> = {
+        emailAlerts: prefs.emailAlerts,
+        alertOnFail: prefs.alertOnFail,
+        alertOnHighRisk: prefs.alertOnHighRisk,
+        highRiskThreshold: prefs.highRiskThreshold,
+      };
+      if (slackFieldTouched) {
+        const v = prefs.slackWebhookUrl?.trim();
+        body.slackWebhookUrl = v ? v : null;
+      }
       const res = await fetch("/api/settings/notifications", {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(prefs),
+        body: JSON.stringify(body),
       });
       const j = (await res.json()) as { preferences?: NotificationPrefsShape; error?: string };
       if (!res.ok) {
         setMessage(j.error ?? "Save failed");
         return;
       }
-      if (j.preferences) setPrefs(j.preferences);
+      if (j.preferences) {
+        setPrefs({
+          ...j.preferences,
+          slackWebhookUrl: j.preferences.slackWebhookUrl ?? null,
+        });
+        setSlackFieldTouched(false);
+      }
       setMessage("Saved.");
     } catch {
       setMessage("Network error");
@@ -185,24 +207,45 @@ export default function NotificationSettingsPage() {
             Slack webhook (placeholder)
           </CardTitle>
           <CardDescription>
-            HTTPS URL only. On alert, the server POSTs a short <code className="rounded bg-muted px-1 font-mono text-[11px]">text</code>{" "}
-            payload. Failures are swallowed so scans never break.
+            Only <code className="rounded bg-muted px-1 font-mono text-[11px]">hooks.slack.com/services/…</code>{" "}
+            URLs are accepted. Saved URLs are never shown again; enter a new URL to replace the stored webhook.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
+          {prefs.slackWebhookConfigured ? (
+            <p className="text-xs text-muted-foreground">
+              A Slack webhook is on file; the URL is not shown again. Paste a new URL and save to replace it.
+            </p>
+          ) : null}
           <Label htmlFor="slack">Incoming webhook URL</Label>
           <Input
             id="slack"
             type="url"
             placeholder="https://hooks.slack.com/services/…"
             value={prefs.slackWebhookUrl ?? ""}
-            onChange={(e) =>
+            onChange={(e) => {
+              const v = e.target.value.trim();
+              if (v) setSlackFieldTouched(true);
               setPrefs((p) => ({
                 ...p,
-                slackWebhookUrl: e.target.value.trim() ? e.target.value.trim() : null,
-              }))
-            }
+                slackWebhookUrl: v ? v : null,
+              }));
+            }}
           />
+          {prefs.slackWebhookConfigured ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-1"
+              onClick={() => {
+                setSlackFieldTouched(true);
+                setPrefs((p) => ({ ...p, slackWebhookUrl: null }));
+              }}
+            >
+              Remove saved webhook
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
 

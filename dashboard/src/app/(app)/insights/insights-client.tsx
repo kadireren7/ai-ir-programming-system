@@ -15,6 +15,8 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { EmptyStateCta } from "@/components/onboarding/empty-state-cta";
+import { GovernanceJourneyStrip } from "@/components/onboarding/governance-journey-strip";
 import { RiskTrendChart } from "@/components/risk-trend-chart";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -96,12 +98,10 @@ export function InsightsPageClient() {
       <div className="border-b border-border/60 pb-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Team governance</p>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Insights & ROI</h1>
-            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Measurable automation risk from saved scans — critical-class findings, policy gates, and ownership. Metrics
-              aggregate <code className="rounded bg-muted px-1 font-mono text-xs">scan_history.result</code> including{" "}
-              <code className="rounded bg-muted px-1 font-mono text-xs">policyEvaluation</code> when present.
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Monitor</p>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Insights</h1>
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              Trends from saved scans — engine status, policy gates, and who is scanning.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <Button asChild size="sm" variant="outline">
@@ -139,10 +139,12 @@ export function InsightsPageClient() {
             </Badge>
           ) : null}
         </div>
+        <div className="mt-5">
+          <GovernanceJourneyStrip />
+        </div>
         {isDemo ? (
           <p className="mt-3 max-w-2xl rounded-lg border border-amber-500/25 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-950 dark:text-amber-100/95">
-            <span className="font-semibold">Demo mode:</span> Connect Supabase and sign in to replace this view with your
-            workspace scan history. Filters still work on synthetic data so you can preview the experience.
+            <span className="font-semibold">Demo:</span> Sample data — connect cloud for your workspace metrics.
           </p>
         ) : null}
         {data?.workspaceRequired ? (
@@ -159,7 +161,7 @@ export function InsightsPageClient() {
       <Card className="border-border/80 shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-base">Filters</CardTitle>
-          <CardDescription>Scope and time window match how scans are stored; policy filters require saved evaluations.</CardDescription>
+          <CardDescription>Scope, window, and policy filters match saved scan history.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-2">
@@ -243,28 +245,38 @@ export function InsightsPageClient() {
 
       {data ? (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <RoiCallout
-              icon={<Target className="h-4 w-4" />}
-              title="Issues caught before production"
-              body="Critical- and high-severity findings surfaced in Torqa scans — visibility before changes hit prod traffic."
+          {!isDemo && data.totals.totalScans === 0 ? (
+            <EmptyStateCta
+              icon={BarChart3}
+              title="No scans in this window"
+              description="Run scans — charts and ownership views populate from saved history."
+              primary={{ href: "/scan", label: "Run scan" }}
+              secondary={{ href: "/scan/history", label: "History" }}
             />
-            <RoiCallout
-              icon={<Shield className="h-4 w-4" />}
-              title="Critical risks blocked"
-              body="Policy FAIL counts show governance gates that would block a release under your chosen standards."
-            />
-            <RoiCallout
-              icon={<Activity className="h-4 w-4" />}
-              title="Governance drift reduced"
-              body="Trend and policy tables show whether trust and policy posture are moving in the right direction."
-            />
-            <RoiCallout
-              icon={<Users className="h-4 w-4" />}
-              title="Team automation posture"
-              body="Member contribution highlights who is scanning most and where critical findings concentrate."
-            />
-          </section>
+          ) : (
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <RoiCallout
+                icon={<Target className="h-4 w-4" />}
+                title="Issues caught before production"
+                body="Critical- and high-severity findings surfaced in Torqa scans — visibility before changes hit prod traffic."
+              />
+              <RoiCallout
+                icon={<Shield className="h-4 w-4" />}
+                title="Critical risks blocked"
+                body="Policy FAIL counts show governance gates that would block a release under your chosen standards."
+              />
+              <RoiCallout
+                icon={<Activity className="h-4 w-4" />}
+                title="Governance drift reduced"
+                body="Trend and policy tables show whether trust and policy posture are moving in the right direction."
+              />
+              <RoiCallout
+                icon={<Users className="h-4 w-4" />}
+                title="Team automation posture"
+                body="Member contribution highlights who is scanning most and where critical findings concentrate."
+              />
+            </section>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <MetricTile

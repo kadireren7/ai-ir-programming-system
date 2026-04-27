@@ -1,6 +1,78 @@
-# Torqa Dashboard (MVP)
+# Torqa Dashboard
 
-Next.js **App Router** + **Tailwind CSS** + **shadcn/ui** + **Recharts** (via shadcn `Chart`). Uses **mock data** under `src/data/` with a **`queries.ts`** facade so you can swap in Supabase or REST without rewriting pages.
+Next.js **App Router** + **Tailwind CSS** + **shadcn/ui** + **Recharts**. The UI works **without Supabase** (demo-style fallbacks); **auth, persisted scans, workspaces, alerts, and API keys** require a configured Supabase project and migrations.
+
+## Product positioning
+
+Torqa is a **governance gate**, not a workflow runtime: teams upload or paste workflow JSON (including **n8n** exports), attach **policies**, run **scans**, store **history**, and optionally **share** read-only reports. **Insights** aggregate saved scan outcomes; **schedules** and **team alerts** extend that to ongoing monitoring (see production limitations below).
+
+## Live demo
+
+| Environment | URL / command |
+| --- | --- |
+| **Local** | `npm run dev` → [http://localhost:3000](http://localhost:3000) |
+| **Hosted** | Not defined in-repo — set `NEXT_PUBLIC_APP_URL` to your production origin after deploy and publish that URL in your runbook. |
+
+## Setup overview
+
+1. **Install:** `cd dashboard && npm install`
+2. **Optional cloud:** Create a Supabase project, enable **Auth**, apply **all** SQL migrations under `../supabase/migrations/` (order matters — see [../supabase/README.md](../supabase/README.md)).
+3. **Env:** Copy repo root [`.env.example`](../.env.example) and set at least `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the dashboard; add `SUPABASE_SERVICE_ROLE_KEY` for **share links** and server-side RPCs.
+4. **Run:** `npm run dev` (development) or `npm run build && npm start` (production).
+5. **Launch QA:** [../docs/launch-checklist.md](../docs/launch-checklist.md)
+
+## Supabase requirements
+
+- **Auth:** Email (or your chosen providers) so users can sign in at `/login`.
+- **RLS:** Migrations install row-level security for `scan_history`, `workflow_templates`, workspace tables, alerts, API keys, etc. Do not disable RLS in production without a replacement model.
+- **Redirect URLs:** Add your deployment origin and `/auth/callback` in Supabase Auth URL configuration.
+
+## Migrations
+
+Apply migrations **in timestamp order** from `supabase/migrations/`. Notable files (non-exhaustive — see folder for full set):
+
+| Migration (prefix) | Enables |
+| --- | --- |
+| `20260426120000_torqa_cloud_core.sql` | Core cloud schema, profiles, orgs |
+| `20260426140000_dashboard_scan_history.sql` | `scan_history` |
+| `20260426150000_scan_history_share_id.sql` | Share id column (early) |
+| `20260426200000_workflow_templates.sql` | Workflow library |
+| `20260426210000_workspace_shared_scans_invites.sql` | Workspace-scoped scans + invites |
+| `20260426220000_scan_notifications.sql` | `notification_preferences`, in-app notifications |
+| `20260426223000_api_keys.sql` | User API keys |
+| `20260427200000_workspace_collaboration_v2.sql` | Activity, ownership RPCs |
+| `20260427213000_integrations_foundation.sql` | Integrations table |
+| `20260427234000_scan_schedules_foundation.sql` | Schedules + runs |
+| `20260428200000_alert_destinations_and_rules.sql` | Team alerts |
+| `20260428220000_policy_templates_workspace_policies.sql` | Policy templates + workspace policies |
+| `20260429120000_security_advisor_hardening.sql` | Security hardening |
+| `20260429140000_security_definer_invoker_and_share_rpc.sql` | `get_scan_by_share_id` RPC for public shares |
+| `20260429150000_invoker_workspace_invites_notify.sql` | Invite / notify helpers |
+
+Use `supabase db push` or run the consolidated SQL in the Supabase SQL editor. **New installs:** prefer pushing the whole chain on an empty database.
+
+## Environment variables
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | For cloud features | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | For cloud features | Supabase anon key (browser + server) |
+| `SUPABASE_SERVICE_ROLE_KEY` | For shares + some server RPCs | **Server only** — never expose to the client |
+| `NEXT_PUBLIC_APP_URL` | Recommended in prod | Canonical app origin for links |
+| `TORQA_SCAN_PROVIDER` | Optional | `server-preview` (default), `hosted-python`, or `python-engine` (stub) |
+| `TORQA_ENGINE_URL` | If `hosted-python` | Base URL for Torqa Python HTTP `/scan` |
+| `TORQA_CRON_SECRET` | Optional | Bearer secret for `/api/scan-schedules/cron/tick` |
+| `TORQA_API_KEY_PEPPER` | Recommended in prod | Pepper for hashing user API keys |
+
+See [`.env.example`](../.env.example) for the full list including core Torqa and optional analytics.
+
+## Production limitations
+
+- **Default scan provider** (`server-preview`) is **Node-based heuristics**, not the Python CLI. For engine parity, run **`hosted-python`** with a reachable `TORQA_ENGINE_URL`.
+- **Schedule automation:** **Run now** is supported; **cron tick** may remain limited or stubbed until a worker calls it with `TORQA_CRON_SECRET`.
+- **Email / some channels:** team alerts support Slack/Discord webhooks and in-app paths; email may be placeholder — verify before promising.
+- **n8n “integration”:** configuration-first; continuous pull from n8n is not the MVP.
+- **Without Supabase:** no login gate (when env unset), no persisted history — pages show empty states / demo data where implemented.
 
 ## Run locally
 
@@ -28,7 +100,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/workspace` | **Team workspace** — create org, set **active workspace** cookie, invite admins/members, list members; shared **`scan_history`** / templates when cookie is set (see migration `20260426210000_workspace_shared_scans_invites.sql`) |
 | `/scan/history` | **Saved scans** — table of past reports (RLS: your rows only) |
 | `/scan/[id]` | **Re-open a report** — read-only view of a saved `scan_history` row; **Share report** creates a public link |
-| `/share/[shareId]` | **Public shared scan** — no login; labeled as shared report (Supabase RPC + anon key) |
+| `/share/[shareId]` | **Public shared scan** — no login; server loads snapshot via **`get_scan_by_share_id`** using **`SUPABASE_SERVICE_ROLE_KEY`** (never shipped to the browser) |
 | `/login` | **Email sign-in / sign-up** (Supabase Auth); optional when env vars are unset (local/CI) |
 | `/auth/callback` | **OAuth / email-confirm** exchange route for Supabase |
 | `/api/scan` | **POST** — body `{ "source", "content", "workspacePolicyId"?, "policyTemplateSlug"? }` → scan JSON; when a policy resolves, response includes **`policyEvaluation`** (`policyStatus`, `violations`, `appliedPolicyName`, `recommendations`) without changing engine **`status`** / findings |
@@ -108,12 +180,12 @@ npm start
 - **Integrations path to continuous governance:** `/integrations` is the first native foundation. n8n is available now as a safe config-only integration (masked API key hint, no live pull yet). GitHub, Zapier, and Make are planned next as continuous source connectors.
 - **Scheduled scans foundation:** `/schedules` stores **`scan_schedules`** + **`scan_schedule_runs`**. Today you can **Run now** to execute on the server (same engine as **`POST /api/scan`**) and persist results like the dashboard scan page. Automatic runs are not required yet: set **`TORQA_CRON_SECRET`** and later point a cron job at **`POST /api/scan-schedules/cron/tick`** (currently a no-op placeholder). Integration-scoped schedules can be created, but **Run now** returns a clear “not implemented” response until ingestion exists.
 - **Team alerting (`/alerts`):** Apply migration `20260428200000_alert_destinations_and_rules.sql`. **`alert_destinations`** store Slack/Discord webhook URLs (https only), an email placeholder address, or **`in_app`** (workspace-wide fanout via `notify_workspace_members`). **`alert_rules`** bind triggers (`scan_failed`, `scan_needs_review`, `high_severity_finding`, `schedule_failed`) to destination UUIDs. Dispatch runs after legacy **`notification_preferences`** delivery from **`POST /api/scan`** (scoped with the active workspace cookie), **`POST /api/public/scan`** (personal rules for the API key owner), and successful/failed **schedule runs**. Webhook URLs are stripped from **GET** JSON — treat stored secrets as sensitive; rotate by **PATCH** with a new URL.
-- **Share links (optional, Supabase-backed):** Apply migration `20260426150000_scan_history_share_id.sql` (column `share_id` + `get_scan_by_share_id` RPC). Owners can **`POST /api/scans/[scanId]/share`** to mint a token and copy **`/share/[shareId]`**. Public access does **not** open `scan_history` to anonymous table reads — only the **SECURITY DEFINER** RPC returns one row for a valid token. **`/share/*`** is excluded from auth middleware so links work without login.
+- **Share links (optional, Supabase-backed):** Apply migrations through `20260429140000_security_definer_invoker_and_share_rpc.sql` (column `share_id` + `get_scan_by_share_id` RPC). Owners can **`POST /api/scans/[scanId]/share`** to mint a token and copy **`/share/[shareId]`**. Public pages and **`GET /api/share/[shareId]`** call the RPC with the **service role** on the server only; `anon`/`authenticated` do not have `EXECUTE` on that function. Set **`SUPABASE_SERVICE_ROLE_KEY`** in the dashboard environment. **`/share/*`** stays outside auth middleware so links work without login.
 - **Local / CI without Supabase:** Leave the env vars unset — the dashboard stays reachable without a login gate; scan still works; history UI explains that Supabase is not configured.
 - **Samples:** Static workflows ship under `public/scan-samples/` for Vercel deploys (middleware allows `/scan-samples/*` without a session).
 
-## Next steps (integration)
+## Further reading
 
-- Replace `src/data/queries.ts` with Supabase client calls (see repo `docs/cloud-backend.md`).
-- Add auth (Supabase Auth or NextAuth) and gate `(app)` layout.
-- Point “Run” JSON panel at `reports.payload` or Storage signed URLs.
+- [docs/cloud-backend.md](../docs/cloud-backend.md) — RLS and API design
+- [docs/launch-checklist.md](../docs/launch-checklist.md) — release and smoke tests
+- [docs/security.md](../docs/security.md) — security notes (if present in your tree)

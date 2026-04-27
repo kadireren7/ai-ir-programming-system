@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ScanApiSuccess } from "@/lib/scan-engine";
 import { notifyWorkspaceMembers } from "@/lib/workspace-activity";
 import type { AlertDestinationType, AlertRuleTrigger } from "@/lib/alerts";
+import { validateDiscordWebhookUrlForOutbound, validateSlackWebhookUrlForOutbound } from "@/lib/webhook-ssrf";
 
 type DestinationRow = {
   id: string;
@@ -43,7 +44,7 @@ async function placeholderAlertEmail(_to: string, subject: string, text: string)
 }
 
 async function postSlackWebhook(url: string, text: string): Promise<void> {
-  if (!url.startsWith("https://")) return;
+  if (!validateSlackWebhookUrlForOutbound(url).ok) return;
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), 5000);
   try {
@@ -61,7 +62,7 @@ async function postSlackWebhook(url: string, text: string): Promise<void> {
 }
 
 async function postDiscordWebhook(url: string, content: string): Promise<void> {
-  if (!url.startsWith("https://")) return;
+  if (!validateDiscordWebhookUrlForOutbound(url).ok) return;
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), 5000);
   try {
