@@ -31,13 +31,13 @@ function decisionBadgeClass(d: ScanDecision): string {
 }
 
 function severityLabel(s: ScanFinding["severity"]): string {
-  if (s === "high") return "Critical";
+  if (s === "critical" || s === "high") return "Critical";
   if (s === "review") return "Review";
   return "Info";
 }
 
 function severityStyles(s: ScanFinding["severity"]): { badge: string; bar: string } {
-  if (s === "high") {
+  if (s === "critical" || s === "high") {
     return {
       badge:
         "border-rose-500/60 bg-gradient-to-br from-rose-500/25 to-rose-950/40 text-rose-100 shadow-[0_0_20px_-4px_rgba(244,63,94,0.45)] ring-1 ring-rose-400/30",

@@ -22,7 +22,7 @@ function isScanDecision(v: unknown): v is ScanDecision {
 }
 
 function isScanSeverity(v: unknown): v is ScanSeverity {
-  return v === "info" || v === "review" || v === "high";
+  return v === "info" || v === "review" || v === "high" || v === "critical";
 }
 
 function isScanSource(v: unknown): v is ScanSource {

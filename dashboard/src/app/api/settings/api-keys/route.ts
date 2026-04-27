@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateApiKey, toApiKeyPreview, type ApiKeyRow } from "@/lib/api-keys";
+import { getActiveOrganizationId } from "@/lib/workspace-scope";
+import { logWorkspaceActivity, notifyWorkspaceMembers } from "@/lib/workspace-activity";
 
 export const runtime = "nodejs";
 
@@ -102,6 +104,27 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const activeOrg = await getActiveOrganizationId();
+  if (activeOrg) {
+    const { data: membership } = await supabase
+      .from("organization_members")
+      .select("organization_id")
+      .eq("organization_id", activeOrg)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (membership) {
+      await logWorkspaceActivity(supabase, activeOrg, "api_key.created", (data as ApiKeyRow).id, { name });
+      await notifyWorkspaceMembers(
+        supabase,
+        activeOrg,
+        "API key created",
+        `A new workspace member API key "${name}" was created.`,
+        "warning",
+        { keyId: (data as ApiKeyRow).id, name }
+      );
+    }
   }
 
   return NextResponse.json({
