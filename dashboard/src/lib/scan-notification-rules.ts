@@ -3,6 +3,8 @@ import type { ScanApiSuccess } from "@/lib/scan-engine";
 export type NotificationPrefsShape = {
   emailAlerts: boolean;
   slackWebhookUrl: string | null;
+  /** Populated from cloud API only; never includes the stored secret URL. */
+  slackWebhookConfigured?: boolean;
   alertOnFail: boolean;
   alertOnHighRisk: boolean;
   highRiskThreshold: number;
@@ -11,6 +13,7 @@ export type NotificationPrefsShape = {
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefsShape = {
   emailAlerts: false,
   slackWebhookUrl: null,
+  slackWebhookConfigured: false,
   alertOnFail: true,
   alertOnHighRisk: true,
   highRiskThreshold: 50,

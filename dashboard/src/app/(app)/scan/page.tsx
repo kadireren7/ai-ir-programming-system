@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ScanPageClient } from "./scan-client";
+
+export const metadata: Metadata = {
+  title: "Scan",
+  description: "Run a workflow security scan and review findings.",
+};
 
 function ScanFallback() {
   return (

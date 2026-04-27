@@ -1,4 +1,4 @@
-import { createAnonSupabase } from "@/lib/supabase/anon-server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isScanApiSuccess } from "@/lib/scan-api-guards";
 import type { ScanApiSuccess } from "@/lib/scan-engine";
 
@@ -11,13 +11,20 @@ export type SharedScanPayload = {
 
 const SHARE_ID_RE = /^tq_[a-f0-9]{48}$/;
 
+/** Server-side share reads use the service role RPC; anon cannot call `get_scan_by_share_id`. */
+export function isSharedScanFetchConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  return Boolean(url && serviceRole);
+}
+
 export function isValidShareId(id: string): boolean {
   return SHARE_ID_RE.test(id);
 }
 
 export async function fetchSharedScanByShareId(shareId: string): Promise<SharedScanPayload | null> {
   if (!isValidShareId(shareId)) return null;
-  const supabase = createAnonSupabase();
+  const supabase = createAdminClient();
   if (!supabase) return null;
 
   const { data, error } = await supabase.rpc("get_scan_by_share_id", { p_share_id: shareId });

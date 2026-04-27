@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isPlainObject } from "@/lib/json-guards";
 import { getBuiltInTemplateBySlug } from "@/lib/built-in-policy-templates";
+import { assertPolicyConfigSize, isReasonablePolicyTemplateSlug } from "@/lib/policy-input-limits";
+import { apiJsonDatabaseError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
 
@@ -70,6 +72,9 @@ export async function PATCH(request: Request, context: Ctx) {
       template_slug = null;
     } else if (typeof body.templateSlug === "string" && body.templateSlug.trim()) {
       const slug = body.templateSlug.trim();
+      if (!isReasonablePolicyTemplateSlug(slug)) {
+        return NextResponse.json({ error: "Invalid template slug format" }, { status: 400 });
+      }
       const { data: tpl } = await supabase.from("policy_templates").select("slug").eq("slug", slug).maybeSingle();
       if (!tpl && !getBuiltInTemplateBySlug(slug)) {
         return NextResponse.json({ error: "Unknown template slug" }, { status: 400 });
@@ -84,6 +89,11 @@ export async function PATCH(request: Request, context: Ctx) {
       : {};
   const nextConfig = isPlainObject(body.config) ? { ...prevConfig, ...body.config } : prevConfig;
 
+  const cfgCheck = assertPolicyConfigSize(nextConfig);
+  if (!cfgCheck.ok) {
+    return NextResponse.json({ error: cfgCheck.message }, { status: 400 });
+  }
+
   const { data, error } = await supabase
     .from("workspace_policies")
     .update({ name, enabled, template_slug, config: nextConfig })
@@ -92,13 +102,13 @@ export async function PATCH(request: Request, context: Ctx) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   return NextResponse.json({ policy: toPolicyRow((data ?? {}) as Record<string, unknown>) });
 }
 
-export async function DELETE(_request: Request, context: Ctx) {
+export async function DELETE(request: Request, context: Ctx) {
   const { id } = await context.params;
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
@@ -117,7 +127,7 @@ export async function DELETE(_request: Request, context: Ctx) {
 
   const { error } = await supabase.from("workspace_policies").delete().eq("id", id);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
   return NextResponse.json({ ok: true });
 }

@@ -51,7 +51,7 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
       </ScrollArea>
       <div className="border-t border-sidebar-border p-3">
         <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          MVP · mock data
+          Governance dashboard
         </p>
       </div>
     </aside>

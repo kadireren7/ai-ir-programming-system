@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { History } from "lucide-react";
+import { EmptyStateCta } from "@/components/onboarding/empty-state-cta";
+import { GovernanceJourneyStrip } from "@/components/onboarding/governance-journey-strip";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -33,11 +35,24 @@ export default async function ScanHistoryPage({
 }) {
   if (!isSupabaseConfigured()) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Scan history</h1>
-        <p className="max-w-xl text-sm text-muted-foreground">
-          Configure Supabase environment variables to persist scans per user. See the dashboard README.
-        </p>
+      <div className="space-y-8 pb-10">
+        <div className="space-y-4 border-b border-border/60 pb-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Monitor</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Scan history</h1>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              Saved reports from each run — needs Supabase to persist.
+            </p>
+          </div>
+          <GovernanceJourneyStrip />
+        </div>
+        <EmptyStateCta
+          icon={History}
+          title="Cloud storage not configured"
+          description="Set Supabase env vars on the dashboard so scans save per user and appear here."
+          primary={{ href: "/overview", label: "Overview" }}
+          secondary={{ href: "/scan", label: "Try scan" }}
+        />
       </div>
     );
   }
@@ -112,28 +127,31 @@ export default async function ScanHistoryPage({
   const list = (rows ?? []) as ScanRow[];
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-2 border-b border-border/60 pb-8 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Workflow</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Scan history</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Open a past report to review the same summary and findings stored when you ran a scan.
-          </p>
+    <div className="space-y-8 pb-10">
+      <div className="space-y-5 border-b border-border/60 pb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Monitor</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Scan history</h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              Reopen any saved report — same summary and findings as when you ran it.
+            </p>
+          </div>
+          <Link
+            href="/scan"
+            className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-primary hover:underline"
+          >
+            <History className="h-4 w-4" />
+            New scan
+          </Link>
         </div>
-        <Link
-          href="/scan"
-          className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-        >
-          <History className="h-4 w-4" />
-          New scan
-        </Link>
+        <GovernanceJourneyStrip />
       </div>
 
       <Card className="border-border/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Visibility filters</CardTitle>
-          <CardDescription>Mine / workspace / all, with optional member filter in active workspace scope.</CardDescription>
+          <CardDescription>Mine, workspace, or all — filter by member in team scope.</CardDescription>
         </CardHeader>
         <CardContent>
           <form method="get" className="grid gap-3 sm:grid-cols-3">
@@ -192,14 +210,26 @@ export default async function ScanHistoryPage({
         <CardHeader>
           <CardTitle className="text-lg">Saved scans</CardTitle>
           <CardDescription>
-            Most recent first. Uses your{" "}
+            Newest first — respects your{" "}
             <Link href="/workspace" className="text-primary underline-offset-2 hover:underline">
               active workspace
-            </Link>{" "}
-            cookie: personal scans only, or shared team history when a workspace is selected.
+            </Link>
+            .
           </CardDescription>
         </CardHeader>
         <CardContent className="px-0 pb-2">
+          {list.length === 0 ? (
+            <div className="px-4 pb-6 pt-2 sm:px-6">
+              <EmptyStateCta
+                icon={History}
+                title="No saved scans yet"
+                description="Run a scan to store a report you can reopen anytime."
+                primary={{ href: "/scan", label: "Run scan" }}
+                secondary={{ href: "/workflow-library", label: "Workflow library" }}
+                className="border-border/60 bg-muted/20"
+              />
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -213,49 +243,41 @@ export default async function ScanHistoryPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="px-6 py-10 text-center text-sm text-muted-foreground">
-                      No saved scans yet. Run a scan from <Link href="/scan" className="text-primary underline">/scan</Link>
-                      .
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  list.map((row) => {
-                    const r = row.result as { status?: string; riskScore?: number } | null;
-                    const status = r?.status ?? "—";
-                    return (
-                      <TableRow key={row.id} className="border-border/60">
-                        <TableCell className="pl-6 text-xs text-muted-foreground">
-                          {new Date(row.created_at).toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="font-normal capitalize">
-                            {row.source}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {row.user_id === user.id ? "Me" : members.find((m) => m.user_id === row.user_id)?.email ?? "Member"}
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-sm">
-                          {row.workflow_name ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-sm">{status}</TableCell>
-                        <TableCell className="pr-6 text-right">
-                          <Link
-                            href={`/scan/${row.id}`}
-                            className="font-mono text-xs text-primary hover:underline"
-                          >
-                            View
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
+                {list.map((row) => {
+                  const r = row.result as { status?: string; riskScore?: number } | null;
+                  const status = r?.status ?? "—";
+                  return (
+                    <TableRow key={row.id} className="border-border/60">
+                      <TableCell className="pl-6 text-xs text-muted-foreground">
+                        {new Date(row.created_at).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="font-normal capitalize">
+                          {row.source}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {row.user_id === user.id ? "Me" : members.find((m) => m.user_id === row.user_id)?.email ?? "Member"}
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate text-sm">
+                        {row.workflow_name ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-sm">{status}</TableCell>
+                      <TableCell className="pr-6 text-right">
+                        <Link
+                          href={`/scan/${row.id}`}
+                          className="font-mono text-xs text-primary hover:underline"
+                        >
+                          View
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -3,8 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveListOrganizationId } from "@/lib/workspace-scope";
 import { isPlainObject } from "@/lib/json-guards";
 import { isAlertRuleTrigger, toRuleApi } from "@/lib/alerts";
+import { isLikelyUuid } from "@/lib/policy-input-limits";
+import { apiJsonDatabaseError, apiJsonError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
+
+const MAX_DESTINATION_IDS = 32;
 
 async function validateDestinationIds(
   supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
@@ -28,16 +32,16 @@ async function validateDestinationIds(
   return true;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "Supabase is not configured", "service_unavailable");
   }
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   const organizationId = await resolveListOrganizationId(supabase, user.id);
@@ -53,7 +57,7 @@ export async function GET() {
 
   const { data, error } = await q;
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const rules = (data ?? [])
@@ -66,13 +70,13 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "Supabase is not configured", "service_unavailable");
   }
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   let body: unknown;
@@ -92,6 +96,16 @@ export async function POST(request: Request) {
   const destinationIds = Array.isArray(destinationIdsRaw)
     ? destinationIdsRaw.filter((x): x is string => typeof x === "string")
     : [];
+
+  if (destinationIds.length > MAX_DESTINATION_IDS) {
+    return NextResponse.json(
+      { error: `At most ${MAX_DESTINATION_IDS} destination ids allowed`, code: "bad_request" },
+      { status: 400 }
+    );
+  }
+  if (destinationIds.some((id) => !isLikelyUuid(id))) {
+    return NextResponse.json({ error: "Each destination id must be a UUID", code: "bad_request" }, { status: 400 });
+  }
 
   if (!name) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
@@ -126,7 +140,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const rule = toRuleApi((data ?? {}) as Record<string, unknown>);

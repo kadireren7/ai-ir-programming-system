@@ -13,9 +13,19 @@ Canonical workflow IR + structural/semantic validation + deterministic trust sco
 [![Packaging CI](https://github.com/kadireren7/Torqa/actions/workflows/packaging.yml/badge.svg)](https://github.com/kadireren7/Torqa/actions/workflows/packaging.yml)
 [![PR: Torqa gate](https://github.com/kadireren7/Torqa/actions/workflows/torqa-pr.yml/badge.svg)](https://github.com/kadireren7/Torqa/actions/workflows/torqa-pr.yml)
 
-[Quickstart](#2-minute-quickstart) · [n8n Demo](#n8n-quick-demo) · [CLI](#cli-examples) · [GitHub Action](#github-action-usage) · [Docs](#documentation)
+[Quickstart](#2-minute-quickstart) · [n8n Demo](#n8n-quick-demo) · [CLI](#cli-examples) · [GitHub Action](#github-action-usage) · [Dashboard](#torqa-dashboard--first-users) · [Docs](#documentation)
 
 </div>
+
+---
+
+## Torqa Dashboard & first users
+
+**Product positioning:** Torqa is the **deterministic gate** for workflow specs (validate, score, policy-check) before anything runs in production. The **Next.js dashboard** (`dashboard/`) is the team surface: scan uploads (including n8n JSON), **workspace policies**, **schedules**, **alerts**, **insights**, **API keys**, and **shareable reports** — all optional until you wire **Supabase** (see [dashboard/README.md](dashboard/README.md)).
+
+- **Live demo (hosted):** this repository does not ship a fixed production URL. After you deploy, document your canonical URL (for example `https://your-torqa.example.com`) in your runbook and in `NEXT_PUBLIC_APP_URL`.
+- **Local demo:** `cd dashboard && npm install && npm run dev` → [http://localhost:3000](http://localhost:3000) (landing at `/`; app routes under `/overview`, `/scan`, etc.).
+- **Launch QA:** [docs/launch-checklist.md](docs/launch-checklist.md) — routes, smoke tests, migrations, env vars, and production limitations.
 
 ---
 

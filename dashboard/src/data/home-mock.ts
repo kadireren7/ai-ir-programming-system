@@ -73,4 +73,5 @@ export const MOCK_HOME_DASHBOARD: HomeDashboardData = {
   reviewCount: 10,
   recentScans: MOCK_RECENT,
   outcomeTrend: MOCK_OUTCOME_TREND,
+  onboarding: null,
 };

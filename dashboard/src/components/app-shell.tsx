@@ -31,7 +31,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <AppSidebar orgName={org.name} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader orgName={org.name} user={user} />
-        <main className="flex-1 overflow-auto">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto outline-none">
           <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
         </main>
       </div>

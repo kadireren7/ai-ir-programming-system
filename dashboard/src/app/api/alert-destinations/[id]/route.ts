@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isPlainObject } from "@/lib/json-guards";
 import { isAlertDestinationType, toDestinationApi } from "@/lib/alerts";
+import { validateWebhookUrlForDestination } from "@/lib/webhook-ssrf";
+import { apiJsonDatabaseError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
 
@@ -69,8 +71,9 @@ export async function PATCH(request: Request, context: Ctx) {
     if (typeof body.config.webhookUrl === "string" && body.config.webhookUrl.trim()) {
       const url = body.config.webhookUrl.trim();
       if (type === "slack" || type === "discord") {
-        if (!url.startsWith("https://")) {
-          return NextResponse.json({ error: "webhookUrl must be https" }, { status: 400 });
+        const v = validateWebhookUrlForDestination(type, url);
+        if (!v.ok) {
+          return NextResponse.json({ error: v.message, code: "invalid_webhook_url" }, { status: 400 });
         }
         nextConfig.webhookUrl = url;
       }
@@ -85,7 +88,7 @@ export async function PATCH(request: Request, context: Ctx) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const destination = toDestinationApi((data ?? {}) as Record<string, unknown>);
@@ -95,7 +98,7 @@ export async function PATCH(request: Request, context: Ctx) {
   return NextResponse.json({ destination });
 }
 
-export async function DELETE(_request: Request, context: Ctx) {
+export async function DELETE(request: Request, context: Ctx) {
   const { id } = await context.params;
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
@@ -114,7 +117,7 @@ export async function DELETE(_request: Request, context: Ctx) {
 
   const { error } = await supabase.from("alert_destinations").delete().eq("id", id);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
   return NextResponse.json({ ok: true });
 }

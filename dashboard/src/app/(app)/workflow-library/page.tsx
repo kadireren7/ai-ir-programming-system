@@ -38,6 +38,7 @@ import {
   localWorkflowRename,
 } from "@/lib/workflow-templates-local";
 import { hasPublicSupabaseUrl } from "@/lib/env";
+import { EmptyStateCta } from "@/components/onboarding/empty-state-cta";
 
 const useCloudLibrary = hasPublicSupabaseUrl();
 
@@ -262,15 +263,12 @@ export default function WorkflowLibraryPage() {
               </span>
               Workflow library
             </h1>
-            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Upload JSON, save templates, and jump to{" "}
+            <p className="max-w-xl text-sm text-muted-foreground sm:text-base">
+              Save exports here, then{" "}
               <Link href="/scan" className="font-medium text-primary underline-offset-4 hover:underline">
-                Scan
+                scan
               </Link>{" "}
-              with one click.{" "}
-              {useCloudLibrary
-                ? "Templates sync to your Supabase account."
-                : "Templates stay in this browser (localStorage) until you connect Supabase."}
+              in one click. {useCloudLibrary ? "Synced to your account." : "Stored locally until cloud is on."}
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -292,10 +290,10 @@ export default function WorkflowLibraryPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="border-border/80 shadow-md ring-1 ring-black/5 dark:ring-white/10 lg:col-span-1">
+        <Card id="wf-upload" className="scroll-mt-24 border-border/80 shadow-md ring-1 ring-black/5 dark:ring-white/10 lg:col-span-1">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Upload JSON</CardTitle>
-            <CardDescription>Parse a file, then name and save it as a template.</CardDescription>
+            <CardDescription>File → name → saved template.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -319,7 +317,7 @@ export default function WorkflowLibraryPage() {
         <Card className="border-border/80 shadow-md ring-1 ring-black/5 dark:ring-white/10 lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">Recent uploads</CardTitle>
-            <CardDescription>Newest templates first — quick access to what you added last.</CardDescription>
+            <CardDescription>Newest first.</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -328,9 +326,15 @@ export default function WorkflowLibraryPage() {
                 Loading…
               </div>
             ) : recentUploads.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No templates yet. Upload a JSON file to create one.
-              </p>
+              <EmptyStateCta
+                icon={FileJson2}
+                title="Nothing recent yet"
+                description="Upload an n8n or generic export to see it here."
+                primary={{ href: "#wf-upload", label: "Upload JSON" }}
+                secondary={{ href: "/scan", label: "Open scan" }}
+                compact
+                className="border-none bg-transparent"
+              />
             ) : (
               <ul className="divide-y divide-border/60 rounded-xl border border-border/60">
                 {recentUploads.map((r) => (
@@ -421,7 +425,7 @@ export default function WorkflowLibraryPage() {
         <CardHeader className="flex flex-col gap-4 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
             <CardTitle className="text-lg font-semibold">All templates</CardTitle>
-            <CardDescription>Search, rename, delete, or run a scan.</CardDescription>
+            <CardDescription>Search, run, rename, delete.</CardDescription>
           </div>
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -451,10 +455,20 @@ export default function WorkflowLibraryPage() {
                 <TableBody>
                   {filtered.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="px-6 py-12 text-center text-sm text-muted-foreground">
-                        {items.length === 0
-                          ? "No templates saved yet."
-                          : "No templates match your search."}
+                      <TableCell colSpan={4} className="px-4 py-6">
+                        {items.length === 0 ? (
+                          <EmptyStateCta
+                            icon={Library}
+                            title="Library is empty"
+                            description="Upload a workflow JSON to build your first template."
+                            primary={{ href: "#wf-upload", label: "Upload JSON" }}
+                            secondary={{ href: "/integrations", label: "Integrations" }}
+                            compact
+                            className="border-none bg-transparent py-4"
+                          />
+                        ) : (
+                          <p className="py-6 text-center text-sm text-muted-foreground">No matches — try another search.</p>
+                        )}
                       </TableCell>
                     </TableRow>
                   ) : (

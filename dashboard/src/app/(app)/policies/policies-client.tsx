@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { BookOpen, Loader2, Pencil, Plus, Shield, Trash2 } from "lucide-react";
+import { EmptyStateCta } from "@/components/onboarding/empty-state-cta";
+import { GovernanceJourneyStrip } from "@/components/onboarding/governance-journey-strip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -237,25 +239,24 @@ export function PoliciesPageClient() {
 
   return (
     <div className="space-y-10 pb-10">
-      <div className="border-b border-border/60 pb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Governance</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Policy templates</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          Templates encode trust floors, critical handling, review caps, and hygiene checks. When you attach a policy to
-          a scan (UI, <code className="rounded bg-muted px-1 font-mono text-xs">POST /api/scan</code>, or a schedule),
-          Torqa evaluates the scan result and returns{" "}
-          <code className="rounded bg-muted px-1 font-mono text-xs">policyEvaluation</code> — PASS / WARN / FAIL plus
-          violations and recommendations — without changing the underlying engine findings.
-        </p>
-        <p className="mt-3 text-sm">
-          <Link href="/scan" className="font-medium text-primary hover:underline">
-            Run a scan with a policy →
-          </Link>
-          <span className="mx-2 text-muted-foreground">·</span>
-          <Link href="/policy" className="font-medium text-muted-foreground hover:text-foreground hover:underline">
-            Legacy policy settings
-          </Link>
-        </p>
+      <div className="space-y-5 border-b border-border/60 pb-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Govern</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Policies</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Templates add a <span className="font-medium text-foreground">policyEvaluation</span> layer on top of scan
+            results — without changing engine findings.
+          </p>
+          <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+            <Link href="/scan" className="font-medium text-primary hover:underline">
+              Scan with policy →
+            </Link>
+            <Link href="/policy" className="font-medium text-muted-foreground hover:text-foreground hover:underline">
+              Legacy settings
+            </Link>
+          </p>
+        </div>
+        <GovernanceJourneyStrip />
       </div>
 
       {error ? (
@@ -271,39 +272,15 @@ export function PoliciesPageClient() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <BookOpen className="h-4 w-4" aria-hidden />
-            How this affects scan results
+            What policies add
           </CardTitle>
           <CardDescription>
-            The scan engine still produces PASS / NEEDS REVIEW / FAIL and findings. Policy adds a second layer for
-            standards you choose.
+            Trust floors, critical handling, review caps, and hygiene checks — evaluated after each scan.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <ul className="list-inside list-disc space-y-1.5">
-            <li>
-              <span className="font-medium text-foreground">Trust floor</span> — FAIL when{" "}
-              <code className="rounded bg-muted px-1 font-mono text-[11px]">riskScore</code> is below{" "}
-              <code className="rounded bg-muted px-1 font-mono text-[11px]">minimumTrustScore</code>.
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Critical handling</span> — optional FAIL when critical-class
-              findings exist and <code className="rounded bg-muted px-1 font-mono text-[11px]">failOnCritical</code> is
-              on.
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Review budget</span> — WARN or FAIL when review findings
-              exceed <code className="rounded bg-muted px-1 font-mono text-[11px]">maxReviewFindings</code> (mode{" "}
-              <code className="rounded bg-muted px-1 font-mono text-[11px]">reviewOverflowMode</code>).
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Hygiene gates</span> — plaintext secrets, webhook auth,
-              error handling, and TLS bypass rules map to evaluator checks on the structured scan output.
-            </li>
-          </ul>
-        </CardContent>
       </Card>
 
-      <section className="space-y-4">
+      <section id="policy-templates" className="scroll-mt-24 space-y-4">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-primary" aria-hidden />
           <h2 className="text-lg font-semibold tracking-tight">Built-in templates</h2>
@@ -368,7 +345,15 @@ export function PoliciesPageClient() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold tracking-tight">Your workspace policies</h2>
           {policies.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No saved policies yet. Create one from a template above.</p>
+            <EmptyStateCta
+              icon={Shield}
+              title="No saved workspace policies"
+              description="Pick a built-in template above and save it to your workspace."
+              primary={{ href: "#policy-templates", label: "Browse templates" }}
+              secondary={{ href: "/scan", label: "Run scan" }}
+              compact
+              className="border-none bg-transparent py-4"
+            />
           ) : (
             <div className="space-y-3">
               {policies.map((p) => (

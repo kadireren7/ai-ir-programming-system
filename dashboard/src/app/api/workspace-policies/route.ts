@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveListOrganizationId } from "@/lib/workspace-scope";
 import { isPlainObject } from "@/lib/json-guards";
 import { getBuiltInTemplateBySlug } from "@/lib/built-in-policy-templates";
+import { assertPolicyConfigSize, isReasonablePolicyTemplateSlug } from "@/lib/policy-input-limits";
+import { apiJsonDatabaseError, apiJsonError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
 
@@ -20,16 +22,16 @@ function toPolicyRow(row: Record<string, unknown>) {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "Supabase is not configured", "service_unavailable");
   }
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   const organizationId = await resolveListOrganizationId(supabase, user.id);
@@ -45,7 +47,7 @@ export async function GET() {
 
   const { data, error } = await q;
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const policies = (data ?? []).map((r) => toPolicyRow(r as Record<string, unknown>));
@@ -55,13 +57,13 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+    return apiJsonError(request, 503, "Supabase is not configured", "service_unavailable");
   }
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return apiJsonError(request, 401, "Unauthorized", "unauthorized");
   }
 
   let body: unknown;
@@ -87,10 +89,18 @@ export async function POST(request: Request) {
   const organizationId = await resolveListOrganizationId(supabase, user.id);
 
   if (templateSlug) {
+    if (!isReasonablePolicyTemplateSlug(templateSlug)) {
+      return NextResponse.json({ error: "Invalid template slug format" }, { status: 400 });
+    }
     const { data: tpl } = await supabase.from("policy_templates").select("slug").eq("slug", templateSlug).maybeSingle();
     if (!tpl && !getBuiltInTemplateBySlug(templateSlug)) {
       return NextResponse.json({ error: "Unknown template slug" }, { status: 400 });
     }
+  }
+
+  const cfgCheck = assertPolicyConfigSize(config);
+  if (!cfgCheck.ok) {
+    return NextResponse.json({ error: cfgCheck.message }, { status: 400 });
   }
 
   const { data, error } = await supabase
@@ -107,7 +117,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   return NextResponse.json({ policy: toPolicyRow((data ?? {}) as Record<string, unknown>) });

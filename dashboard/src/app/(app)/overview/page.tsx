@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Activity,
@@ -25,8 +26,14 @@ import {
 } from "@/components/ui/table";
 import { getHomeDashboardData } from "@/data/home-metrics";
 import { cn } from "@/lib/utils";
+import { OverviewFirstRun } from "@/components/onboarding/overview-first-run";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Overview",
+  description: "Workspace overview — recent scans, risk trends, and quick actions.",
+};
 
 function formatRatio(pass: number, fail: number): string {
   if (pass === 0 && fail === 0) return "—";
@@ -78,13 +85,12 @@ export default async function DashboardOverviewPage() {
               </span>
             </div>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Trust command center</h1>
-            <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Scan volume, gate outcomes, and trust scores in one view — tuned for a calm, premium SaaS
-              experience. Run analyses from{" "}
+            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+              Scans, policies, and alerts in one place.{" "}
               <Link href="/scan" className="font-medium text-primary underline-offset-4 hover:underline">
-                Workflow scan
+                Run a workflow scan
               </Link>{" "}
-              to grow these numbers.
+              to populate metrics.
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col lg:items-end">
@@ -106,6 +112,12 @@ export default async function DashboardOverviewPage() {
           </div>
         </div>
       </div>
+
+      <OverviewFirstRun
+        mode={home.mode}
+        savedReportsAllTime={home.savedReportsAllTime}
+        onboarding={home.onboarding}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
@@ -163,9 +175,7 @@ export default async function DashboardOverviewPage() {
               <Shield className="h-5 w-5 text-primary" aria-hidden />
               Scan outcome trend
             </CardTitle>
-            <CardDescription className="max-w-xl">
-              Daily stacked outcomes from saved scans — pass, needs review, and fail (last 14 days).
-            </CardDescription>
+            <CardDescription className="max-w-xl">Last 14 days — pass, needs review, fail.</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="pt-2">
@@ -180,7 +190,7 @@ export default async function DashboardOverviewPage() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
             <CardTitle className="text-lg font-semibold">Recent scans</CardTitle>
-            <CardDescription>Latest saved workflow analyses</CardDescription>
+            <CardDescription>Latest saved analyses</CardDescription>
           </div>
           <Button variant="outline" size="sm" asChild className="border-border/80">
             <Link href="/scan/history">Full history</Link>
@@ -200,12 +210,16 @@ export default async function DashboardOverviewPage() {
             <TableBody>
               {home.recentScans.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="px-6 py-12 text-center text-sm text-muted-foreground">
-                    No scans yet.{" "}
-                    <Link href="/scan" className="font-medium text-primary underline-offset-4 hover:underline">
-                      Run your first workflow scan
-                    </Link>
-                    .
+                  <TableCell colSpan={5} className="px-6 py-10">
+                    <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-center">
+                      <p className="text-sm text-muted-foreground">No saved scans yet.</p>
+                      <Button asChild size="sm" className="gap-1.5">
+                        <Link href="/scan">
+                          Run first scan
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

@@ -3,7 +3,9 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CalendarClock, Loader2, Play, Trash2 } from "lucide-react";
+import { CalendarClock, Cloud, Loader2, Play, Trash2 } from "lucide-react";
+import { EmptyStateCta } from "@/components/onboarding/empty-state-cta";
+import { GovernanceJourneyStrip } from "@/components/onboarding/governance-journey-strip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -262,35 +264,33 @@ function SchedulesContent() {
 
   if (!useCloud) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 py-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Scheduled scans</h1>
-        <p className="text-sm text-muted-foreground">
-          Connect Supabase to enable saved schedules. Manual runs use the same scan engine as /scan; automatic
-          background execution will use a cron hook later.
-        </p>
-        <Card className="border-border/80">
-          <CardHeader>
-            <CardTitle className="text-base">Local mode</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Use the workflow library and <Link href="/scan" className="text-primary hover:underline">/scan</Link>{" "}
-            for now. When the dashboard is cloud-connected, schedules appear here.
-          </CardContent>
-        </Card>
+      <div className="mx-auto max-w-2xl space-y-6 py-8">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Schedules</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Automate scans on templates — available in cloud mode.</p>
+        </div>
+        <EmptyStateCta
+          icon={Cloud}
+          title="Schedules need cloud"
+          description="Enable Supabase to save schedules and run them from here."
+          primary={{ href: "/workspace", label: "Workspace setup" }}
+          secondary={{ href: "/workflow-library", label: "Library" }}
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="border-b border-border/60 pb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Continuous governance</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Scheduled scans</h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          Scheduler-ready records for workflow templates (and future integration pulls).{" "}
-          <span className="font-medium text-foreground">Run now</span> executes immediately; background cron can call
-          a protected tick endpoint later.
-        </p>
+      <div className="space-y-5 border-b border-border/60 pb-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Monitor</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Schedules</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Attach a library template, pick cadence, <span className="font-medium text-foreground">Run now</span> anytime.
+          </p>
+        </div>
+        <GovernanceJourneyStrip />
       </div>
 
       {error ? (
@@ -302,15 +302,13 @@ function SchedulesContent() {
         <p className="rounded-lg border border-border/80 bg-muted/40 px-3 py-2 text-sm">{message}</p>
       ) : null}
 
-      <Card className="border-border/80 shadow-sm">
+      <Card id="new-schedule" className="scroll-mt-24 border-border/80 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <CalendarClock className="h-4 w-4" aria-hidden />
             New schedule
           </CardTitle>
-          <CardDescription>
-            Targets the active workspace library when a workspace is selected; otherwise personal templates.
-          </CardDescription>
+          <CardDescription>Uses templates from your active workspace or personal library.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
@@ -391,12 +389,10 @@ function SchedulesContent() {
               ))}
             </select>
             <p className="text-xs text-muted-foreground">
-              Manual <strong className="font-medium text-foreground">Run now</strong> applies the same policy and
-              stores <code className="rounded bg-muted px-1 font-mono text-[11px]">policyEvaluation</code> on the saved
-              scan when configured.{" "}
               <Link href="/policies" className="text-primary hover:underline">
                 Policies
-              </Link>
+              </Link>{" "}
+              apply on Run now when selected.
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm sm:col-span-2">
@@ -419,7 +415,7 @@ function SchedulesContent() {
       <Card className="border-border/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Your schedules</CardTitle>
-          <CardDescription>Last run reflects the most recent manual or automated attempt.</CardDescription>
+          <CardDescription>Last run + next slot.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
@@ -427,7 +423,15 @@ function SchedulesContent() {
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </p>
           ) : sortedSchedules.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No schedules yet.</p>
+            <EmptyStateCta
+              icon={CalendarClock}
+              title="No schedules yet"
+              description="Pick a saved workflow template and a cadence — then run on demand."
+              primary={{ href: "#new-schedule", label: "Create schedule" }}
+              secondary={{ href: "/workflow-library", label: "Library" }}
+              compact
+              className="border-none bg-transparent py-4"
+            />
           ) : (
             sortedSchedules.map((s) => {
               const last = lastRuns[s.id];

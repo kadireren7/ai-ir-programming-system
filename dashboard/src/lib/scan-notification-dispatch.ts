@@ -6,6 +6,7 @@ import {
   type NotificationPrefsShape,
 } from "@/lib/scan-notification-rules";
 import { dispatchAlertRulesForScanContext } from "@/lib/alert-dispatch";
+import { validateSlackWebhookUrlForOutbound } from "@/lib/webhook-ssrf";
 
 function rowToPrefs(row: Record<string, unknown> | null): NotificationPrefsShape {
   if (!row) return { ...DEFAULT_NOTIFICATION_PREFS };
@@ -32,7 +33,7 @@ async function placeholderSendScanEmail(_userId: string, subject: string, text: 
 }
 
 async function sendSlackWebhookStub(url: string, text: string): Promise<void> {
-  if (!url.startsWith("https://")) return;
+  if (!validateSlackWebhookUrlForOutbound(url).ok) return;
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), 4000);
   try {
@@ -89,7 +90,7 @@ export async function dispatchScanNotificationsForUser(
       metadata: { ...meta, kind: p.kind },
     });
     if (error) {
-      console.warn("[notifications] insert failed", error.message);
+      console.warn("[notifications] insert failed");
     }
   }
 

@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Megaphone, Send } from "lucide-react";
+import { Bell, Cloud, Loader2, Megaphone, Send } from "lucide-react";
+import { EmptyStateCta } from "@/components/onboarding/empty-state-cta";
+import { GovernanceJourneyStrip } from "@/components/onboarding/governance-journey-strip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -284,26 +286,33 @@ export default function AlertsPage() {
 
   if (!useCloud) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 py-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Alerts</h1>
-        <p className="text-sm text-muted-foreground">
-          Connect Supabase to configure team alert destinations and rules. Existing per-user notification settings
-          remain at <Link href="/settings/notifications" className="text-primary hover:underline">Alert settings</Link>.
-        </p>
+      <div className="mx-auto max-w-2xl space-y-6 py-8">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Alerts</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Team routes for scan outcomes — cloud only.</p>
+        </div>
+        <EmptyStateCta
+          icon={Cloud}
+          title="Alerts need cloud"
+          description="Personal toggles live in settings until then."
+          primary={{ href: "/workspace", label: "Workspace setup" }}
+          secondary={{ href: "/settings/notifications", label: "Personal alerts" }}
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="border-b border-border/60 pb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Governance signals</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Alerts</h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          Route FAIL / NEEDS REVIEW / high-severity findings and schedule failures to Slack, Discord (JSON webhook),
-          in-app workspace fanout, or an email placeholder. Webhook URLs are stored server-side and{" "}
-          <span className="font-medium text-foreground">not returned</span> after save — rotate via update if needed.
-        </p>
+      <div className="space-y-5 border-b border-border/60 pb-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Alert</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Alerts</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Slack, Discord, in-app, or email placeholder. Webhooks stay on the server after save.
+          </p>
+        </div>
+        <GovernanceJourneyStrip />
       </div>
 
       {error ? (
@@ -315,16 +324,13 @@ export default function AlertsPage() {
         <p className="rounded-lg border border-border/80 bg-muted/40 px-3 py-2 text-sm">{message}</p>
       ) : null}
 
-      <Card className="border-border/80 shadow-sm">
+      <Card id="dest-form" className="scroll-mt-24 border-border/80 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Megaphone className="h-4 w-4" aria-hidden />
             New destination
           </CardTitle>
-          <CardDescription>
-            Scoped to your active workspace when one is selected; otherwise personal. Only workspace admins can create
-            workspace destinations.
-          </CardDescription>
+          <CardDescription>Workspace or personal scope — matches your active org cookie.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-2">
@@ -380,7 +386,7 @@ export default function AlertsPage() {
       <Card className="border-border/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Destinations</CardTitle>
-          <CardDescription>Masked config in list; use Test to verify delivery.</CardDescription>
+          <CardDescription>Masked in list · Test to verify.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
@@ -388,7 +394,15 @@ export default function AlertsPage() {
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </p>
           ) : destinations.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No destinations yet.</p>
+            <EmptyStateCta
+              icon={Bell}
+              title="No destinations"
+              description="Add Slack or Discord first, then bind rules."
+              primary={{ href: "#dest-form", label: "Add destination" }}
+              secondary={{ href: "/scan", label: "Run a scan" }}
+              compact
+              className="border-none bg-transparent py-4"
+            />
           ) : (
             destinations.map((d) => (
               <div
@@ -434,7 +448,7 @@ export default function AlertsPage() {
       <Card className="border-border/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">New rule</CardTitle>
-          <CardDescription>Maps triggers to destinations for the active scope.</CardDescription>
+          <CardDescription>Trigger → where to notify.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -460,7 +474,12 @@ export default function AlertsPage() {
           <div className="space-y-2">
             <Label>Destinations</Label>
             {destinations.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Create a destination first.</p>
+              <p className="text-xs text-muted-foreground">
+                <Link href="#dest-form" className="font-medium text-primary hover:underline">
+                  Add a destination
+                </Link>{" "}
+                first.
+              </p>
             ) : (
               <ul className="space-y-2">
                 {destinations.map((d) => (
@@ -491,7 +510,15 @@ export default function AlertsPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {rules.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No rules yet.</p>
+            <EmptyStateCta
+              icon={Megaphone}
+              title="No rules yet"
+              description="Wire scan FAIL, review, or high-severity triggers to a destination."
+              primary={{ href: "#dest-form", label: "Check destinations" }}
+              secondary={{ href: "/policies", label: "Policies" }}
+              compact
+              className="border-none bg-transparent py-4"
+            />
           ) : (
             rules.map((r) => (
               <div key={r.id} className="rounded-lg border border-border/60 bg-muted/20 p-3">
@@ -517,11 +544,10 @@ export default function AlertsPage() {
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        Legacy per-user toggles remain at{" "}
+        Personal toggles:{" "}
         <Link href="/settings/notifications" className="text-primary hover:underline">
-          /settings/notifications
+          Settings → notifications
         </Link>
-        . This page adds team-routable destinations and explicit rules on top.
       </p>
     </div>
   );

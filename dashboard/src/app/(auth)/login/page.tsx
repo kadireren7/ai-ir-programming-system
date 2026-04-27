@@ -1,14 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
 import { LoginForm } from "@/components/auth/login-form";
 import { isSupabaseConfigured } from "@/lib/env";
 
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in to your Torqa workspace.",
+  robots: { index: false, follow: false },
+};
+
 export default function LoginPage() {
   const configured = isSupabaseConfigured();
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-6 p-4">
+    <div
+      id="main-content"
+      className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-6 p-4"
+    >
       {!configured && (
         <div className="max-w-md rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-100">
           Set <code className="rounded bg-muted px-1 font-mono text-xs">NEXT_PUBLIC_SUPABASE_URL</code> and{" "}

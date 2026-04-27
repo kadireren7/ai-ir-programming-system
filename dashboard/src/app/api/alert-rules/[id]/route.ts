@@ -3,8 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveListOrganizationId } from "@/lib/workspace-scope";
 import { isPlainObject } from "@/lib/json-guards";
 import { isAlertRuleTrigger, toRuleApi } from "@/lib/alerts";
+import { isLikelyUuid } from "@/lib/policy-input-limits";
+import { apiJsonDatabaseError } from "@/lib/api-json-error";
 
 export const runtime = "nodejs";
+
+const MAX_DESTINATION_IDS = 32;
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -95,6 +99,16 @@ export async function PATCH(request: Request, context: Ctx) {
     destination_ids = Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
   }
 
+  if (destination_ids.length > MAX_DESTINATION_IDS) {
+    return NextResponse.json(
+      { error: `At most ${MAX_DESTINATION_IDS} destination ids allowed`, code: "bad_request" },
+      { status: 400 }
+    );
+  }
+  if (destination_ids.some((id) => !isLikelyUuid(id))) {
+    return NextResponse.json({ error: "Each destination id must be a UUID", code: "bad_request" }, { status: 400 });
+  }
+
   const okDest = await validateDestinationIds(supabase, destination_ids, user.id, existingOrg ?? null);
   if (!okDest) {
     return NextResponse.json({ error: "Invalid destination ids for this scope" }, { status: 400 });
@@ -108,7 +122,7 @@ export async function PATCH(request: Request, context: Ctx) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
 
   const rule = toRuleApi((data ?? {}) as Record<string, unknown>);
@@ -118,7 +132,7 @@ export async function PATCH(request: Request, context: Ctx) {
   return NextResponse.json({ rule });
 }
 
-export async function DELETE(_request: Request, context: Ctx) {
+export async function DELETE(request: Request, context: Ctx) {
   const { id } = await context.params;
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
@@ -137,7 +151,7 @@ export async function DELETE(_request: Request, context: Ctx) {
 
   const { error } = await supabase.from("alert_rules").delete().eq("id", id);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiJsonDatabaseError(request);
   }
   return NextResponse.json({ ok: true });
 }
