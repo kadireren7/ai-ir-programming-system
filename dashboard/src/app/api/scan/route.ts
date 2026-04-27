@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { getScanProvider, ScanProviderExecutionError } from "@/lib/scan/providers";
 import { isScanApiSuccess } from "@/lib/scan-api-guards";
-import type { ScanSource } from "@/lib/scan-engine";
+import type { ScanApiSuccess, ScanSource } from "@/lib/scan-engine";
 import { createClient } from "@/lib/supabase/server";
+import { resolveScopedOrganizationId } from "@/lib/workspace-scope";
 import { dispatchScanNotificationsForUser } from "@/lib/scan-notification-dispatch";
 import { isPlainObject } from "@/lib/json-guards";
+import { resolveScanPolicy } from "@/lib/resolve-scan-policy";
+import { evaluateScanAgainstPolicy } from "@/lib/policy-evaluator";
 
 export const runtime = "nodejs";
 
@@ -40,6 +43,15 @@ export async function POST(request: Request) {
   const source = sourceRaw as ScanSource;
   const input = { source, content };
 
+  const workspacePolicyId =
+    typeof body.workspacePolicyId === "string" && body.workspacePolicyId.trim()
+      ? body.workspacePolicyId.trim()
+      : null;
+  const policyTemplateSlug =
+    typeof body.policyTemplateSlug === "string" && body.policyTemplateSlug.trim()
+      ? body.policyTemplateSlug.trim()
+      : null;
+
   let provider;
   try {
     provider = getScanProvider();
@@ -52,18 +64,33 @@ export async function POST(request: Request) {
 
   try {
     const payload = await provider.scan(input);
-    if (isScanApiSuccess(payload)) {
+    if (!isScanApiSuccess(payload)) {
+      return NextResponse.json(payload);
+    }
+
+    let responsePayload: ScanApiSuccess = payload;
+    if (workspacePolicyId || policyTemplateSlug) {
       const supabase = await createClient();
-      if (supabase) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          void dispatchScanNotificationsForUser(user.id, payload, source).catch(() => {});
-        }
+      const resolved = await resolveScanPolicy(supabase, { workspacePolicyId, policyTemplateSlug });
+      if (resolved) {
+        responsePayload = {
+          ...payload,
+          policyEvaluation: evaluateScanAgainstPolicy(payload, resolved.name, resolved.config),
+        };
       }
     }
-    return NextResponse.json(payload);
+
+    const supabase = await createClient();
+    if (supabase) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const organizationId = await resolveScopedOrganizationId(supabase, user.id);
+        void dispatchScanNotificationsForUser(user.id, responsePayload, source, organizationId).catch(() => {});
+      }
+    }
+    return NextResponse.json(responsePayload);
   } catch (e) {
     if (e instanceof ScanProviderExecutionError) {
       return NextResponse.json({ error: e.message, code: e.code }, { status: e.httpStatus });

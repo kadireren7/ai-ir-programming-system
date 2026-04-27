@@ -5,6 +5,7 @@ import {
   DEFAULT_NOTIFICATION_PREFS,
   type NotificationPrefsShape,
 } from "@/lib/scan-notification-rules";
+import { dispatchAlertRulesForScanContext } from "@/lib/alert-dispatch";
 
 function rowToPrefs(row: Record<string, unknown> | null): NotificationPrefsShape {
   if (!row) return { ...DEFAULT_NOTIFICATION_PREFS };
@@ -55,7 +56,9 @@ async function sendSlackWebhookStub(url: string, text: string): Promise<void> {
 export async function dispatchScanNotificationsForUser(
   userId: string,
   result: ScanApiSuccess,
-  source: string
+  source: string,
+  organizationId: string | null = null,
+  via: string = "scan"
 ): Promise<void> {
   const supabase = await createClient();
   if (!supabase) return;
@@ -97,4 +100,12 @@ export async function dispatchScanNotificationsForUser(
   if (prefs.slackWebhookUrl) {
     void sendSlackWebhookStub(prefs.slackWebhookUrl, `*Torqa scan alert*\n${summary}\nSource: ${source}`);
   }
+
+  void dispatchAlertRulesForScanContext(supabase, {
+    actorUserId: userId,
+    organizationId,
+    result,
+    source,
+    via,
+  }).catch(() => {});
 }

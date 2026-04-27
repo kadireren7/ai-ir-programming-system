@@ -23,14 +23,16 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="relative flex min-h-screen bg-background">
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,hsl(var(--primary)/0.08),transparent_50%),radial-gradient(ellipse_80%_50%_at_100%_0%,hsl(var(--chart-2)/0.06),transparent_45%)]"
+        aria-hidden
+      />
       <AppSidebar orgName={org.name} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader orgName={org.name} user={user} />
         <main className="flex-1 overflow-auto">
-          <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            {children}
-          </div>
+          <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
         </main>
       </div>
     </div>

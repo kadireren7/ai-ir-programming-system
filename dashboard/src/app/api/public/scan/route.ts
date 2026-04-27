@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 import { getScanProvider, ScanProviderExecutionError } from "@/lib/scan/providers";
 import { extractApiKeyFromRequest, hashApiKey } from "@/lib/api-keys";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { ScanSource } from "@/lib/scan-engine";
+import type { ScanApiSuccess, ScanSource } from "@/lib/scan-engine";
+import { isScanApiSuccess } from "@/lib/scan-api-guards";
 import { isPlainObject } from "@/lib/json-guards";
+import { dispatchAlertRulesForScanContext } from "@/lib/alert-dispatch";
+import { resolveScanPolicy } from "@/lib/resolve-scan-policy";
+import { evaluateScanAgainstPolicy } from "@/lib/policy-evaluator";
 
 export const runtime = "nodejs";
 
@@ -133,7 +137,36 @@ export async function POST(request: Request) {
 
     try {
       const payload = await provider.scan({ source, content });
-      return NextResponse.json(payload, {
+      let responsePayload: ScanApiSuccess | typeof payload = payload;
+      if (isScanApiSuccess(payload)) {
+        const policyTemplateSlug =
+          typeof body.policyTemplateSlug === "string" && body.policyTemplateSlug.trim()
+            ? body.policyTemplateSlug.trim()
+            : null;
+        const workspacePolicyId =
+          typeof body.workspacePolicyId === "string" && body.workspacePolicyId.trim()
+            ? body.workspacePolicyId.trim()
+            : null;
+        const resolved = await resolveScanPolicy(admin, {
+          workspacePolicyId,
+          policyTemplateSlug,
+          strictPersonalUserId: keyRow.user_id as string,
+        });
+        if (resolved) {
+          responsePayload = {
+            ...payload,
+            policyEvaluation: evaluateScanAgainstPolicy(payload, resolved.name, resolved.config),
+          };
+        }
+        void dispatchAlertRulesForScanContext(admin, {
+          actorUserId: keyRow.user_id as string,
+          organizationId: null,
+          result: responsePayload as ScanApiSuccess,
+          source,
+          via: "api_public_scan",
+        }).catch(() => {});
+      }
+      return NextResponse.json(responsePayload, {
         headers: {
           "x-ratelimit-limit": String(rateLimit.limit),
           "x-ratelimit-remaining": String(rateLimit.remaining),

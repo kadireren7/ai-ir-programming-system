@@ -76,8 +76,47 @@ export function ScanPageClient() {
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<ScanApiSuccess | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [policySelect, setPolicySelect] = useState("none");
+  const [policyTemplates, setPolicyTemplates] = useState<{ slug: string; name: string }[]>([]);
+  const [workspacePolicies, setWorkspacePolicies] = useState<{ id: string; name: string }[]>([]);
 
   const libraryId = searchParams.get("library")?.trim() ?? "";
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const tplRes = await fetch("/api/policy-templates");
+        if (cancelled || !tplRes.ok) return;
+        const j = (await tplRes.json()) as { templates?: { slug?: string; name?: string }[] };
+        const list = Array.isArray(j.templates)
+          ? j.templates
+              .filter((t) => typeof t.slug === "string" && typeof t.name === "string")
+              .map((t) => ({ slug: t.slug as string, name: t.name as string }))
+          : [];
+        setPolicyTemplates(list);
+      } catch {
+        /* ignore */
+      }
+      if (!hasSupabase || cancelled) return;
+      try {
+        const polRes = await fetch("/api/workspace-policies", { credentials: "include" });
+        if (cancelled || !polRes.ok) return;
+        const j = (await polRes.json()) as { policies?: { id?: string; name?: string }[] };
+        const plist = Array.isArray(j.policies)
+          ? j.policies
+              .filter((p) => typeof p.id === "string" && typeof p.name === "string")
+              .map((p) => ({ id: p.id as string, name: p.name as string }))
+          : [];
+        setWorkspacePolicies(plist);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!libraryId) return;
@@ -151,10 +190,16 @@ export function ScanPageClient() {
     const contentObj = parsed as object;
     setIsScanning(true);
     try {
+      const scanBody: Record<string, unknown> = { source, content: parsed };
+      if (policySelect.startsWith("template:")) {
+        scanBody.policyTemplateSlug = policySelect.slice("template:".length);
+      } else if (policySelect.startsWith("workspace:")) {
+        scanBody.workspacePolicyId = policySelect.slice("workspace:".length);
+      }
       const res = await fetch("/api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source, content: parsed }),
+        body: JSON.stringify(scanBody),
       });
       let data: unknown;
       try {
@@ -188,7 +233,7 @@ export function ScanPageClient() {
     } finally {
       setIsScanning(false);
     }
-  }, [jsonText, source]);
+  }, [jsonText, source, policySelect]);
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -246,6 +291,9 @@ export function ScanPageClient() {
               </Link>
               <Link href="/scan/history" className="font-medium text-primary hover:underline">
                 Scan history →
+              </Link>
+              <Link href="/policies" className="font-medium text-primary hover:underline">
+                Policies →
               </Link>
             </p>
           </div>
@@ -332,6 +380,45 @@ export function ScanPageClient() {
                 <option value="n8n">n8n workflow export</option>
                 <option value="generic">Generic JSON</option>
               </select>
+            </div>
+            <div className="space-y-2 sm:col-span-1">
+              <Label htmlFor="scan-policy" className="text-sm font-medium">
+                Policy (optional)
+              </Label>
+              <select
+                id="scan-policy"
+                value={policySelect}
+                disabled={busy}
+                onChange={(e) => setPolicySelect(e.target.value)}
+                className="flex h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="none">None — engine scan only</option>
+                {policyTemplates.length > 0 ? (
+                  <optgroup label="Built-in templates">
+                    {policyTemplates.map((t) => (
+                      <option key={t.slug} value={`template:${t.slug}`}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null}
+                {workspacePolicies.length > 0 ? (
+                  <optgroup label="Workspace policies">
+                    {workspacePolicies.map((p) => (
+                      <option key={p.id} value={`workspace:${p.id}`}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null}
+              </select>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                When set, the API attaches a governance verdict (PASS / WARN / FAIL) without changing the underlying
+                scan.{" "}
+                <Link href="/policies" className="font-medium text-primary hover:underline">
+                  Manage policies
+                </Link>
+              </p>
             </div>
           </div>
 

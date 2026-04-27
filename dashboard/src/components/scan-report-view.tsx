@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { ScanApiSuccess, ScanDecision, ScanFinding } from "@/lib/scan-engine";
+import type { PolicyEvaluationResult, PolicyGateStatus } from "@/lib/policy-types";
 import { cn } from "@/lib/utils";
 
 /* ——— Visual tokens (dark-first SaaS security) ——— */
@@ -27,6 +28,12 @@ import { cn } from "@/lib/utils";
 function decisionBadgeClass(d: ScanDecision): string {
   if (d === "PASS") return "border-emerald-500/50 bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20";
   if (d === "NEEDS REVIEW") return "border-amber-500/50 bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20";
+  return "border-rose-500/50 bg-rose-500/10 text-rose-200 ring-1 ring-rose-500/25";
+}
+
+function policyGateBadgeClass(s: PolicyGateStatus): string {
+  if (s === "PASS") return "border-emerald-500/50 bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20";
+  if (s === "WARN") return "border-amber-500/50 bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20";
   return "border-rose-500/50 bg-rose-500/10 text-rose-200 ring-1 ring-rose-500/25";
 }
 
@@ -302,6 +309,65 @@ function FindingCard({ f }: { f: ScanFinding }) {
   );
 }
 
+function PolicyEvaluationPanel({ pe }: { pe: PolicyEvaluationResult }) {
+  return (
+    <section className="rounded-2xl border border-teal-500/25 bg-gradient-to-br from-teal-500/[0.08] via-card to-card p-5 shadow-lg ring-1 ring-teal-500/10 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Governance</p>
+          <h3 className="text-lg font-semibold tracking-tight text-foreground">Applied policy</h3>
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{pe.appliedPolicyName}</span>
+            <span className="mx-2 text-muted-foreground/60">·</span>
+            Thresholds evaluated on top of the scan gate above.
+          </p>
+        </div>
+        <Badge variant="outline" className={cn("w-fit shrink-0 font-bold", policyGateBadgeClass(pe.policyStatus))}>
+          {pe.policyStatus}
+        </Badge>
+      </div>
+
+      {pe.violations.length > 0 ? (
+        <div className="mt-5 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Violations</p>
+          <ul className="space-y-2">
+            {pe.violations.map((v, i) => (
+              <li
+                key={`${v.code}-${i}`}
+                className={cn(
+                  "rounded-lg border px-3 py-2 text-sm",
+                  v.severity === "error"
+                    ? "border-rose-500/35 bg-rose-500/[0.06] text-rose-100"
+                    : "border-amber-500/30 bg-amber-500/[0.06] text-amber-100"
+                )}
+              >
+                <span className="font-mono text-[11px] text-muted-foreground">{v.code}</span>
+                <span className="mx-2 text-muted-foreground/50">—</span>
+                {v.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">No policy violations for this snapshot.</p>
+      )}
+
+      {pe.recommendations.length > 0 ? (
+        <div className="mt-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recommendations</p>
+          <ul className="mt-2 list-inside list-disc space-y-1.5 text-sm text-foreground/90">
+            {pe.recommendations.map((r, i) => (
+              <li key={i} className="leading-relaxed">
+                {r}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 export type ScanReportViewProps = {
   result: ScanApiSuccess;
   showPoweredBanner?: boolean;
@@ -429,6 +495,8 @@ export function ScanReportView({
         </div>
       </div>
 
+      {result.policyEvaluation ? <PolicyEvaluationPanel pe={result.policyEvaluation} /> : null}
+
       {/* Main + sidebar */}
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_min(100%,340px)] lg:items-start lg:gap-10">
         <div className="min-w-0 space-y-8">
@@ -463,8 +531,9 @@ export function ScanReportView({
         <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <RecommendationsPanel result={result} />
           <p className="mt-4 px-1 text-[11px] leading-relaxed text-muted-foreground/90">
-            Recommendations are generated from this scan only. For policy-backed gates, run{" "}
-            <code className="rounded bg-muted/60 px-1 font-mono text-[10px]">torqa validate</code> locally.
+            {result.policyEvaluation
+              ? "Engine recommendations (sidebar) are separate from governance policy violations above."
+              : "Recommendations are generated from this scan only. Attach a policy on /scan or define workspace policies on /policies."}
           </p>
         </aside>
       </div>

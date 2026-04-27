@@ -33,5 +33,8 @@ select public.create_organization('My team', 'my-team');
 6. **Scan notifications:** apply `20260426220000_scan_notifications.sql` for `notification_preferences` + `in_app_notifications` (alerts after **`POST /api/scan`** when signed in).
 7. **Public API keys:** apply `20260426223000_api_keys.sql` for hashed key storage (`api_keys`) and audit logs (`api_key_usage_logs`) used by **`POST /api/public/scan`**.
 8. **Workspace collaboration v2:** apply `20260427200000_workspace_collaboration_v2.sql` for `workspace_activity_logs`, role/ownership/settings RPCs, and workspace-wide in-app notification fanout helpers.
+9. **Integrations foundation:** apply `20260427213000_integrations_foundation.sql` for `integrations` table + RLS (personal and workspace-scoped integration records).
+10. **Scan schedules:** apply `20260427234000_scan_schedules_foundation.sql` for `scan_schedules` + `scan_schedule_runs` (manual run today; future cron).
+11. **Team alerts:** apply `20260428200000_alert_destinations_and_rules.sql` for `alert_destinations` + `alert_rules` (Slack/Discord/email placeholder/in-app; RLS mirrors integrations-style personal vs workspace admin).
 
 Design details, RLS model, and API layout: **[Cloud backend](../docs/cloud-backend.md)**.

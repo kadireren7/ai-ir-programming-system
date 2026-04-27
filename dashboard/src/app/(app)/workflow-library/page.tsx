@@ -13,6 +13,7 @@ import {
   Trash2,
   Upload,
   Library,
+  CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -346,16 +347,26 @@ export default function WorkflowLibraryPage() {
                         </Badge>
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      className="shrink-0 gap-1"
-                      onClick={() => runScan(r.id)}
-                    >
-                      <Play className="h-3.5 w-3.5" />
-                      Scan
-                    </Button>
+                    <div className="flex shrink-0 flex-wrap gap-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="gap-1"
+                        onClick={() => runScan(r.id)}
+                      >
+                        <Play className="h-3.5 w-3.5" />
+                        Scan
+                      </Button>
+                      {useCloudLibrary ? (
+                        <Button type="button" size="sm" variant="outline" className="gap-1" asChild>
+                          <Link href={`/schedules?template=${encodeURIComponent(r.id)}`}>
+                            <CalendarClock className="h-3.5 w-3.5" />
+                            Schedule
+                          </Link>
+                        </Button>
+                      ) : null}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -518,6 +529,14 @@ export default function WorkflowLibraryPage() {
                               <Play className="h-3.5 w-3.5" />
                               Scan
                             </Button>
+                            {useCloudLibrary ? (
+                              <Button type="button" size="sm" variant="outline" className="gap-1" asChild>
+                                <Link href={`/schedules?template=${encodeURIComponent(row.id)}`}>
+                                  <CalendarClock className="h-3.5 w-3.5" />
+                                  Schedule
+                                </Link>
+                              </Button>
+                            ) : null}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -536,6 +555,15 @@ export default function WorkflowLibraryPage() {
           JSON is stored as data only. Scans still run through{" "}
           <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">POST /api/scan</code> when you choose
           Scan.
+          {!useCloudLibrary ? (
+            <>
+              {" "}
+              <Link href="/schedules" className="font-medium text-primary underline-offset-4 hover:underline">
+                Scheduled scans
+              </Link>{" "}
+              require cloud Supabase.
+            </>
+          ) : null}
         </span>
       </p>
     </div>

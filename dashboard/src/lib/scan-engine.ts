@@ -3,6 +3,8 @@
  * Produces production-style, explainable findings with no randomness.
  */
 
+import type { PolicyEvaluationResult } from "@/lib/policy-types";
+
 export type ScanSeverity = "info" | "review" | "high" | "critical";
 
 export type ScanFinding = {
@@ -34,6 +36,8 @@ export type ScanApiSuccess = {
   totals: ScanTotals;
   engine: ScanApiEngineId;
   source: ScanSource;
+  /** Present when a governance policy was applied to this scan response. */
+  policyEvaluation?: PolicyEvaluationResult;
 };
 
 type N8nNode = {

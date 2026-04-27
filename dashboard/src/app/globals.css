@@ -83,3 +83,42 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+/* Premium marketing: subtle moving grid (respects reduced motion via framer in components) */
+@keyframes torqa-grid-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-24px, -24px, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.torqa-hero-grid {
+  background-image: linear-gradient(hsl(var(--border) / 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border) / 0.45) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+  animation: torqa-grid-drift 22s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .torqa-hero-grid {
+    animation: none;
+  }
+}
+
+@layer utilities {
+  .torqa-premium-surface {
+    @apply rounded-2xl border border-border/60 bg-card/60 shadow-xl shadow-black/30 ring-1 ring-white/[0.04] backdrop-blur-sm;
+  }
+}
