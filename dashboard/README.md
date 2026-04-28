@@ -134,7 +134,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/api/settings/notifications` | **GET** / **PATCH** — `notification_preferences` (requires migration `20260426220000_scan_notifications.sql`) |
 | `/api/settings/api-keys` | **GET** list keys + recent usage · **POST** create key `{ name }` (raw key returned once) |
 | `/api/settings/api-keys/[id]` | **PATCH** `{ revoke: true }` — revokes an active key |
-| `/api/public/scan` | **POST** (public with API key) — same body as `/api/scan` plus optional **`policyTemplateSlug`** or a **personal** **`workspacePolicyId`**; response is envelope-first `{ ok, data/error, meta }` (use `?legacy=1` for old raw payload shape). |
+| `/api/public/scan` | **POST** (public with API key) — same body as `/api/scan` plus optional **`policyTemplateSlug`** or a **personal** **`workspacePolicyId`**; response is envelope-first `{ ok, data/error, meta }` (use `?legacy=1` for old raw payload shape). See [../docs/api.md](../docs/api.md). |
 | `/api/integrations` | **GET** list active-scope integrations · **POST** create integration (n8n available in MVP) |
 | `/api/integrations/[id]` | **PATCH** update integration metadata/status · **DELETE** remove integration |
 | `/api/scan-schedules` | **GET** list schedules for active workspace scope · **POST** create `{ name, scopeType, scopeId, frequency, enabled?, workspacePolicyId? }` |
@@ -190,3 +190,6 @@ npm start
 - [docs/cloud-backend.md](../docs/cloud-backend.md) — RLS and API design
 - [docs/launch-checklist.md](../docs/launch-checklist.md) — release and smoke tests
 - [docs/security.md](../docs/security.md) — security notes (if present in your tree)
+- [docs/api.md](../docs/api.md) — public scan envelope and report artifact contract
+
+API note: full versioning guarantees across all dashboard routes are future work; only documented route contracts should be treated as stable.

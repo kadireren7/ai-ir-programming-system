@@ -2,11 +2,18 @@
 
 # Torqa
 
-**Ship workflow automations with confidence before anything executes.**
+**Torqa is a governance gate for automation workflows.**
 
-Canonical workflow IR + structural/semantic validation + deterministic trust scoring + CI-ready CLI.
+For teams using n8n and workflow JSON in CI, Torqa helps you catch policy and risk issues before runtime.
 
-> **Torqa is a gate, not a runtime.**
+In 60 seconds you can run:
+- `torqa quickstart`
+- `torqa validate examples/integrations/minimal_n8n.json --source n8n`
+- `torqa report examples/integrations --format html -o torqa-report.html`
+
+Strongest path today: `n8n export -> scan -> risk/policy report -> share or schedule`.
+
+> Torqa is a gate, not a runtime.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://github.com/kadireren7/Torqa/blob/main/pyproject.toml)
@@ -23,7 +30,7 @@ Canonical workflow IR + structural/semantic validation + deterministic trust sco
 
 **Product positioning:** Torqa is the **deterministic gate** for workflow specs (validate, score, policy-check) before anything runs in production. The **Next.js dashboard** (`dashboard/`) is the team surface: scan uploads (including n8n JSON), **workspace policies**, **schedules**, **alerts**, **insights**, **API keys**, and **shareable reports** — all optional until you wire **Supabase** (see [dashboard/README.md](dashboard/README.md)).
 
-**v0.1.4 focus:** hardening + clarity + reliability for **n8n / automation workflow governance**. This release emphasizes explicit engine trust signals, scheduled scan execution, stronger n8n findings, and test/documentation alignment (not broad platform expansion).
+**v0.1.5 focus:** growth readiness + release cleanup for **n8n / automation workflow governance**. This release tightens first-run clarity, examples, CI adoption guidance, API/report contracts, and dashboard onboarding copy (not broad platform expansion).
 
 - **Live demo (hosted):** this repository does not ship a fixed production URL. After you deploy, document your canonical URL (for example `https://your-torqa.example.com`) in your runbook and in `NEXT_PUBLIC_APP_URL`.
 - **Local demo:** `cd dashboard && npm install && npm run dev` → [http://localhost:3000](http://localhost:3000) (landing at `/`; app routes under `/overview`, `/scan`, etc.).
@@ -63,18 +70,19 @@ From repo root:
 git clone https://github.com/kadireren7/Torqa.git
 cd Torqa
 pip install -e ".[dev]"
-torqa validate examples/templates/login_flow.tq
-torqa scan examples/templates --profile default
 torqa quickstart
+torqa validate examples/integrations/minimal_n8n.json --source n8n
+torqa scan examples/integrations/customer_support_n8n.json --source n8n
+torqa report examples/integrations --format html -o torqa-report.html
 ```
 
-Expected outcome: `Result: PASS` for `login_flow.tq` and a trust summary for the scan.
+Expected outcome: one safe n8n validation pass, one risky n8n scan with findings, and a shareable report artifact.
 
 If `torqa` is not on `PATH` (common on Windows), use:
 
 ```bash
-python -m torqa validate examples/templates/login_flow.tq
 python -m torqa quickstart
+python -m torqa validate examples/integrations/minimal_n8n.json --source n8n
 ```
 
 `torqa quickstart` is the fastest adoption path in v0.1.5: it runs a bundled n8n sample, prints decision/risk summary, and can generate a shareable report artifact.
@@ -100,6 +108,7 @@ Torqa does **not** execute n8n workflows. It statically reviews exported workflo
 ```bash
 torqa validate examples/integrations/minimal_n8n.json --source n8n
 torqa scan examples/integrations/customer_support_n8n.json --source n8n
+torqa report examples/integrations/customer_support_n8n.json --format md -o customer_support_report.md
 torqa import n8n examples/integrations/customer_support_n8n.json --out customer_support.bundle.json
 ```
 
@@ -144,6 +153,22 @@ Use the built-in composite action for CI gating:
 ```yaml
 permissions:
   contents: read
+
+steps:
+  - uses: actions/checkout@v4
+  - uses: ./.github/actions/torqa
+    with:
+      torqa-package-path: .
+      scan-path: examples/integrations
+      profile: default
+      upload-artifact: true
+```
+
+Optional PR summary comment (already supported by the action):
+
+```yaml
+permissions:
+  contents: read
   pull-requests: write
 
 steps:
@@ -151,15 +176,26 @@ steps:
   - uses: ./.github/actions/torqa
     with:
       torqa-package-path: .
-      scan-path: examples/templates
+      scan-path: examples/integrations
       profile: default
-      fail-on-warning: false
       upload-artifact: true
       comment-on-pr: true
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Full reference: [docs/github-actions.md](docs/github-actions.md)
+
+---
+
+## Public API and report contract
+
+- Public scan API (`POST /api/public/scan`) uses envelope responses by default:
+  - success: `{ ok: true, data, meta }`
+  - error: `{ ok: false, error, meta }`
+- Legacy raw response mode remains available via `?legacy=1`.
+- `torqa report` supports `html`, `md`, and `json` output (`torqa.report.v1` for JSON artifacts).
+
+Details: [docs/api.md](docs/api.md)
 
 ---
 
@@ -225,6 +261,7 @@ Issues and PRs are welcome.
 - [Trust scoring](docs/trust-scoring.md)
 - [CI reports](docs/ci-report.md)
 - [n8n integration](docs/integrations/n8n.md)
+- [Public API contract](docs/api.md)
 
 ---
 

@@ -8,6 +8,9 @@ If you want the fastest first run in under a minute, use:
 
 ```bash
 torqa quickstart
+torqa validate examples/integrations/minimal_n8n.json --source n8n
+torqa scan examples/integrations/customer_support_n8n.json --source n8n
+torqa report examples/integrations/customer_support_n8n.json --format md -o customer_support_report.md
 ```
 
 Optional shareable artifact from the same one-command flow:

@@ -10,12 +10,12 @@ This page is an **honest audit** of the Torqa core as shipped in-repo: what is s
 
 | Area | Assessment |
 |------|------------|
-| **Product clarity** | **Strong.** v0.1.4 narrows product signal to n8n/no-code workflow governance hardening (not enterprise platform breadth). |
+| **Product clarity** | **Strong.** v0.1.5 keeps product signal focused on n8n/automation workflow governance (not enterprise platform breadth). |
 | **Technical quality** | **Solid for v0.x.** Test-backed pipeline (`validate_ir` → semantics → policy), deterministic outputs, versioned IR. Coverage is smoke-heavy, not an exhaustive matrix. |
 | **UX (author / reviewer)** | **Mixed.** `.tq` errors use stable `PX_TQ_*` codes; JSON load errors include path hints. Batch JSON and `torqa.toml` improve CI ergonomics; `doctor` / `explain` reject JSON arrays—documented, but can surprise newcomers. |
 | **CLI quality** | **Good and improving.** v0.1.5 adds one-command onboarding via `torqa quickstart` plus clearer report sharing artifacts (`html`/`md`/`json`). |
 | **Trust model** | **Coherent.** Policy + risk + profiles are deterministic and documented ([Trust layer](trust-layer.md), [Trust policies](trust-policies.md)). Not a security audit tool—**trust** here means spec-level gates, not threat modeling. |
-| **Docs** | **Improving.** Quickstart, trust docs, CI reports, project config, and demos exist; v0.1.4 aligns engine modes, schedule automation limits, and n8n findings language with code behavior. |
+| **Docs** | **Improving.** Quickstart, trust docs, CI reports, project config, and demos exist; v0.1.5 sharpens first-run messaging, CI adoption snippets, and public API/report contract language. |
 | **Adoption readiness** | **Early-adopter.** Install is `pip install -e ".[dev]"`; no PyPI story in-repo. [CONTRIBUTING](../CONTRIBUTING.md) and [GOOD_FIRST_ISSUES](../GOOD_FIRST_ISSUES.md) lower the bar for contributors. |
 
 ---

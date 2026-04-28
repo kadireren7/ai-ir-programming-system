@@ -286,7 +286,8 @@ export function ScanPageClient() {
               Scan
             </h1>
             <p className="max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Upload or paste workflow JSON and run a deterministic scan via{" "}
+              Upload an n8n export (or paste workflow JSON), run a deterministic scan, review the report, then schedule recurring checks.{" "}
+              This page uses{" "}
               <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">POST /api/scan</code>
               . Results include explicit engine mode (real vs preview/fallback). For full Torqa validation, use the CLI.
             </p>
@@ -299,6 +300,9 @@ export function ScanPageClient() {
               </Link>
               <Link href="/policies" className="font-medium text-primary hover:underline">
                 Policies →
+              </Link>
+              <Link href="/schedules" className="font-medium text-primary hover:underline">
+                Schedules →
               </Link>
             </p>
           </div>

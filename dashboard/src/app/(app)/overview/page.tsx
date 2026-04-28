@@ -32,7 +32,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Overview",
-  description: "Workspace overview — recent scans, risk trends, and quick actions.",
+  description: "Automation governance overview — n8n scans, risk trends, and quick actions.",
 };
 
 function formatRatio(pass: number, fail: number): string {
@@ -84,11 +84,11 @@ export default async function DashboardOverviewPage() {
                   : "Connect Supabase to replace with your workspace."}
               </span>
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Trust command center</h1>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Automation governance command center</h1>
             <p className="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Scans, policies, and alerts in one place.{" "}
+              Upload n8n workflows, run deterministic scans, review reports, and schedule recurring checks.{" "}
               <Link href="/scan" className="font-medium text-primary underline-offset-4 hover:underline">
-                Run a workflow scan
+                Run a scan now
               </Link>{" "}
               to populate metrics.
             </p>
@@ -96,7 +96,7 @@ export default async function DashboardOverviewPage() {
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col lg:items-end">
             <Button asChild className="gap-2 shadow-md">
               <Link href="/scan">
-                New scan
+                Upload and scan
                 <ArrowUpRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -104,7 +104,7 @@ export default async function DashboardOverviewPage() {
               <Link href="/workspace">Workspace</Link>
             </Button>
             <Button variant="outline" asChild className="border-border/80 bg-background/50 backdrop-blur">
-              <Link href="/workflow-library">Workflow library</Link>
+              <Link href="/workflow-library">Upload workflow</Link>
             </Button>
             <Button variant="outline" asChild className="border-border/80 bg-background/50 backdrop-blur">
               <Link href="/scan/history">Scan history</Link>
@@ -201,7 +201,7 @@ export default async function DashboardOverviewPage() {
               <Shield className="h-5 w-5 text-primary" aria-hidden />
               Scan outcome trend
             </CardTitle>
-            <CardDescription className="max-w-xl">Last 14 days — pass, needs review, fail.</CardDescription>
+            <CardDescription className="max-w-xl">Last 14 days for workflow governance outcomes.</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="pt-2">

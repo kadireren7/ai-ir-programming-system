@@ -11,7 +11,7 @@ Planning for an **early core**: small API surface, reference Python implementati
 | **Trust signals** without ML inside the core | **Profiles** + deterministic policy / risk / reasons |
 | A **runtime or hosted runner** | **Out of scope** for this repository (see [non-goals](#explicit-non-goals)) |
 
-**Adoption path:** clone → [README — try in 2 minutes](https://github.com/kadireren7/Torqa#try-it-in-2-minutes) → wire `torqa` into CI → (optional) [dashboard](https://github.com/kadireren7/Torqa/tree/main/dashboard) + [cloud schema](cloud-backend.md) when you need teams.
+**Adoption path:** clone → [README — 2-minute quickstart](https://github.com/kadireren7/Torqa#2-minute-quickstart) → wire `torqa` into CI → (optional) [dashboard](https://github.com/kadireren7/Torqa/tree/main/dashboard) + [cloud schema](cloud-backend.md) when you need teams.
 
 ---
 

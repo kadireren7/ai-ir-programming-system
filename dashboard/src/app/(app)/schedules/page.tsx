@@ -178,7 +178,7 @@ function SchedulesContent() {
       }
       setName("");
       setCreatePolicyId("");
-      setMessage("Schedule created.");
+      setMessage("Schedule created. Next step: run once now to verify output.");
       await load();
     } catch {
       setError("Network error");
@@ -225,7 +225,7 @@ function SchedulesContent() {
         scanId?: string;
       };
       if (j.code === "integration_scan_not_implemented") {
-        setMessage(j.message ?? "Integration runs are not implemented yet.");
+        setMessage(j.message ?? "Integration schedules are saved, but run execution is not implemented yet.");
         return;
       }
       if (!res.ok) {
@@ -233,9 +233,9 @@ function SchedulesContent() {
         return;
       }
       if (j.ok && j.scanId) {
-        setMessage(`Scan saved to history (${j.scanId.slice(0, 8)}…).`);
+        setMessage(`Run succeeded. Report saved to history (${j.scanId.slice(0, 8)}…).`);
       } else {
-        setMessage("Run finished.");
+        setMessage("Run finished successfully.");
       }
       await load();
     } catch {
@@ -267,7 +267,7 @@ function SchedulesContent() {
       <div className="mx-auto max-w-2xl space-y-6 py-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Schedules</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Automate scans on templates — available in cloud mode.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Automate scan + report checks for uploaded workflows — available in cloud mode.</p>
         </div>
         <EmptyStateCta
           icon={Cloud}
@@ -287,7 +287,7 @@ function SchedulesContent() {
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Monitor</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Schedules</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Attach a library template, pick cadence, <span className="font-medium text-foreground">Run now</span> anytime.
+            Upload workflow -&gt; run scan -&gt; review report -&gt; create schedule. Use Run now anytime to verify schedule behavior.
           </p>
         </div>
         <GovernanceJourneyStrip />
@@ -374,7 +374,7 @@ function SchedulesContent() {
             </div>
           )}
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="sch-policy">Policy on runs (optional)</Label>
+            <Label htmlFor="sch-policy">Policy for scheduled runs (optional)</Label>
             <select
               id="sch-policy"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -415,7 +415,7 @@ function SchedulesContent() {
       <Card className="border-border/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Your schedules</CardTitle>
-          <CardDescription>Last run + next slot.</CardDescription>
+          <CardDescription>Last run status and next execution slot.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
@@ -426,7 +426,7 @@ function SchedulesContent() {
             <EmptyStateCta
               icon={CalendarClock}
               title="No schedules yet"
-              description="Pick a saved workflow template and a cadence — then run on demand."
+              description="Pick a saved workflow and cadence, then use Run now to confirm report output."
               primary={{ href: "#new-schedule", label: "Create schedule" }}
               secondary={{ href: "/workflow-library", label: "Library" }}
               compact
@@ -459,7 +459,9 @@ function SchedulesContent() {
                     <span>
                       Last run:{" "}
                       <span className="font-medium text-foreground">
-                        {last ? `${last.status}${last.error ? ` — ${last.error.slice(0, 80)}` : ""}` : "—"}
+                        {last
+                          ? `${last.status === "succeeded" ? "Succeeded" : last.status === "failed" ? "Failed" : last.status}${last.error ? ` — ${last.error.slice(0, 80)}` : ""}`
+                          : "—"}
                       </span>
                     </span>
                     <span>
@@ -473,7 +475,7 @@ function SchedulesContent() {
                     ) : null}
                   </div>
                   <div className="mt-3 space-y-1">
-                    <Label className="text-xs text-muted-foreground">Policy on runs</Label>
+                    <Label className="text-xs text-muted-foreground">Policy for scheduled runs</Label>
                     <select
                       className="flex h-9 w-full max-w-md rounded-md border border-input bg-background px-2 py-1.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       value={s.workspacePolicyId ?? ""}

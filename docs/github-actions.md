@@ -39,14 +39,57 @@ Reference the action with a repository-relative path:
   id: torqa
   with:
     torqa-package-path: .
-    scan-path: examples/templates
+    scan-path: examples/integrations
     profile: default
-    fail-on-warning: false
     upload-artifact: true
     artifact-name: torqa-report
     json-report-filename: torqa-ci-report.json
-    comment-on-pr: true
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Minimal copy-paste workflow:
+
+```yaml
+name: Torqa CI gate
+
+on:
+  pull_request:
+    paths:
+      - "**.json"
+      - "**.tq"
+
+permissions:
+  contents: read
+
+jobs:
+  torqa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/torqa
+        with:
+          torqa-package-path: .
+          scan-path: examples/integrations
+          profile: default
+          upload-artifact: true
+```
+
+Optional PR comment (already supported):
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+
+steps:
+  - uses: actions/checkout@v4
+  - uses: ./.github/actions/torqa
+    with:
+      torqa-package-path: .
+      scan-path: examples/integrations
+      profile: default
+      upload-artifact: true
+      comment-on-pr: true
+      github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Read outputs in later steps:

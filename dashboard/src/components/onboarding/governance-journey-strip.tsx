@@ -1,10 +1,10 @@
-import { Bell, Gavel, LineChart, Plug } from "lucide-react";
+import { CalendarClock, FileSearch, ScanLine, Upload } from "lucide-react";
 
 const steps = [
-  { key: "connect", label: "Connect", Icon: Plug },
-  { key: "monitor", label: "Monitor", Icon: LineChart },
-  { key: "govern", label: "Govern", Icon: Gavel },
-  { key: "alert", label: "Alert", Icon: Bell },
+  { key: "upload", label: "Upload", Icon: Upload },
+  { key: "scan", label: "Scan", Icon: ScanLine },
+  { key: "review", label: "Review", Icon: FileSearch },
+  { key: "schedule", label: "Schedule", Icon: CalendarClock },
 ] as const;
 
 export function GovernanceJourneyStrip() {
@@ -28,7 +28,7 @@ export function GovernanceJourneyStrip() {
           </div>
         ))}
       </div>
-      <p className="mt-3 text-center text-xs text-muted-foreground">Connect → Monitor → Govern → Alert</p>
+      <p className="mt-3 text-center text-xs text-muted-foreground">Upload → Scan → Review → Schedule</p>
     </div>
   );
 }

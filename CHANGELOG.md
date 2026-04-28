@@ -10,6 +10,8 @@ _No user-facing changes yet._
 
 ## [0.1.5] — 2026-04-28
 
+v0.1.5 continues the adoption and release-quality work started in the prior rapid iteration.
+
 ### Added
 
 - **`torqa quickstart`** one-command first-run flow for fast local evaluation of bundled n8n sample.

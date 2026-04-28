@@ -16,8 +16,12 @@ Use committed examples:
 ```bash
 torqa validate examples/integrations/minimal_n8n.json --source n8n
 torqa scan examples/integrations/customer_support_n8n.json --source n8n
+torqa report examples/integrations/customer_support_n8n.json --format md -o customer_support_report.md
 torqa import n8n examples/integrations/customer_support_n8n.json --out customer_support.bundle.json
 ```
+
+- `minimal_n8n.json` is a safe baseline for first-pass validation.
+- `customer_support_n8n.json` is intentionally riskier and should produce meaningful findings.
 
 ## Exporting from n8n
 

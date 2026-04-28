@@ -18,6 +18,8 @@ Fastest first success path:
 
 ```bash
 python -m torqa quickstart
+python -m torqa validate examples/integrations/minimal_n8n.json --source n8n
+python -m torqa scan examples/integrations/customer_support_n8n.json --source n8n
 ```
 
 Run that from the repository root.

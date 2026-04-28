@@ -22,26 +22,26 @@ export function OverviewFirstRun({ mode, savedReportsAllTime, onboarding }: Prop
   const scanDone = savedReportsAllTime > 0;
   const steps: Step[] = [
     {
-      id: "integration",
-      label: "Connect an integration",
-      href: "/integrations",
-      done: cloud ? (o!.integrations > 0) : false,
-    },
-    {
       id: "workflow",
-      label: "Upload or import a workflow",
+      label: "Upload n8n workflow",
       href: "/workflow-library",
       done: cloud ? (o!.workflowTemplates > 0) : false,
     },
     {
       id: "scan",
-      label: "Run your first scan",
+      label: "Run scan",
       href: "/scan",
       done: scanDone,
     },
     {
+      id: "report",
+      label: "Review report",
+      href: "/scan/history",
+      done: scanDone,
+    },
+    {
       id: "schedule",
-      label: "Create a scan schedule",
+      label: "Create schedule",
       href: "/schedules",
       done: cloud ? (o!.scanSchedules > 0) : false,
     },
@@ -67,7 +67,7 @@ export function OverviewFirstRun({ mode, savedReportsAllTime, onboarding }: Prop
   ];
 
   const doneCount = steps.filter((s) => s.done).length;
-  const allCoreDone = steps.slice(0, 6).every((s) => s.done);
+  const allCoreDone = steps.slice(0, 5).every((s) => s.done);
 
   return (
     <div className="space-y-6">
@@ -80,8 +80,8 @@ export function OverviewFirstRun({ mode, savedReportsAllTime, onboarding }: Prop
               <CardTitle className="text-lg font-semibold">Get started</CardTitle>
               <CardDescription className="mt-1 max-w-xl">
                 {cloud
-                  ? `${doneCount}/${steps.length} complete · finish the loop to operationalize Torqa.`
-                  : "Connect Supabase to unlock saved data, then upload an n8n export and run first scan."}
+                  ? `${doneCount}/${steps.length} complete · finish the n8n governance loop.`
+                  : "Start local: upload an n8n export, run a scan, review the report, then add a schedule when cloud is enabled."}
               </CardDescription>
             </div>
             {!cloud ? (
