@@ -3,7 +3,6 @@ import {
   Shield,
   Users,
   FolderKanban,
-  History,
   Radar,
   Plug,
   ClipboardList,
@@ -13,7 +12,6 @@ import {
   CalendarClock,
   Megaphone,
   LineChart,
-  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 
