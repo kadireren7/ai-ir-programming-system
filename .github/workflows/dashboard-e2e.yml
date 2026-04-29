@@ -16,14 +16,13 @@ on:
 permissions:
   contents: read
 
-defaults:
-  run:
-    working-directory: dashboard
-
 jobs:
   playwright:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: dashboard
     steps:
       - uses: actions/checkout@v4
 
@@ -34,15 +33,19 @@ jobs:
           cache-dependency-path: dashboard/package-lock.json
 
       - name: Install dependencies
+        working-directory: dashboard
         run: npm ci
 
       - name: Build Next.js app
+        working-directory: dashboard
         run: npm run build
 
       - name: Install Playwright Chromium
+        working-directory: dashboard
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
+        working-directory: dashboard
         run: npx playwright test
         env:
           CI: true

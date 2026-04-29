@@ -18,14 +18,13 @@ on:
 permissions:
   contents: read
 
-defaults:
-  run:
-    working-directory: dashboard
-
 jobs:
   gate:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: dashboard
     steps:
       - uses: actions/checkout@v4
 
@@ -36,21 +35,27 @@ jobs:
           cache-dependency-path: dashboard/package-lock.json
 
       - name: Install dependencies
+        working-directory: dashboard
         run: npm ci
 
       - name: Lint
+        working-directory: dashboard
         run: npm run lint
 
       - name: Build
+        working-directory: dashboard
         run: npm run build
 
       - name: Unit tests
+        working-directory: dashboard
         run: npm test
 
       - name: Install Playwright Chromium
+        working-directory: dashboard
         run: npx playwright install --with-deps chromium
 
       - name: Playwright accessibility (axe)
+        working-directory: dashboard
         run: npm run test:a11y
         env:
           CI: true
