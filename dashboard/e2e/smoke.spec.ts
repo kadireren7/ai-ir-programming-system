@@ -15,7 +15,7 @@ test.describe("public smoke", () => {
     expect(res.ok()).toBeTruthy();
     const text = await res.text();
     expect(text).toContain("openapi: 3.0.3");
-    expect(text).toContain('version: "0.1.6"');
+    expect(text).toContain('version: "0.1.7"');
     expect(text).toContain("/api/public/scan");
   });
 
@@ -35,8 +35,9 @@ test.describe("local mode (no Supabase in CI)", () => {
   test("overview is reachable when middleware skips auth", async ({ page }) => {
     await page.goto("/overview");
     await expect(
-      page.getByRole("heading", { name: "Automation governance command center" })
+      page.getByRole("heading", { name: "Workflow governance, automated." })
     ).toBeVisible();
-    await expect(page.getByText("Get started")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Connect a source/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Advanced: manual scan/i })).toBeVisible();
   });
 });

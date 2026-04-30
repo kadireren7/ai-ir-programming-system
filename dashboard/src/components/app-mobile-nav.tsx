@@ -12,8 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { mainNavSections } from "@/lib/nav";
-import { Separator } from "@/components/ui/separator";
+import { mainNavItems } from "@/lib/nav";
 
 type AppMobileNavProps = {
   orgName: string;
@@ -34,60 +33,46 @@ export function AppMobileNav({ orgName }: AppMobileNavProps) {
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 border-border bg-sidebar p-0 text-sidebar-foreground">
-        <SheetHeader className="border-b border-sidebar-border px-4 py-4 text-left">
-          <SheetTitle className="flex items-center gap-2 text-sidebar-foreground">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
+      <SheetContent side="left" className="w-64 border-border bg-sidebar p-0 text-sidebar-foreground">
+        <SheetHeader className="border-b border-sidebar-border px-5 py-4 text-left">
+          <SheetTitle className="flex items-center gap-2.5 text-sidebar-foreground">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
               T
             </span>
-            <span className="truncate font-semibold">Torqa</span>
+            <span className="font-semibold tracking-tight">Torqa</span>
           </SheetTitle>
-          <p className="text-xs text-sidebar-foreground/80">{orgName}</p>
+          <p className="text-[11px] text-sidebar-foreground/60">{orgName}</p>
         </SheetHeader>
-        <nav className="space-y-3 p-2">
-          {mainNavSections.map((section) => (
-            <div key={section.title}>
-              <div className="px-3 pb-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/90">
-                  {section.title}
-                </p>
-                {section.subtitle ? (
-                  <p className="mt-0.5 text-xs leading-snug text-sidebar-foreground/75">{section.subtitle}</p>
+
+        <nav className="space-y-0.5 p-3">
+          {mainNavItems.map((item) => {
+            const active =
+              pathname === item.href ||
+              (item.href !== "/overview" && pathname.startsWith(item.href + "/")) ||
+              (item.href === "/overview" && pathname === "/overview");
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1">{item.title}</span>
+                {item.badge ? (
+                  <span className="rounded border border-primary/30 bg-primary/10 px-1 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                    {item.badge}
+                  </span>
                 ) : null}
-              </div>
-              <div className="flex flex-col gap-0.5">
-                {section.items.map((item) => {
-                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium",
-                        active
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground/90 hover:bg-sidebar-accent/60"
-                      )}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1">{item.title}</span>
-                      {item.badge ? (
-                        <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-primary">
-                          {item.badge}
-                        </span>
-                      ) : null}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+              </Link>
+            );
+          })}
         </nav>
-        <Separator className="bg-sidebar-border" />
-        <p className="p-3 text-xs uppercase tracking-wider text-sidebar-foreground/80">
-          MVP · mock data
-        </p>
       </SheetContent>
     </Sheet>
   );

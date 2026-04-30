@@ -8,39 +8,39 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 const STEPS = [
   {
-    id: "upload",
-    title: "Upload workflow",
-    body: "Start with a JSON export from n8n or another automation tool.",
-    href: "/workflow-library",
-    actionLabel: "Upload your workflow",
+    id: "source",
+    title: "Choose your source",
+    body: "Connect n8n, GitHub, or another automation platform. Torqa will scan workflows automatically from there.",
+    href: "/sources",
+    actionLabel: "Connect a source",
   },
   {
-    id: "scan",
-    title: "Run scan",
-    body: "Run a deterministic scan to get risk score, policy status, and explainable findings.",
-    href: "/scan",
-    actionLabel: "Run scan",
+    id: "workflows",
+    title: "Select workflows",
+    body: "Browse synced workflows from your connected source. Pick the ones you want Torqa to monitor.",
+    href: "/workflows",
+    actionLabel: "View workflows",
+  },
+  {
+    id: "policy",
+    title: "Pick a policy",
+    body: "Choose a governance policy template. Policies define pass/fail/review thresholds for each scan.",
+    href: "/policies",
+    actionLabel: "Browse policies",
+  },
+  {
+    id: "automate",
+    title: "Turn on automation",
+    body: "Set up a recurring schedule and alert routes. Torqa will scan on every change and notify your team on failures.",
+    href: "/automations",
+    actionLabel: "Set up automations",
   },
   {
     id: "review",
-    title: "Review risk/policy",
-    body: "Open scan history to inspect findings and policy outcomes.",
-    href: "/scan/history",
-    actionLabel: "Review report",
-  },
-  {
-    id: "share",
-    title: "Save/share report",
-    body: "Keep a scan snapshot for team review and share a report when needed.",
-    href: "/scan/history",
-    actionLabel: "Open saved reports",
-  },
-  {
-    id: "monitor",
-    title: "Set schedule/alert",
-    body: "Automate recurring scans and route high-risk outcomes to your team.",
-    href: "/schedules",
-    actionLabel: "Set schedule",
+    title: "Review your first run",
+    body: "Check the Runs page after your first automated scan. Review findings, export PDF, or share the report.",
+    href: "/runs",
+    actionLabel: "View runs",
   },
 ] as const;
 
@@ -101,17 +101,25 @@ export function OnboardingWizard({ open, onOpenChange, onCompleted }: Props) {
         <CardHeader className="border-b border-border/60 bg-muted/30 pr-12">
           <div className="flex items-center gap-2 text-primary">
             <Sparkles className="h-4 w-4" aria-hidden />
-            <span className="text-xs font-semibold uppercase tracking-widest">Welcome</span>
+            <span className="text-xs font-semibold uppercase tracking-widest">Get started</span>
           </div>
           <CardTitle id="onboarding-wizard-title" className="text-xl">
-            Torqa setup walkthrough
+            Connect → Monitor → Enforce
           </CardTitle>
           <CardDescription id="onboarding-wizard-desc">
-            Step {idx + 1} of {STEPS.length} — follow the governance loop once; you can reopen any page later from the
-            sidebar.
+            Step {idx + 1} of {STEPS.length} — set up continuous automation governance in minutes.
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-4 pt-5">
+          <div className="flex gap-1 pb-1">
+            {STEPS.map((s, i) => (
+              <div
+                key={s.id}
+                className={`h-1 flex-1 rounded-full transition-colors ${i <= idx ? "bg-primary" : "bg-muted"}`}
+              />
+            ))}
+          </div>
           <p className="text-base font-semibold text-foreground">{step.title}</p>
           <p className="text-sm leading-relaxed text-muted-foreground">{step.body}</p>
           <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
@@ -121,10 +129,20 @@ export function OnboardingWizard({ open, onOpenChange, onCompleted }: Props) {
             </Link>
           </Button>
         </CardContent>
-        <CardFooter className="flex flex-wrap justify-between gap-2 border-t border-border/60 bg-muted/20">
-          <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            Dismiss
-          </Button>
+
+        <CardFooter className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-muted/20">
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+              Dismiss
+            </Button>
+            <Link
+              href="/advanced/manual-scan"
+              onClick={() => onOpenChange(false)}
+              className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+            >
+              Skip → manual scan
+            </Link>
+          </div>
           <div className="flex flex-wrap justify-end gap-2">
             {idx > 0 ? (
               <Button type="button" variant="outline" size="sm" onClick={() => setIdx((i) => i - 1)}>
@@ -139,7 +157,7 @@ export function OnboardingWizard({ open, onOpenChange, onCompleted }: Props) {
             ) : (
               <Button type="button" size="sm" disabled={saving} onClick={() => void complete()}>
                 <Check className="mr-1 h-4 w-4" aria-hidden />
-                {saving ? "Saving…" : "Finish"}
+                {saving ? "Saving…" : "Done"}
               </Button>
             )}
           </div>

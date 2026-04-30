@@ -30,7 +30,9 @@ Strongest path today: `n8n export -> scan -> risk/policy report -> share or sche
 
 **Product positioning:** Torqa is the **deterministic gate** for workflow specs (validate, score, policy-check) before anything runs in production. The **Next.js dashboard** (`dashboard/`) is the team surface: scan uploads (including n8n JSON), **workspace policies**, **schedules**, **alerts**, **insights**, **API keys**, and **shareable reports** — all optional until you wire **Supabase** (see [dashboard/README.md](dashboard/README.md)).
 
-**v0.1.6 focus:** dashboard automation (cron, onboarding, webhooks, alerts), operator packaging (Docker/Helm), and **PyPI-ready** CLI distribution (`pip install torqa`). See [CHANGELOG.md](CHANGELOG.md) and [docs/release-process.md](docs/release-process.md).
+**v0.1.7 direction:** Automation-first dashboard — connect sources (n8n, GitHub, webhook), monitor workflows continuously, enforce policies on every run, and notify your team on failures. Manual scan is preserved as an advanced option. See [docs/automation-first-roadmap.md](docs/automation-first-roadmap.md) and [docs/connectors.md](docs/connectors.md).
+
+**v0.1.6:** dashboard automation (cron, onboarding, webhooks, alerts), operator packaging (Docker/Helm), and **PyPI-ready** CLI distribution (`pip install torqa`). See [CHANGELOG.md](CHANGELOG.md) and [docs/release-process.md](docs/release-process.md).
 
 - **Live demo (hosted):** this repository does not ship a fixed production URL. After you deploy, document your canonical URL (for example `https://your-torqa.example.com`) in your runbook and in `NEXT_PUBLIC_APP_URL`.
 - **Local demo:** `cd dashboard && npm install && npm run dev` → [http://localhost:3000](http://localhost:3000) (landing at `/`; app routes under `/overview`, `/scan`, etc.).
