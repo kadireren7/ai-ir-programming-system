@@ -20,7 +20,7 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold tracking-tight">Torqa</p>
-          <p className="truncate text-[11px] text-sidebar-foreground/60">{orgName}</p>
+          <p className="truncate text-xs text-sidebar-foreground/70">{orgName}</p>
         </div>
       </div>
 
@@ -55,7 +55,7 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
       </nav>
 
       <div className="border-t border-sidebar-border px-5 py-3">
-        <p className="text-[11px] text-sidebar-foreground/40 uppercase tracking-wider">Workflow governance</p>
+        <p className="text-xs text-sidebar-foreground/65 uppercase tracking-wider">Workflow governance</p>
       </div>
     </aside>
   );

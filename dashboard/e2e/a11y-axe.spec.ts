@@ -16,7 +16,6 @@ const ROUTES = [
   "/insights",
   "/workspace",
   "/alerts",
-  "/integrations",
   "/schedules",
   "/settings/api",
 ] as const;

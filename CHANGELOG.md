@@ -8,6 +8,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 _No user-facing changes yet._
 
+## [0.1.7] — 2026-04-30
+
+Release track: **automation-first UI, connector registry, premium redesign, and WCAG 2.1 AA hardening.**
+
+### What this means for users
+
+- The dashboard is now an automation control center — connect a source and governance starts automatically.
+- Manual scan is preserved as an advanced option (`/advanced/manual-scan`), not the primary flow.
+- Accessibility is enforced in CI with a full axe WCAG 2.1 AA gate (`@axe-core/playwright`).
+
+### Added
+
+- **Automation-first overview**: new hero (`text-4xl/5xl`), active sources strip (n8n, GitHub, Webhook), last-run card, risk-score card, and framer-motion fade-up animations throughout.
+- **Runs page card layout**: table replaced with responsive card grid (mobile and desktop).
+- **FadeUp motion component** (`src/components/motion/fade-up.tsx`): respects `prefers-reduced-motion`.
+- **WCAG 2.1 AA contrast fixes**: darkened `--primary` (38% → 28% lightness) and `--muted-foreground` (46% → 40%) in light mode for all small text; emerald badge text moved to `text-emerald-800`.
+- **CI a11y gate activated**: axe `@axe-core/playwright` now in `dashboard-accessibility.yml` workflow.
+
+### Changed
+
+- `release.yml` now runs **only on `workflow_dispatch`** (tag-push trigger removed) — no accidental PyPI publishes on version tags.
+- `smoke.spec.ts` updated to assert new heading and CTAs (`"Workflow governance, automated."`, `"Connect a source"`, `"Advanced: manual scan"`).
+- Navigation unchanged from v0.1.6 (Home · Sources · Workflows · Runs · Policies · Automations · Reports · Settings).
+
+### Version alignment
+
+- `dashboard/package.json`: `0.1.7`
+- `pyproject.toml`: `0.1.7`
+- `dashboard/public/openapi.yaml`: `0.1.7`
+- `docs/api.md`: updated to v0.1.7
+
 ## [0.1.6] — 2026-04-29
 
 Release track: **dashboard automation, onboarding, integrations, operator packaging, and PyPI-ready CLI** (incremental; self-host friendly). See [docs/launch-checklist.md](docs/launch-checklist.md) § “0.1.6 release verification” before tagging.

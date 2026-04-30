@@ -10,7 +10,7 @@ const steps = [
 export function GovernanceJourneyStrip() {
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 px-4 py-5 shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.04] sm:px-6 sm:py-6">
-      <p className="text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+      <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-foreground/60">
         Connected governance journey
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-y-2 sm:gap-x-1">
