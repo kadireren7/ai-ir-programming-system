@@ -42,13 +42,25 @@ def load_input(
             return None, e, "tq"
     if suf == ".json":
         if integration_source == "n8n":
-            from torqa.integrations.n8n.convert import n8n_file_to_bundle
+            import json
 
-            bundle, err = n8n_file_to_bundle(path)
-            if err is not None:
-                return None, err, "n8n"
-            assert bundle is not None
-            return bundle, None, "n8n"
+            from torqa.integrations.registry import get_adapter
+
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+            except OSError as ex:
+                return None, f"{path}: {ex}", "n8n"
+            except json.JSONDecodeError as ex:
+                return None, f"{path}: invalid JSON: {ex}", "n8n"
+            adapter = get_adapter("n8n")
+            try:
+                parsed = adapter.parse(raw)
+            except ValueError as ex:
+                return None, str(ex), "n8n"
+            wb = adapter.to_bundle(parsed)
+            # Unwrap to existing {"ir_goal": ...} dict — no behavior change downstream
+            ir_bundle = wb.metadata["_ir_bundle"]
+            return ir_bundle, None, "n8n"
         payload, err = load_bundle_from_json_path(path)
         if err is not None:
             return None, err, "json"

@@ -5,12 +5,14 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from torqa.ir.canonical_ir import validate_ir
 from torqa.policy import build_policy_report
+from torqa.report.builder import governance_report_blocked, governance_report_from_policy
+from torqa.report.contract import GovernanceReport
 from torqa.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 from torqa.surface.parse_tq import TQParseError
 from torqa.cli.io import bundle_jobs, goal_from_bundle, load_input
@@ -41,6 +43,7 @@ class TrustEvalResult:
     trust_profile: str
     reason_summary: str
     has_warnings: bool = False
+    governance_report: Optional[GovernanceReport] = field(default=None, compare=False)
 
 
 def evaluate_trust_from_bundle(bundle: Dict[str, Any], profile: str = "default") -> TrustEvalResult:
@@ -50,12 +53,18 @@ def evaluate_trust_from_bundle(bundle: Dict[str, Any], profile: str = "default")
     """
     goal, gerr = goal_from_bundle(bundle)
     if gerr is not None:
-        return TrustEvalResult(DECISION_BLOCKED, "n/a", profile, str(gerr))
+        gr = governance_report_blocked(reason=str(gerr))
+        return TrustEvalResult(DECISION_BLOCKED, "n/a", profile, str(gerr), governance_report=gr)
+
+    workflow_name: str = getattr(goal, "goal", None) or "unknown"
+    source: str = (getattr(goal, "metadata", None) or {}).get("integration", {}).get("adapter", "unknown")
+    bundle_id = f"{source}:{workflow_name}"
 
     struct = validate_ir(goal)
     if struct:
         top = struct[0] if struct else "Structural validation failed"
-        return TrustEvalResult(DECISION_BLOCKED, "n/a", profile, top)
+        gr = governance_report_blocked(workflow_name=workflow_name, source=source, reason=top, bundle_id=bundle_id)
+        return TrustEvalResult(DECISION_BLOCKED, "n/a", profile, top, governance_report=gr)
 
     reg = default_ir_function_registry()
     report = build_ir_semantic_report(goal, reg)
@@ -64,23 +73,42 @@ def evaluate_trust_from_bundle(bundle: Dict[str, Any], profile: str = "default")
     errs: List[str] = list(report.get("errors") or [])
     if not sem_ok or not logic_ok:
         top = errs[0] if errs else "Semantic or logic validation failed"
-        return TrustEvalResult(DECISION_BLOCKED, "n/a", profile, top)
+        gr = governance_report_blocked(workflow_name=workflow_name, source=source, reason=top, bundle_id=bundle_id)
+        return TrustEvalResult(DECISION_BLOCKED, "n/a", profile, top, governance_report=gr)
 
     policy_rep = build_policy_report(goal, profile=profile)
     pok = bool(policy_rep["policy_ok"])
     risk = str(policy_rep.get("risk_level", "low"))
     prof = str(policy_rep.get("trust_profile", profile))
-    sem_warns = list(report.get("warnings") or [])
-    pol_warns = list(policy_rep.get("warnings") or [])
+    sem_warns: List[str] = list(report.get("warnings") or [])
+    pol_warns: List[str] = list(policy_rep.get("warnings") or [])
     has_warnings = bool(sem_warns or pol_warns)
 
     if not pok:
         perrs = list(policy_rep.get("errors") or [])
         top = perrs[0] if perrs else "Policy validation failed"
-        return TrustEvalResult(DECISION_BLOCKED, risk, prof, top, has_warnings)
+        gr = governance_report_from_policy(
+            cli_decision=DECISION_BLOCKED,
+            policy_rep=policy_rep,
+            workflow_name=workflow_name,
+            source=source,
+            bundle_id=bundle_id,
+            sem_errors=errs,
+            sem_warnings=sem_warns,
+        )
+        return TrustEvalResult(DECISION_BLOCKED, risk, prof, top, has_warnings, governance_report=gr)
 
     decision, top_reason, _ = _decision_from_policy_rep(policy_rep)
-    return TrustEvalResult(decision, risk, prof, top_reason, has_warnings)
+    gr = governance_report_from_policy(
+        cli_decision=decision,
+        policy_rep=policy_rep,
+        workflow_name=workflow_name,
+        source=source,
+        bundle_id=bundle_id,
+        sem_errors=errs,
+        sem_warnings=sem_warns,
+    )
+    return TrustEvalResult(decision, risk, prof, top_reason, has_warnings, governance_report=gr)
 
 
 def evaluate_trust_gate(path: Path, profile: str = "default") -> TrustEvalResult:

@@ -31,6 +31,7 @@ import { getHomeDashboardData } from "@/data/home-metrics";
 import { cn } from "@/lib/utils";
 import { OverviewFirstRun } from "@/components/onboarding/overview-first-run";
 import { FadeUp } from "@/components/motion/fade-up";
+import { GlowCard } from "@/components/ui/glow-card";
 
 export const dynamic = "force-dynamic";
 
@@ -61,67 +62,35 @@ export default async function DashboardOverviewPage() {
   const lastRun = home.recentScans[0] ?? null;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
 
-      {/* ── HERO ───────────────────────────────────────────────── */}
+      {/* ── PAGE HEADER ───────────────────────────────────────── */}
       <FadeUp>
-        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/[0.06] p-7 shadow-lg ring-1 ring-white/[0.06] sm:p-10">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/[0.10] blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-chart-3/10 blur-3xl" aria-hidden="true" />
-
-          <div className="relative max-w-2xl space-y-5">
-            <Badge
-              variant="secondary"
-              className={cn(
-                "border font-semibold tracking-wide",
-                home.mode === "supabase"
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-400"
-                  : "border-border/80 bg-muted/60 text-foreground/60"
-              )}
-            >
+        <div className="flex items-end justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
+              <span className="h-px w-[18px] bg-primary" />
               {home.mode === "supabase" ? (
-                <>
-                  <Sparkles className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                  Live metrics
-                </>
+                <><Sparkles className="h-3 w-3" aria-hidden />Live metrics</>
               ) : (
-                <>
-                  <BarChart3 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                  Demo data
-                </>
+                <><BarChart3 className="h-3 w-3" aria-hidden />Demo data</>
               )}
-            </Badge>
-
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              Workflow governance, automated.
-            </h1>
-
-            <p className="max-w-lg text-base leading-relaxed text-foreground/65 sm:text-lg">
-              Torqa continuously validates your workflows in the background — connect a source and
-              enforcement starts on every run.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button asChild size="lg" className="gap-2 shadow-md hover:-translate-y-0.5 transition-transform">
-                <Link href="/sources">
-                  Connect a source
-                  <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button variant="outline" asChild size="lg" className="border-border/80 hover:-translate-y-0.5 transition-transform">
-                <Link href="/reports">View reports</Link>
-              </Button>
             </div>
-
-            <p className="text-sm text-foreground/50">
-              Prefer manual?{" "}
-              <Link
-                href="/advanced/manual-scan"
-                className="font-medium text-foreground/70 underline underline-offset-4 hover:text-foreground"
-              >
-                Advanced: manual scan
-              </Link>
+            <h1 className="text-3xl font-semibold tracking-tight">Command center</h1>
+            <p className="mt-1.5 max-w-lg text-sm text-muted-foreground">
+              Live governance state across all connected sources.
             </p>
+          </div>
+          <div className="flex gap-2.5">
+            <Button asChild size="sm" variant="outline" className="border-border/70">
+              <Link href="/reports">View reports</Link>
+            </Button>
+            <Button asChild size="sm" className="gap-1.5">
+              <Link href="/sources">
+                Connect source
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            </Button>
           </div>
         </div>
       </FadeUp>
@@ -155,59 +124,41 @@ export default async function DashboardOverviewPage() {
       {/* ── LAST RUN + RISK + PASS RATE ────────────────────────── */}
       <FadeUp delay={0.14}>
         <div className="grid gap-4 sm:grid-cols-3">
-          {/* Last run */}
-          <Card className="border-border/70 bg-card/60 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
-            <CardHeader className="pb-2">
-              <CardDescription className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider">
-                <Activity className="h-3.5 w-3.5" aria-hidden="true" />
-                Last run
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              {lastRun ? (
-                <>
-                  <ScanOutcomeBadge status={lastRun.status} />
-                  <p className="text-xs text-foreground/60">{new Date(lastRun.createdAt).toLocaleString()}</p>
-                </>
-              ) : (
-                <p className="text-sm text-foreground/50">No runs yet</p>
-              )}
-            </CardContent>
-          </Card>
+          <GlowCard glowColor="cyan" className="p-5">
+            <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <Activity className="h-3.5 w-3.5 text-primary" aria-hidden />Last run
+            </div>
+            {lastRun ? (
+              <>
+                <ScanOutcomeBadge status={lastRun.status} />
+                <p className="mt-2 text-xs text-foreground/60">{new Date(lastRun.createdAt).toLocaleString()}</p>
+              </>
+            ) : (
+              <p className="text-sm text-foreground/50">No runs yet</p>
+            )}
+          </GlowCard>
 
-          {/* Risk score */}
-          <Card className="border-border/70 bg-card/60 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
-            <CardHeader className="pb-2">
-              <CardDescription className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider">
-                <Gauge className="h-3.5 w-3.5" aria-hidden="true" />
-                Avg risk score
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold tabular-nums text-primary">
-                {home.avgTrustScore === null ? "—" : home.avgTrustScore}
-              </p>
-              <p className="text-xs text-foreground/50">0–100 scale</p>
-            </CardContent>
-          </Card>
+          <GlowCard glowColor="cyan" className="p-5">
+            <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <Gauge className="h-3.5 w-3.5 text-primary" aria-hidden />Avg trust score
+            </div>
+            <p className="text-4xl font-bold tabular-nums text-primary">
+              {home.avgTrustScore === null ? "—" : home.avgTrustScore}
+            </p>
+            <p className="mt-1 text-xs text-foreground/50">0–100 scale</p>
+          </GlowCard>
 
-          {/* Pass / fail */}
-          <Card className="border-border/70 bg-card/60 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
-            <CardHeader className="pb-2">
-              <CardDescription className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider">
-                <Scale className="h-3.5 w-3.5" aria-hidden="true" />
-                Pass / fail
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold tabular-nums">
-                {formatRatio(home.passCount, home.failCount)}
-              </p>
-              <p className="text-xs text-foreground/50">
-                {passRatePct === null ? "No data yet" : `${passRatePct}% pass rate`}
-              </p>
-            </CardContent>
-          </Card>
+          <GlowCard glowColor="none" className="p-5">
+            <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <Scale className="h-3.5 w-3.5" aria-hidden />Pass / fail ratio
+            </div>
+            <p className="text-4xl font-bold tabular-nums">
+              {formatRatio(home.passCount, home.failCount)}
+            </p>
+            <p className="mt-1 text-xs text-foreground/50">
+              {passRatePct === null ? "No data yet" : `${passRatePct}% pass rate`}
+            </p>
+          </GlowCard>
         </div>
       </FadeUp>
 

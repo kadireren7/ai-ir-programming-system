@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Literal
 
 from torqa.ir.canonical_ir import IRGoal
+from torqa.policy.packs import PolicyPack
 from torqa.policy.profiles import TrustProfileId, normalize_trust_profile
 from torqa.policy.risk_engine import compute_trust_score
 
@@ -280,6 +281,15 @@ def _report_enterprise(ir_goal: IRGoal) -> Dict[str, Any]:
     out = _report_review_heavy(ir_goal)
     out["reasons"] = [s.replace("review-heavy", "enterprise") for s in out["reasons"]]
     return out
+
+
+def build_policy_report_from_pack(ir_goal: IRGoal, pack: PolicyPack) -> Dict[str, Any]:
+    """Build policy report from a PolicyPack. Delegates to build_policy_report.
+
+    Primary API for pack-aware callers. Backward-compatible: the built-in
+    pack_ids map directly to the existing profile strings.
+    """
+    return build_policy_report(ir_goal, profile=pack.pack_id)
 
 
 def build_policy_report(ir_goal: IRGoal, profile: str = "default") -> Dict[str, Any]:

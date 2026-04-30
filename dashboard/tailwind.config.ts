@@ -10,6 +10,20 @@ export default {
   theme: {
   	extend: {
   		colors: {
+  			'tr-void': 'var(--tr-void)',
+  			'tr-surface': 'var(--tr-surface)',
+  			'tr-s2': 'var(--tr-s2)',
+  			'tr-line': 'var(--tr-line)',
+  			'tr-line2': 'var(--tr-line2)',
+  			'tr-fg': 'var(--tr-fg)',
+  			'tr-fg2': 'var(--tr-fg2)',
+  			'tr-fg3': 'var(--tr-fg3)',
+  			'tr-fg4': 'var(--tr-fg4)',
+  			'tr-cyan': 'var(--tr-cyan)',
+  			'tr-cyl': 'var(--tr-cyl)',
+  			'tr-cyd': 'var(--tr-cyd)',
+  			'tr-red': 'var(--tr-red)',
+  			'tr-amb': 'var(--tr-amb)',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

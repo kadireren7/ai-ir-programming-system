@@ -9,7 +9,11 @@
       "Bash(python -m pytest -q)",
       "Bash(python -m pytest --co -q)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(PLAYWRIGHT_A11Y_BUILT=1 npx playwright test --config=playwright.a11y.config.ts)",
+      "Bash(PLAYWRIGHT_A11Y_BUILT=1 npx playwright test --config=playwright.config.ts)",
+      "Bash(python -m pip install -e \".[test]\" -q)",
+      "Bash(python -m pytest --tb=short)"
     ]
   }
 }

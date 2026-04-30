@@ -1,6 +1,7 @@
 """
 ``torqa`` CLI — load .tq or bundle JSON, validate IR, print diagnostics. No execution engine.
 """
+# ruff: noqa: E402  — _PACK_CHOICES must be computed from POLICY_PACK_REGISTRY before remaining imports
 
 from __future__ import annotations
 
@@ -12,6 +13,12 @@ from typing import List, Optional
 
 from torqa.ir.canonical_ir import CANONICAL_IR_VERSION, ir_goal_to_json, validate_ir
 from torqa.policy import build_policy_report
+from torqa.policy.packs import POLICY_PACK_REGISTRY
+
+# Derived from registry so custom packs registered at runtime appear automatically.
+_PACK_CHOICES: List[str] = [
+    k for k in ("default", "strict", "review-heavy", "enterprise") if k in POLICY_PACK_REGISTRY
+] + [k for k in sorted(POLICY_PACK_REGISTRY) if k not in {"default", "strict", "review-heavy", "enterprise"}]
 from torqa.semantics.ir_semantics import build_ir_semantic_report, default_ir_function_registry
 from torqa.surface.parse_tq import TQParseError
 from torqa.cli.check_cmd import cmd_check
@@ -513,7 +520,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pv.add_argument(
         "--profile",
         default=argparse.SUPPRESS,
-        choices=["default", "strict", "review-heavy", "enterprise"],
+        choices=_PACK_CHOICES,
         metavar="PROFILE",
         help="Built-in trust profile for policy and risk evaluation (default: from torqa.toml or default).",
     )
@@ -546,7 +553,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pd.add_argument(
         "--profile",
         default=argparse.SUPPRESS,
-        choices=["default", "strict", "review-heavy", "enterprise"],
+        choices=_PACK_CHOICES,
         metavar="PROFILE",
         help="Built-in trust profile for policy and risk evaluation (default: from torqa.toml or default).",
     )
@@ -568,7 +575,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pc.add_argument(
         "--profile",
         default=argparse.SUPPRESS,
-        choices=["default", "strict", "review-heavy", "enterprise"],
+        choices=_PACK_CHOICES,
         metavar="PROFILE",
         help="Built-in trust profile for policy and risk evaluation (default: from torqa.toml or default).",
     )
@@ -591,7 +598,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pex.add_argument(
         "--profile",
         default=argparse.SUPPRESS,
-        choices=["default", "strict", "review-heavy", "enterprise"],
+        choices=_PACK_CHOICES,
         metavar="PROFILE",
         help="Built-in trust profile for policy and risk evaluation (default: from torqa.toml or default).",
     )
@@ -635,7 +642,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pscan.add_argument(
         "--profile",
         default=argparse.SUPPRESS,
-        choices=["default", "strict", "review-heavy", "enterprise"],
+        choices=_PACK_CHOICES,
         metavar="PROFILE",
         help="Built-in trust profile for policy and risk evaluation (default: from torqa.toml or default).",
     )
@@ -706,7 +713,7 @@ def _build_parser() -> argparse.ArgumentParser:
     prpt.add_argument(
         "--profile",
         default=argparse.SUPPRESS,
-        choices=["default", "strict", "review-heavy", "enterprise"],
+        choices=_PACK_CHOICES,
         metavar="PROFILE",
         help="Built-in trust profile for policy and risk evaluation (default: from torqa.toml or default).",
     )
@@ -782,7 +789,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pqs.add_argument(
         "--profile",
         default=argparse.SUPPRESS,
-        choices=["default", "strict", "review-heavy", "enterprise"],
+        choices=_PACK_CHOICES,
         metavar="PROFILE",
         help="Trust profile used for quickstart evaluation (default: from torqa.toml or default).",
     )

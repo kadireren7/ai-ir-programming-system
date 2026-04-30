@@ -12,19 +12,16 @@ BUILTIN_PROFILES: FrozenSet[str] = frozenset({"default", "strict", "review-heavy
 
 
 def normalize_trust_profile(name: str) -> TrustProfileId:
+    """Return canonical profile id or raise ValueError with a stable message.
+
+    Derives valid names from POLICY_PACK_REGISTRY so any registered pack is
+    automatically accepted. The returned type is still TrustProfileId for the
+    four built-in packs; custom packs share the same validation path.
     """
-    Return canonical profile id or raise ValueError with a stable message.
-    """
+    from torqa.policy.packs import POLICY_PACK_REGISTRY
+
     key = name.strip().lower()
-    if key == "review-heavy":
-        return "review-heavy"
-    if key == "enterprise":
-        return "enterprise"
-    if key == "strict":
-        return "strict"
-    if key == "default":
-        return "default"
-    raise ValueError(
-        "Unknown trust profile "
-        f"{name!r}; use one of: default, strict, review-heavy, enterprise"
-    )
+    if key in POLICY_PACK_REGISTRY:
+        return key  # type: ignore[return-value]
+    known = ", ".join(sorted(POLICY_PACK_REGISTRY))
+    raise ValueError(f"Unknown trust profile {name!r}; use one of: {known}")
