@@ -1,10 +1,14 @@
-# README images
+# Dashboard Screenshots
 
-These assets are referenced from the root **`README.md`** so new visitors see the CLI at a glance.
+Place the following screenshot files here to populate the README:
 
-| File | Purpose |
-| --- | --- |
-| `hero-validate.png` | Example **`torqa validate`** success path |
-| `hero-version.png` | **`torqa version`** output (install sanity check) |
+| File | What to capture |
+|---|---|
+| `torqa-logo.png` | Torqa logo (square, transparent background) |
+| `screenshot-overview.png` | `/overview` page — governance metrics hero, trend chart, recent scans |
+| `screenshot-sources.png` | `/sources` page — Integration Center with connected providers |
+| `screenshot-scan-report.png` | Scan result page — findings list, trust score badge, policy decision |
+| `screenshot-webhooks.png` | `/settings/webhooks` page — enforcement webhook list |
+| `screenshot-audit-log.png` | `/settings/audit-log` page — activity event trail |
 
-To refresh: run the real commands locally, capture the terminal (or replace files here), and keep filenames stable so the README does not break.
+Recommended: 1600x900px, PNG, dark mode.

@@ -1,272 +1,393 @@
 <div align="center">
 
-# Torqa
+<br />
 
-**Torqa is a governance gate for automation workflows.**
+<img src="docs/images/torqa-logo.png" alt="Torqa" width="72" />
 
-For teams using n8n and workflow JSON in CI, Torqa helps you catch policy and risk issues before runtime.
+<h1>Torqa</h1>
 
-In 60 seconds you can run:
-- `torqa quickstart`
-- `torqa validate examples/integrations/minimal_n8n.json --source n8n`
-- `torqa report examples/integrations --format html -o torqa-report.html`
+<p><strong>Universal automation governance layer.</strong><br />
+Inspect, enforce, and audit every workflow — before it runs in production.</p>
 
-Strongest path today: `n8n export -> scan -> risk/policy report -> share or schedule`.
+<br />
 
-> Torqa is a gate, not a runtime.
+[![Version](https://img.shields.io/badge/version-0.1.9-0ea5e9?style=flat-square)](CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-3b82f6?style=flat-square)](pyproject.toml)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](dashboard/)
+[![CI](https://github.com/kadireren7/Torqa/actions/workflows/ci.yml/badge.svg)](https://github.com/kadireren7/Torqa/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-51%20passing-22c55e?style=flat-square)](dashboard/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript)](dashboard/tsconfig.json)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://github.com/kadireren7/Torqa/blob/main/pyproject.toml)
-[![Packaging CI](https://github.com/kadireren7/Torqa/actions/workflows/packaging.yml/badge.svg)](https://github.com/kadireren7/Torqa/actions/workflows/packaging.yml)
-[![PR: Torqa gate](https://github.com/kadireren7/Torqa/actions/workflows/torqa-pr.yml/badge.svg)](https://github.com/kadireren7/Torqa/actions/workflows/torqa-pr.yml)
+<br />
 
-[Quickstart](#2-minute-quickstart) · [n8n Demo](#n8n-quick-demo) · [CLI](#cli-examples) · [GitHub Action](#github-action-usage) · [Dashboard](#torqa-dashboard--first-users) · [Docs](#documentation)
+[Overview](#-overview) · [Screenshots](#-screenshots) · [Architecture](#-architecture) · [Dashboard](#-dashboard) · [Quickstart](#-quickstart) · [CLI](#-cli) · [GitHub Action](#-github-action) · [Changelog](CHANGELOG.md)
+
+<br />
 
 </div>
 
 ---
 
-## Torqa Dashboard & first users
+## Overview
 
-**Product positioning:** Torqa is the **deterministic gate** for workflow specs (validate, score, policy-check) before anything runs in production. The **Next.js dashboard** (`dashboard/`) is the team surface: scan uploads (including n8n JSON), **workspace policies**, **schedules**, **alerts**, **insights**, **API keys**, and **shareable reports** — all optional until you wire **Supabase** (see [dashboard/README.md](dashboard/README.md)).
+Torqa sits **above** your automation systems and acts as a deterministic governance gate. It does not execute workflows — it inspects, scores, and enforces policy on workflow definitions before they reach production.
 
-**v0.1.6 focus:** dashboard automation (cron, onboarding, webhooks, alerts), operator packaging (Docker/Helm), and **PyPI-ready** CLI distribution (`pip install torqa`). See [CHANGELOG.md](CHANGELOG.md) and [docs/release-process.md](docs/release-process.md).
+```
+n8n  ·  GitHub Actions  ·  AI Agents  ·  Zapier  ·  Make  ─→  Torqa  ─→  PASS / NEEDS REVIEW / FAIL
+```
 
-- **Live demo (hosted):** this repository does not ship a fixed production URL. After you deploy, document your canonical URL (for example `https://your-torqa.example.com`) in your runbook and in `NEXT_PUBLIC_APP_URL`.
-- **Local demo:** `cd dashboard && npm install && npm run dev` → [http://localhost:3000](http://localhost:3000) (landing at `/`; app routes under `/overview`, `/scan`, etc.).
-- **Bootstrap helper:** `./scripts/bootstrap-dashboard.sh --with-supabase` (macOS/Linux) or `.\scripts\bootstrap-dashboard.ps1 -WithSupabase` (Windows PowerShell) to install dashboard deps and apply local Supabase migrations in one run.
-- **Launch QA:** [docs/launch-checklist.md](docs/launch-checklist.md) — routes, smoke tests, migrations, env vars, and production limitations.
+**Why it matters:**
 
----
-
-## Why Torqa
-
-Most teams have workflow definitions from prose, ad-hoc JSON, LLM output, or vendor exports.
-“It parses” is not enough for safe production handoff.
-
-Torqa gives you a deterministic gate:
-
-- **One canonical contract:** `ir_goal` bundle shape for review, diff, storage, and CI.
-- **Multi-layer validation:** structural (`validate_ir`), semantics, logic, policy, and trust scoring.
-- **Profile-aware enforcement:** `default`, `strict`, `review-heavy`, `enterprise`.
-- **Automation-native output:** stable JSON schemas, predictable exit codes, GitHub Action support.
+- Catch credential leaks, risky permissions, and policy violations at definition time — not at incident time.
+- Every scan produces a **trust score**, a **decision**, and an auditable **findings report**.
+- Works from CLI, CI/CD, REST API, or the live dashboard — same engine, same results.
 
 ---
 
-## What Torqa catches
+## Screenshots
 
-- malformed or incomplete workflow specs before runtime
-- semantic mismatch between transitions, conditions, and function signatures
-- trust/policy issues (missing metadata, risky severity posture, governance gaps)
-- advanced static concerns (retry strategy, observability, execution ordering, circular dependencies)
-- n8n export risks (credentials, code nodes, webhook exposure, HTTP handling, missing manual gates)
+> Dashboard running locally. Dark-first, enterprise-grade control center.
+
+<br />
+
+**Overview — governance health at a glance**
+
+![Torqa Overview](docs/images/screenshot-overview.png)
+
+<br />
+
+**Sources — connect your automation platforms**
+
+![Torqa Sources](docs/images/screenshot-sources.png)
+
+<br />
+
+**Scan report — findings, trust score, policy decision**
+
+![Torqa Scan Report](docs/images/screenshot-scan-report.png)
+
+<br />
+
+**Enforcement Webhooks — real-time outbound governance callbacks**
+
+![Torqa Enforcement Webhooks](docs/images/screenshot-webhooks.png)
+
+<br />
+
+**Audit Log — full event trail across workspace activity**
+
+![Torqa Audit Log](docs/images/screenshot-audit-log.png)
 
 ---
 
-## Install Torqa (Python CLI)
+## Architecture
 
-| Goal | Command |
-|------|---------|
-| **Stable (PyPI)** — when `torqa` is published | `pip install torqa` or `pipx install torqa` |
-| **Dev / tests from PyPI** (ruff + pytest extras) | `pip install "torqa[dev]"` or `pip install "torqa[test]"` for tests only |
-| **Pre-release / dry run** | `pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ torqa==<version>` (see [docs/release-process.md](docs/release-process.md)) |
-| **From this repo (editable)** | `pip install -e ".[dev]"` from repository root |
-| **From Git tag** (no PyPI) | `pip install "git+https://github.com/kadireren7/Torqa.git@v0.1.6"` |
+```
+Source
+  │
+  ▼
+Adapter (n8n · GitHub Actions · AI Agent · Generic)
+  │
+  ▼
+WorkflowBundle
+  │
+  ├─► Scan Engine ──────────────────────────────────────────┐
+  │     · structural analysis                               │
+  │     · secret / credential detection                     │
+  │     · permission & scope analysis                       │
+  │     · policy enforcement (trust score, decision)        │
+  │                                                         │
+  ▼                                                         ▼
+PolicyPack                                          GovernanceReport
+  │                                                  · PASS / NEEDS REVIEW / FAIL
+  ▼                                                  · trust_score (0–100)
+WorkspacePolicy                                     · findings (severity, rule, target)
+                                                    · policyEvaluation
+                                                         │
+                                          ┌──────────────┼──────────────┐
+                                          ▼              ▼              ▼
+                                        Dashboard      REST API      CI/CD
+                                        (Next.js)   (Next.js RT)  (GitHub Action)
+                                                                       │
+                                                              Enforcement Webhooks
+                                                           (HMAC-SHA256 signed POST)
+```
 
-After any install, run `torqa version` (or `python -m torqa version`) to confirm the distribution.
+**Key invariant:** same input → same output. No hidden LLM calls in the scan path. Every decision is traceable to a concrete finding.
 
 ---
 
-## 2-minute quickstart
+## Dashboard
 
-From repo root (contributors / editable install):
+The **Next.js 15 dashboard** (`dashboard/`) is the team surface for Torqa. It provides:
+
+| Feature | Description |
+|---|---|
+| **Integration Center** | Connect n8n, GitHub, AI agents. Auto-sync workflows on connect. |
+| **Scan Schedules** | Automated recurring scans — cron, hourly, daily, manual. |
+| **Governance Reports** | Per-scan trust score, findings, policy status, PDF export. |
+| **Workspace Policies** | Custom enforcement thresholds per workspace or project. |
+| **Alert Rules** | Slack, Discord, email — triggered on FAIL or review decisions. |
+| **Enforcement Webhooks** | HMAC-signed outbound POST on every governance decision. |
+| **Audit Log** | Full event trail — integrations, scans, API keys, policy changes. |
+| **API Keys** | Machine-to-machine access for CLI and CI workflows. |
+| **Multi-workspace** | Organization support with member roles and scoped governance. |
+
+### Tech stack
+
+```
+Next.js 15 (App Router)   Supabase (auth · database · RLS)   Tailwind CSS
+TypeScript (strict)        Vitest (unit)                       Playwright (e2e · a11y)
+Radix UI / shadcn          HMAC-SHA256 (webhook signing)        @axe-core/playwright (WCAG 2.1 AA)
+```
+
+---
+
+## Quickstart
+
+### Dashboard (local)
 
 ```bash
 git clone https://github.com/kadireren7/Torqa.git
-cd Torqa
+cd Torqa/dashboard
+npm install
+cp .env.example .env.local   # fill in NEXT_PUBLIC_SUPABASE_URL + keys
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+> Supabase is optional for demo mode — the dashboard runs on mock data without it.
+
+### Python CLI
+
+```bash
+pip install torqa
+# or editable from source:
 pip install -e ".[dev]"
+```
+
+```bash
 torqa quickstart
 torqa validate examples/integrations/minimal_n8n.json --source n8n
 torqa scan examples/integrations/customer_support_n8n.json --source n8n
 torqa report examples/integrations --format html -o torqa-report.html
 ```
 
-Expected outcome: one safe n8n validation pass, one risky n8n scan with findings, and a shareable report artifact.
-
-If `torqa` is not on `PATH` (common on Windows), use:
-
-```bash
-python -m torqa quickstart
-python -m torqa validate examples/integrations/minimal_n8n.json --source n8n
-```
-
-`torqa quickstart` uses a **bundled** n8n sample when installed from PyPI (or your git checkout’s `examples/` when developing from the repo). It prints decision/risk summary and can generate a report artifact with `--report`.
-
 ---
 
-## Environment Setup
-
-Copy the example file:
+## CLI
 
 ```bash
-cp .env.example .env
-```
-
-Then edit `.env` for your machine. Values are optional until you use features that read them (for example the dashboard or future Supabase/API integrations). The committed `.env.example` documents planned variables; **do not** commit `.env`.
-
----
-
-## n8n quick demo
-
-Torqa does **not** execute n8n workflows. It statically reviews exported workflow JSON.
-
-```bash
-torqa validate examples/integrations/minimal_n8n.json --source n8n
-torqa scan examples/integrations/customer_support_n8n.json --source n8n
-torqa report examples/integrations/customer_support_n8n.json --format md -o customer_support_report.md
-torqa import n8n examples/integrations/customer_support_n8n.json --out customer_support.bundle.json
-```
-
-Why this is useful:
-
-- findings map back to **n8n node names / ids / types**
-- findings include **severity** and **fix suggestions**
-- converted bundle can run through normal Torqa validation without `--source`
-
-See: [docs/integrations/n8n.md](docs/integrations/n8n.md)
-
----
-
-## CLI examples
-
-```bash
-# Core gate
-torqa validate flow.tq
-torqa validate bundle.json --profile strict
-
-# Batch confidence
-torqa scan . --profile review-heavy
-torqa report . --format md -o torqa-report.md
-torqa compare flow.tq
-torqa explain flow.tq
-
-# Bootstrap
-torqa init login --output starter.tq
-
-# n8n adapter
+# Validate a workflow definition
 torqa validate workflow.json --source n8n
+torqa validate flow.tq --profile strict
+
+# Scan for governance findings
 torqa scan workflow.json --source n8n --json
+torqa scan . --profile review-heavy
+
+# Generate reports
+torqa report . --format html -o report.html
+torqa report . --format md -o report.md
+
+# Import/convert
 torqa import n8n workflow.json --out workflow.bundle.json
+
+# Utilities
+torqa version
+torqa explain flow.tq
+torqa compare flow.tq
 ```
+
+Exit codes: `0` = PASS, `1` = FAIL/BLOCK, `2` = configuration error.
 
 ---
 
-## GitHub Action usage
+## GitHub Action
 
-Use the built-in composite action for CI gating:
-
-```yaml
-permissions:
-  contents: read
-
-steps:
-  - uses: actions/checkout@v4
-  - uses: ./.github/actions/torqa
-    with:
-      torqa-package-path: .
-      scan-path: examples/integrations
-      profile: default
-      upload-artifact: true
-```
-
-Optional PR summary comment (already supported by the action):
+Drop-in CI governance gate — scans your workflow specs on every PR:
 
 ```yaml
+name: Torqa Governance Gate
+
+on: [push, pull_request]
+
 permissions:
   contents: read
   pull-requests: write
 
-steps:
-  - uses: actions/checkout@v4
-  - uses: ./.github/actions/torqa
-    with:
-      torqa-package-path: .
-      scan-path: examples/integrations
-      profile: default
-      upload-artifact: true
-      comment-on-pr: true
-      github-token: ${{ secrets.GITHUB_TOKEN }}
+jobs:
+  torqa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/torqa
+        with:
+          torqa-package-path: .
+          scan-path: .
+          profile: default
+          upload-artifact: true
+          comment-on-pr: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Full reference: [docs/github-actions.md](docs/github-actions.md)
+Torqa posts a decision summary comment directly on the PR with trust score, decision badge, and top findings.
 
 ---
 
-## Public API and report contract
+## Supported Sources
 
-- Public scan API (`POST /api/public/scan`) uses envelope responses by default:
-  - success: `{ ok: true, data, meta }`
-  - error: `{ ok: false, error, meta }`
-- Legacy raw response mode remains available via `?legacy=1`.
-- `torqa report` supports `html`, `md`, and `json` output (`torqa.report.v1` for JSON artifacts).
-
-Details: [docs/api.md](docs/api.md)
+| Source | Status | What it scans |
+|---|---|---|
+| **n8n** | Active | Exported workflow JSON — nodes, credentials, HTTP methods, code execution |
+| **GitHub Actions** | Active | Workflow YAML — permissions, secret exposure, unpinned actions, pwn-request patterns |
+| **AI Agents** | Active | Agent definitions — prompt injection, dangerous tools, scope creep, privileged permissions |
+| **Generic JSON/TQ** | Active | Any `ir_goal` bundle or raw workflow spec |
+| **Zapier** | Planned | — |
+| **Make** | Planned | — |
+| **Pipedream** | Planned | — |
 
 ---
 
-## Architecture overview
+## What Torqa catches
 
-```text
-source (.tq / json / n8n export)
-  -> surface parser / adapter
-  -> canonical ir_goal
-  -> structural validation
-  -> semantics + logic
-  -> policy + trust scoring
-  -> CLI / JSON report / CI decision
+**n8n**
+- Credentials stored in workflow JSON
+- Dangerous code nodes (`eval`, `exec`, shell calls)
+- Exposed webhook endpoints without auth
+- Unsafe HTTP methods targeting external endpoints
+- Missing manual approval gates
+
+**GitHub Actions**
+- `contents: write` on pull request triggers
+- Secrets echoed to logs
+- Unpinned third-party actions (`uses: action@v1`)
+- Self-hosted runners on public repos
+- `pull_request_target` + PR head checkout (privilege escalation)
+
+**AI Agents**
+- Prompt injection attack surfaces
+- Missing or oversized system prompts
+- Dangerous tool permissions (`exec`, `file_write`, `db_write`, `network`)
+- Scope creep (>15 tool definitions)
+- Hardcoded secrets in prompts
+
+---
+
+## REST API
+
+```http
+POST /api/public/scan
+Content-Type: application/json
+
+{
+  "source": "n8n",
+  "content": { ...workflow }
+}
 ```
 
-Core package layout:
+Response envelope:
 
-- `src/torqa/ir/`
-- `src/torqa/surface/`
-- `src/torqa/semantics/`
-- `src/torqa/policy/`
-- `src/torqa/analysis/`
-- `src/torqa/integrations/`
-- `src/torqa/cli/`
+```json
+{
+  "ok": true,
+  "data": {
+    "status": "FAIL",
+    "riskScore": 42,
+    "findings": [...],
+    "engine": "torqa-scan-v1"
+  },
+  "meta": { "version": "0.1.9" }
+}
+```
 
----
-
-## Not a runtime
-
-Torqa **does not** orchestrate tasks, execute workflows, host jobs, or call LLM APIs by default.
-It validates and scores workflow specs so your runtime can execute with stronger guarantees.
-
-### Why trust Torqa?
-
-- **Deterministic analysis:** same input yields the same result.
-- **No workflow execution:** Torqa inspects definitions; it does not run your automations.
-- **No default LLM calls:** baseline scan path stays explicit and auditable.
-- **Explicit engine metadata:** reports include engine/mode metadata for every scan.
-- **Inspectable reasons:** risk and policy outcomes are tied to concrete findings.
+Full reference: [docs/api.md](docs/api.md)
 
 ---
 
-## Roadmap
+## Enforcement Webhooks
 
-- polish adapter ecosystem beyond n8n
-- deepen policy customization and org-specific guardrails
-- tighten CI/report ergonomics for multi-repo adoption
-- keep core deterministic and source-agnostic
+Configure outbound HTTP callbacks that fire on every governance decision:
 
-See: [docs/roadmap.md](docs/roadmap.md) and [docs/status.md](docs/status.md)
+```json
+POST https://your-endpoint.example.com/torqa
+X-Torqa-Event: governance.decision
+X-Torqa-Decision: FAIL
+X-Torqa-Signature-256: sha256=<hmac>
+
+{
+  "event": "governance.decision",
+  "decision": "FAIL",
+  "riskScore": 31,
+  "workflowName": "customer-support-automation",
+  "source": "n8n",
+  "findings": [...],
+  "timestamp": "2026-05-01T21:00:00.000Z"
+}
+```
+
+Verify the signature on your end:
+
+```python
+import hmac, hashlib
+
+def verify(secret: str, body: bytes, header: str) -> bool:
+    expected = "sha256=" + hmac.new(
+        secret.encode(), body, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, header)
+```
+
+---
+
+## Deployment
+
+### Docker
+
+```bash
+docker build -f dashboard/Dockerfile -t torqa-dashboard .
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_SUPABASE_URL=... \
+  -e NEXT_PUBLIC_SUPABASE_ANON_KEY=... \
+  -e SUPABASE_SERVICE_ROLE_KEY=... \
+  torqa-dashboard
+```
+
+### Docker Compose (full stack)
+
+```bash
+docker compose up
+```
+
+### Helm (Kubernetes)
+
+```bash
+helm install torqa charts/torqa/ \
+  --set supabase.url=... \
+  --set supabase.anonKey=...
+```
+
+---
+
+## Release History
+
+| Version | Date | Highlights |
+|---|---|---|
+| **v0.1.9** | 2026-05-01 | Source connections, enforcement webhooks, GitHub Actions + AI agent scan engine, audit log, CI workflow |
+| v0.1.8 | 2026-04-30 | Axe contrast fixes, smoke E2E alignment, UI stabilization |
+| v0.1.7 | 2026-04-30 | Automation-first redesign, connector registry, WCAG 2.1 AA gate |
+| v0.1.6 | 2026-04-29 | Cron schedules, onboarding wizard, Slack/Discord/email alerts, Docker, Helm |
+
+Full history: [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
 ## Contributing
 
-Issues and PRs are welcome.
+Issues, bug reports, and PRs are welcome.
 
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 - [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md)
@@ -275,20 +396,6 @@ Issues and PRs are welcome.
 
 ---
 
-## Documentation
-
-- [Docs index](docs/README.md)
-- [Quickstart](docs/quickstart.md)
-- [First run](docs/first-run.md)
-- [Trust layer](docs/trust-layer.md)
-- [Trust policies](docs/trust-policies.md)
-- [Trust scoring](docs/trust-scoring.md)
-- [CI reports](docs/ci-report.md)
-- [n8n integration](docs/integrations/n8n.md)
-- [Public API contract](docs/api.md)
-
----
-
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — © 2026 Kadir Eren Altıntaş
