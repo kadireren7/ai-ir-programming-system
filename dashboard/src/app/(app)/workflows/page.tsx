@@ -234,8 +234,9 @@ export default function WorkflowsPage() {
                 {sourceWorkflows.length === 0 ? (
                   <div className="rounded-xl border border-border/30 bg-muted/5 px-5 py-6 text-center">
                     <p className="text-xs text-muted-foreground">
-                      No workflows synced yet. Click <span className="font-medium text-foreground">Sync now</span>{" "}
-                      to fetch.
+                      {
+                        "No workflows synced yet. Click Sync now on this source header to fetch workflows."
+                      }
                     </p>
                   </div>
                 ) : (
