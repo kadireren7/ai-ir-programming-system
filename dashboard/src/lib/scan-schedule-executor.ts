@@ -421,7 +421,7 @@ async function executeIntegrationScheduleRun(
     let payload: unknown;
     try {
       payload = await scannerProvider.scan({ source, content: wf.content });
-    } catch (e) {
+    } catch {
       failed += 1;
       continue;
     }
