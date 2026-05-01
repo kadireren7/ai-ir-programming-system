@@ -56,10 +56,10 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
       </nav>
 
       <div className="border-t border-sidebar-border px-5 py-3">
-        <p className="text-[11px] text-sidebar-foreground/40 uppercase tracking-wider">Workflow governance</p>
+        <p className="text-[11px] text-sidebar-foreground/70 uppercase tracking-wider">Workflow governance</p>
         <Link
           href="/"
-          className="mt-2 inline-flex text-xs font-medium text-sidebar-foreground/55 transition-colors hover:text-sidebar-foreground"
+          className="mt-2 inline-flex text-xs font-medium text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground"
         >
           ← Torqa home
         </Link>
