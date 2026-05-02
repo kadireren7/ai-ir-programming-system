@@ -16,7 +16,7 @@ function isProtectedPage(pathname: string): boolean {
   return !isPublicPath(pathname);
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const env = supabasePublicEnv();
   const pathname = request.nextUrl.pathname;
 
