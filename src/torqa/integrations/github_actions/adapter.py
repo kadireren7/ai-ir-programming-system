@@ -34,7 +34,7 @@ class GitHubActionsAdapter:
                 node_id=job.job_id,
                 name=job.job_id,
                 type="job",
-                platform_type=f"github_actions.job",
+                platform_type="github_actions.job",
                 parameters={"runs_on": job.runs_on, "steps": len(job.steps)},
                 credentials=[],
                 disabled=False,
