@@ -15,6 +15,7 @@ export type ConnectorCapability =
   | "test_connection"
   | "list_workflows"
   | "scan_workflow"
+  | "upload_definition"
   | "pr_comments"
   | "webhook"
   | "schedule";

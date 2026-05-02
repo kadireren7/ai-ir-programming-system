@@ -1,40 +1,20 @@
 "use client";
 
-import {
-  BadgeCheck,
-  Cable,
-  GitBranch,
-  Plug,
-  Plus,
-  Puzzle,
-  Webhook,
-  Workflow,
-  Zap,
-  Bot,
-} from "lucide-react";
+import Image from "next/image";
+import { BadgeCheck, Cable, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProviderStatusBadge } from "@/components/provider-status-badge";
 import { AuthTypeBadge } from "@/components/auth-type-badge";
 import type { Connector } from "@/lib/connectors/types";
 
-const PROVIDER_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  n8n: Workflow,
-  github: GitBranch,
-  webhook: Webhook,
-  zapier: Zap,
-  make: Puzzle,
-  pipedream: Plug,
-  "ai-agent": Bot,
-};
-
-const PROVIDER_COLORS: Record<string, string> = {
-  n8n: "bg-orange-500/15 text-orange-400",
-  github: "bg-neutral-500/20 text-neutral-300",
-  webhook: "bg-cyan-500/15 text-cyan-400",
-  zapier: "bg-orange-600/15 text-orange-500",
-  make: "bg-purple-500/15 text-purple-400",
-  pipedream: "bg-green-500/15 text-green-400",
-  "ai-agent": "bg-violet-500/15 text-violet-400",
+const PROVIDER_LOGOS: Record<string, string> = {
+  n8n: "/logos/n8n.svg",
+  github: "/logos/github.svg",
+  webhook: "/logos/webhook.svg",
+  zapier: "/logos/zapier.svg",
+  make: "/logos/make.svg",
+  pipedream: "/logos/pipedream.svg",
+  "ai-agent": "/logos/ai-agent.svg",
 };
 
 type Props = {
@@ -45,8 +25,7 @@ type Props = {
 };
 
 export function ProviderCard({ connector, connected, canConnect, onConnect }: Props) {
-  const Icon = PROVIDER_ICONS[connector.id] ?? Cable;
-  const colorClass = PROVIDER_COLORS[connector.id] ?? "bg-muted/30 text-muted-foreground";
+  const logoSrc = PROVIDER_LOGOS[connector.id];
   const isComingSoon = connector.status === "coming_soon";
 
   return (
@@ -67,8 +46,14 @@ export function ProviderCard({ connector, connected, canConnect, onConnect }: Pr
       )}
 
       <div className="flex items-start gap-4 p-5 pb-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${colorClass}`}>
-          <Icon className="h-5 w-5" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+          {logoSrc ? (
+            <Image src={logoSrc} alt={connector.name} width={40} height={40} className="h-10 w-10 rounded-lg object-contain" />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted/30">
+              <Cable className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
           <div className="flex items-center gap-2">

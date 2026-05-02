@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "torqa"
-version = "0.1.7"
+version = "0.2.0"
 description = "Canonical workflow IR (ir_goal), validation, trust profiles, and CLI — gate specs before execution."
 readme = "README.md"
 license = "MIT"

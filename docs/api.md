@@ -1,6 +1,6 @@
-# Public API contract (v0.1.7)
+# Public API contract (v0.1.9)
 
-The machine-readable sibling of this document is `dashboard/public/openapi.yaml` (`info.version: "0.1.7"`). Keep both in sync when the public scan contract changes.
+The machine-readable sibling of this document is `dashboard/public/openapi.yaml` (`info.version: "0.1.9"`). Keep both in sync when the public scan contract changes.
 
 Torqa currently exposes a public scan endpoint in the dashboard app:
 

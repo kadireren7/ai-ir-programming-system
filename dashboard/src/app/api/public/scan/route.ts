@@ -126,10 +126,11 @@ export async function POST(request: Request) {
     const sourceRaw = body.source;
     const content = body.content;
 
-    if (sourceRaw !== "n8n" && sourceRaw !== "generic") {
+    const VALID_SOURCES = ["n8n", "generic", "github", "ai-agent"] as const;
+    if (!VALID_SOURCES.includes(sourceRaw as (typeof VALID_SOURCES)[number])) {
       statusCode = 400;
       errorCode = "invalid_source";
-      return respondError(400, 'Field "source" must be either "n8n" or "generic"', "bad_request");
+      return respondError(400, `Field "source" must be one of: ${VALID_SOURCES.join(", ")}`, "bad_request");
     }
     if (!isPlainObject(content)) {
       statusCode = 400;

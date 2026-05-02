@@ -1,6 +1,6 @@
 apiVersion: v2
 name: torqa-dashboard
-description: Torqa Next.js dashboard (v0.1.6 baseline chart)
+description: Torqa Next.js dashboard
 type: application
-version: 0.1.6
-appVersion: "0.1.6"
+version: 0.2.0
+appVersion: "0.2.0"

@@ -26,6 +26,7 @@ import { hasPublicSupabaseUrl } from "@/lib/env";
 import { connectorRegistry } from "@/lib/connectors";
 import { ProviderCard } from "@/components/provider-card";
 import { N8nConnectPanel } from "@/components/n8n-connect-panel";
+import { AiAgentScanPanel } from "@/components/ai-agent-scan-panel";
 import type { IntegrationProvider, IntegrationStatus } from "@/lib/integrations";
 
 const useCloud = hasPublicSupabaseUrl();
@@ -67,6 +68,7 @@ export default function SourcesPage() {
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [formName, setFormName] = useState("");
   const [n8nPanelOpen, setN8nPanelOpen] = useState(false);
+  const [aiAgentPanelOpen, setAiAgentPanelOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!useCloud) { setLoading(false); return; }
@@ -86,11 +88,15 @@ export default function SourcesPage() {
   const openConnect = (id: string) => {
     const connector = connectorRegistry.find((c) => c.id === id);
     if (connector?.authType === "oauth") {
-      window.location.href = "/api/integrations/github/oauth/start";
+      window.location.assign("/api/integrations/github/oauth/start");
       return;
     }
     if (id === "n8n") {
       setN8nPanelOpen(true);
+      return;
+    }
+    if (id === "ai-agent") {
+      setAiAgentPanelOpen(true);
       return;
     }
     setConnectingId(id);
@@ -373,6 +379,11 @@ export default function SourcesPage() {
           Advanced → Manual Scan
         </Link>
       </p>
+
+      <AiAgentScanPanel
+        open={aiAgentPanelOpen}
+        onClose={() => setAiAgentPanelOpen(false)}
+      />
 
       <N8nConnectPanel
         open={n8nPanelOpen}

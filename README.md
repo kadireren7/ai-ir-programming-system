@@ -2,8 +2,6 @@
 
 <br />
 
-<img src="docs/images/torqa-logo.png" alt="Torqa" width="72" />
-
 <h1>Torqa</h1>
 
 <p><strong>Universal automation governance layer.</strong><br />
@@ -11,10 +9,10 @@ Inspect, enforce, and audit every workflow — before it runs in production.</p>
 
 <br />
 
-[![Version](https://img.shields.io/badge/version-0.1.9-0ea5e9?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-0ea5e9?style=flat-square)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3b82f6?style=flat-square)](pyproject.toml)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](dashboard/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](dashboard/)
 [![CI](https://github.com/kadireren7/Torqa/actions/workflows/ci.yml/badge.svg)](https://github.com/kadireren7/Torqa/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-51%20passing-22c55e?style=flat-square)](dashboard/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript)](dashboard/tsconfig.json)
@@ -49,37 +47,17 @@ n8n  ·  GitHub Actions  ·  AI Agents  ·  Zapier  ·  Make  ─→  Torqa  ─
 
 > Dashboard running locally. Dark-first, enterprise-grade control center.
 
-<br />
+| Screen | What you see |
+|---|---|
+| **Overview** | Governance health at a glance — trust score distribution, recent scan decisions, active sources |
+| **Sources** | Connect your automation platforms — n8n, GitHub, AI agents |
+| **Scan Report** | Per-scan findings, trust score, policy decision, PDF export |
+| **Enforcement Webhooks** | Real-time outbound governance callbacks with HMAC-SHA256 signing |
+| **Audit Log** | Full event trail across workspace activity |
 
-**Overview — governance health at a glance**
-
-![Torqa Overview](docs/images/screenshot-overview.png)
-
-<br />
-
-**Sources — connect your automation platforms**
+> Screenshots will be added in v0.2.0 once the public demo environment is live.
 
 ![Torqa Sources](docs/images/screenshot-sources.png)
-
-<br />
-
-**Scan report — findings, trust score, policy decision**
-
-![Torqa Scan Report](docs/images/screenshot-scan-report.png)
-
-<br />
-
-**Enforcement Webhooks — real-time outbound governance callbacks**
-
-![Torqa Enforcement Webhooks](docs/images/screenshot-webhooks.png)
-
-<br />
-
-**Audit Log — full event trail across workspace activity**
-
-![Torqa Audit Log](docs/images/screenshot-audit-log.png)
-
----
 
 ## Architecture
 
@@ -116,11 +94,11 @@ WorkspacePolicy                                     · findings (severity, rule,
 
 **Key invariant:** same input → same output. No hidden LLM calls in the scan path. Every decision is traceable to a concrete finding.
 
----
+<br />
 
 ## Dashboard
 
-The **Next.js 15 dashboard** (`dashboard/`) is the team surface for Torqa. It provides:
+The **Next.js 16 dashboard** (`dashboard/`) is the team surface for Torqa. It provides:
 
 | Feature | Description |
 |---|---|
@@ -137,7 +115,7 @@ The **Next.js 15 dashboard** (`dashboard/`) is the team surface for Torqa. It pr
 ### Tech stack
 
 ```
-Next.js 15 (App Router)   Supabase (auth · database · RLS)   Tailwind CSS
+Next.js 16 (App Router)   Supabase (auth · database · RLS)   Tailwind CSS
 TypeScript (strict)        Vitest (unit)                       Playwright (e2e · a11y)
 Radix UI / shadcn          HMAC-SHA256 (webhook signing)        @axe-core/playwright (WCAG 2.1 AA)
 ```
@@ -246,8 +224,8 @@ Torqa posts a decision summary comment directly on the PR with trust score, deci
 | **GitHub Actions** | Active | Workflow YAML — permissions, secret exposure, unpinned actions, pwn-request patterns |
 | **AI Agents** | Active | Agent definitions — prompt injection, dangerous tools, scope creep, privileged permissions |
 | **Generic JSON/TQ** | Active | Any `ir_goal` bundle or raw workflow spec |
-| **Zapier** | Planned | — |
-| **Make** | Planned | — |
+| **Zapier** | Beta | API key connection — scan Zap orchestrations |
+| **Make** | Beta | API token connection — scan Make scenarios |
 | **Pipedream** | Planned | — |
 
 ---
@@ -300,7 +278,7 @@ Response envelope:
     "findings": [...],
     "engine": "torqa-scan-v1"
   },
-  "meta": { "version": "0.1.9" }
+  "meta": { "version": "0.2.0" }
 }
 ```
 
@@ -376,10 +354,10 @@ helm install torqa charts/torqa/ \
 
 | Version | Date | Highlights |
 |---|---|---|
-| **v0.1.9** | 2026-05-01 | Source connections, enforcement webhooks, GitHub Actions + AI agent scan engine, audit log, CI workflow |
+| **v0.2.0** | 2026-05-02 | Real GitHub Actions + AI Agent adapters (Python + dashboard), SVG provider logos, Zapier/Make beta connections, scan route expanded to all sources, Next.js 16 |
+| v0.1.9 | 2026-05-01 | Source connections, enforcement webhooks, GitHub Actions + AI agent scan engine, audit log, CI workflow |
 | v0.1.8 | 2026-04-30 | Axe contrast fixes, smoke E2E alignment, UI stabilization |
 | v0.1.7 | 2026-04-30 | Automation-first redesign, connector registry, WCAG 2.1 AA gate |
-| v0.1.6 | 2026-04-29 | Cron schedules, onboarding wizard, Slack/Discord/email alerts, Docker, Helm |
 
 Full history: [CHANGELOG.md](CHANGELOG.md)
 

@@ -69,10 +69,10 @@ def test_list_available_adapters_includes_n8n():
     assert "n8n" in ids
 
 
-def test_list_available_adapters_excludes_placeholders():
+def test_list_available_adapters_includes_new_adapters():
     ids = {e.source_id for e in list_available_adapters()}
-    assert "github_actions" not in ids
-    assert "agent" not in ids
+    assert "github_actions" in ids
+    assert "agent" in ids
 
 
 # ---------------------------------------------------------------------------
@@ -114,14 +114,16 @@ def test_get_adapter_unknown_error_lists_known():
         get_adapter("does_not_exist")
 
 
-def test_get_adapter_placeholder_raises_not_implemented():
-    with pytest.raises(NotImplementedError, match="not yet implemented"):
-        get_adapter("github_actions")
+def test_get_adapter_github_actions_returns_adapter():
+    adapter = get_adapter("github_actions")
+    assert isinstance(adapter, SourceAdapter)
+    assert adapter.source_id == "github_actions"
 
 
-def test_get_adapter_agent_placeholder_raises_not_implemented():
-    with pytest.raises(NotImplementedError, match="not yet implemented"):
-        get_adapter("agent")
+def test_get_adapter_agent_returns_adapter():
+    adapter = get_adapter("agent")
+    assert isinstance(adapter, SourceAdapter)
+    assert adapter.source_id == "agent"
 
 
 # ---------------------------------------------------------------------------
@@ -178,14 +180,14 @@ def test_n8n_entry_has_tags():
     assert entries["n8n"].tags
 
 
-def test_github_actions_entry_not_available():
+def test_github_actions_entry_available():
     entries = {e.source_id: e for e in list_adapters()}
-    assert entries["github_actions"].available is False
+    assert entries["github_actions"].available is True
 
 
-def test_agent_entry_not_available():
+def test_agent_entry_available():
     entries = {e.source_id: e for e in list_adapters()}
-    assert entries["agent"].available is False
+    assert entries["agent"].available is True
 
 
 # ---------------------------------------------------------------------------
