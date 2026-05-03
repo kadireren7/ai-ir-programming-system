@@ -1,7 +1,7 @@
 replicaCount: 1
 image:
   repository: torqa/dashboard
-  tag: "0.1.6"
+  tag: "0.2.0"
   pullPolicy: IfNotPresent
 service:
   type: ClusterIP

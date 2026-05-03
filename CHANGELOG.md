@@ -8,6 +8,56 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 _No user-facing changes yet._
 
+## [0.2.0] — 2026-05-02
+
+Release track: **AI agent adapter, GitHub Actions adapter, SVG logo assets, Next.js 16 proxy layer.**
+
+### Added
+
+- **AI Agent source adapter** (`src/torqa/integrations/agent/`): parses agent definitions, runs 18+ governance checks (system prompt injection, dangerous tool permissions, missing human-in-the-loop, runaway iteration limits).
+- **GitHub Actions source adapter** (`src/torqa/integrations/github_actions/`): parses YAML workflows, analyzes jobs/steps/run commands/action pinning.
+- **SVG logo assets** and updated branding.
+- **Next.js 16 middleware → proxy migration** for deployment compatibility.
+
+### Fixed
+
+- ESLint flat config migration for Next.js 16 lint command.
+- Credential-fields assertion scoped to auth-requiring connectors in tests.
+
+### Version alignment
+
+- `dashboard/package.json`: `0.2.0`
+- `pyproject.toml`: `0.2.0`
+- `dashboard/public/openapi.yaml`: `0.2.0`
+- `docker-compose.yml`: `v0.2.0`
+- `charts/torqa/values.yaml`: `0.2.0`
+
+## [0.1.9] — 2026-05-01
+
+Release track: **source connections, enforcement webhooks, GitHub Actions integration, AI agent scan, audit log, CI workflow.**
+
+### Added
+
+- Real source connection flow (n8n, GitHub OAuth).
+- Enforcement webhook system.
+- Audit log page.
+- GitHub Actions CI workflow integration.
+
+### Fixed
+
+- Playwright selector stability for E2E tests.
+- CI and deployment failures.
+
+## [0.1.8] — 2026-04-30
+
+Release track: **UI stabilization and accessibility hardening.**
+
+### Fixed
+
+- Axe contrast fixes for WCAG 2.1 AA compliance.
+- Smoke E2E selector alignment with updated UI.
+- ESLint JSX text escaping in workflows empty state.
+
 ## [0.1.7] — 2026-04-30
 
 Release track: **automation-first UI, connector registry, premium redesign, and WCAG 2.1 AA hardening.**
@@ -178,7 +228,11 @@ First early public release of the Torqa core: canonical IR, validation, referenc
 
 Earlier development history is folded into **0.1.0** for clarity; subsequent versions list incremental changes here.
 
-[Unreleased]: https://github.com/kadireren7/Torqa/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/kadireren7/Torqa/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kadireren7/Torqa/compare/v0.1.9...v0.2.0
+[0.1.9]: https://github.com/kadireren7/Torqa/compare/v0.1.8...v0.1.9
+[0.1.8]: https://github.com/kadireren7/Torqa/compare/v0.1.7...v0.1.8
+[0.1.7]: https://github.com/kadireren7/Torqa/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/kadireren7/Torqa/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/kadireren7/Torqa/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/kadireren7/Torqa/compare/v0.1.1...v0.1.4
