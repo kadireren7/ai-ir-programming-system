@@ -3,6 +3,75 @@ import type { ScanApiSuccess } from "@/lib/scan-engine";
 import { notifyWorkspaceMembers } from "@/lib/workspace-activity";
 import type { AlertDestinationType, AlertRuleTrigger } from "@/lib/alerts";
 import { validateDiscordWebhookUrlForOutbound, validateSlackWebhookUrlForOutbound } from "@/lib/webhook-ssrf";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+/* ─── Alert message template ─────────────────────────────────── */
+
+type AlertContext = {
+  ruleName: string;
+  ruleTrigger: AlertRuleTrigger;
+  result: ScanApiSuccess;
+  workflowName?: string;
+  scanId?: string;
+  appUrl?: string;
+};
+
+function buildAlertTitle(ctx: AlertContext): string {
+  const decision = ctx.result.status === "FAIL" ? "Blocked" : ctx.result.status === "NEEDS REVIEW" ? "Review Required" : "Passed";
+  const wf = ctx.workflowName ? ` — ${ctx.workflowName}` : "";
+  return `Torqa: ${decision}${wf}`;
+}
+
+function buildAlertBody(ctx: AlertContext): string {
+  const lines: string[] = [];
+  lines.push(`Decision:    ${ctx.result.status}`);
+  lines.push(`Trust score: ${ctx.result.riskScore}/100`);
+  if (ctx.workflowName) lines.push(`Workflow:    ${ctx.workflowName}`);
+  lines.push(`Source:      ${ctx.result.source}`);
+  lines.push(`Rule:        "${ctx.ruleName}"`);
+  if (ctx.result.findings.length > 0) {
+    const crit = ctx.result.totals.high;
+    const rev  = ctx.result.totals.review;
+    const parts = [];
+    if (crit) parts.push(`${crit} critical`);
+    if (rev)  parts.push(`${rev} review`);
+    if (parts.length) lines.push(`Findings:    ${parts.join(", ")}`);
+  }
+  if (ctx.scanId && ctx.appUrl) {
+    lines.push(`Report:      ${ctx.appUrl}/scan/${ctx.scanId}`);
+  }
+  return lines.join("\n");
+}
+
+/* ─── Delivery log ───────────────────────────────────────────── */
+
+async function logDelivery(opts: {
+  userId: string;
+  ruleId?: string;
+  destinationId?: string;
+  destinationType: string;
+  ruleTrigger?: string;
+  status: "ok" | "error" | "test";
+  errorMessage?: string;
+  workflowName?: string;
+  scanDecision?: string;
+  riskScore?: number;
+}): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin) return;
+  await admin.from("alert_deliveries").insert({
+    user_id: opts.userId,
+    rule_id: opts.ruleId ?? null,
+    destination_id: opts.destinationId ?? null,
+    destination_type: opts.destinationType,
+    rule_trigger: opts.ruleTrigger ?? null,
+    status: opts.status,
+    error_message: opts.errorMessage ?? null,
+    workflow_name: opts.workflowName ?? null,
+    scan_decision: opts.scanDecision ?? null,
+    risk_score: opts.riskScore ?? null,
+  });
+}
 
 type DestinationRow = {
   id: string;
@@ -173,8 +242,8 @@ export async function deliverToDestination(
   body: string,
   severity: "info" | "warning" | "critical",
   metadata: Record<string, unknown>
-): Promise<void> {
-  if (!dest.enabled) return;
+): Promise<{ ok: boolean; error?: string }> {
+  if (!dest.enabled) return { ok: false, error: "destination disabled" };
   switch (dest.type) {
     case "in_app": {
       if (dest.organization_id) {
@@ -192,28 +261,33 @@ export async function deliverToDestination(
           metadata: { ...metadata, destinationId: dest.id, channel: "alert_destination" },
         });
       }
-      break;
+      return { ok: true };
     }
     case "slack": {
       const url = typeof dest.config.webhookUrl === "string" ? dest.config.webhookUrl.trim() : "";
-      if (!url) return;
-      void postSlackWebhook(url, `*${title}*\n${body}`);
-      break;
+      if (!url) return { ok: false, error: "missing webhookUrl" };
+      const res = await postSlackWebhook(url, `*${title}*\n${body}`);
+      if (!res) return { ok: false, error: "Slack webhook failed validation or network error" };
+      if (!res.ok) return { ok: false, error: `Slack HTTP ${res.status}` };
+      return { ok: true };
     }
     case "discord": {
       const url = typeof dest.config.webhookUrl === "string" ? dest.config.webhookUrl.trim() : "";
-      if (!url) return;
-      void postDiscordWebhook(url, `**${title}**\n${body}`);
-      break;
+      if (!url) return { ok: false, error: "missing webhookUrl" };
+      const res = await postDiscordWebhook(url, `**${title}**\n${body}`);
+      if (!res) return { ok: false, error: "Discord webhook failed validation or network error" };
+      if (!res.ok) return { ok: false, error: `Discord HTTP ${res.status}` };
+      return { ok: true };
     }
     case "email": {
       const addr = typeof dest.config.address === "string" ? dest.config.address.trim() : "";
-      if (!addr) return;
-      void sendResendEmail(addr, title, body).then(() => {});
-      break;
+      if (!addr) return { ok: false, error: "missing email address" };
+      const r = await sendResendEmail(addr, title, body);
+      if (!r.ok) return { ok: false, error: r.error };
+      return { ok: true };
     }
     default:
-      break;
+      return { ok: false, error: `unknown type: ${dest.type as string}` };
   }
 }
 
@@ -285,6 +359,8 @@ export async function dispatchAlertRulesForScanContext(
     result: ScanApiSuccess;
     source: string;
     via?: string;
+    workflowName?: string;
+    scanId?: string;
   }
 ): Promise<void> {
   try {
@@ -297,6 +373,7 @@ export async function dispatchAlertRulesForScanContext(
       opts.organizationId
     );
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
     const metaBase = {
       source: opts.source,
       status: opts.result.status,
@@ -310,15 +387,17 @@ export async function dispatchAlertRulesForScanContext(
     for (const rule of rules) {
       if (!triggers.has(rule.rule_trigger)) continue;
 
-      const title =
-        rule.rule_trigger === "scan_failed"
-          ? "Torqa: scan failed"
-          : rule.rule_trigger === "scan_needs_review"
-            ? "Torqa: scan needs review"
-            : "Torqa: high-severity finding";
+      const ctx: AlertContext = {
+        ruleName: rule.name,
+        ruleTrigger: rule.rule_trigger,
+        result: opts.result,
+        workflowName: opts.workflowName,
+        scanId: opts.scanId,
+        appUrl,
+      };
 
-      const body = `Rule "${rule.name}" · ${opts.result.status} (score ${opts.result.riskScore}) · source ${opts.source}`;
-
+      const title = buildAlertTitle(ctx);
+      const body  = buildAlertBody(ctx);
       const severity: "warning" | "critical" =
         rule.rule_trigger === "scan_failed" || rule.rule_trigger === "high_severity_finding"
           ? "critical"
@@ -328,11 +407,26 @@ export async function dispatchAlertRulesForScanContext(
         if (deliveredDest.has(destId)) continue;
         const dest = destinationsById.get(destId);
         if (!dest) continue;
-        await deliverToDestination(supabase, dest, title, body, severity, {
+
+        const outcome = await deliverToDestination(supabase, dest, title, body, severity, {
           ...metaBase,
           ruleId: rule.id,
           ruleTrigger: rule.rule_trigger,
         });
+
+        void logDelivery({
+          userId: opts.actorUserId,
+          ruleId: rule.id,
+          destinationId: dest.id,
+          destinationType: dest.type,
+          ruleTrigger: rule.rule_trigger,
+          status: outcome.ok ? "ok" : "error",
+          errorMessage: outcome.error,
+          workflowName: opts.workflowName,
+          scanDecision: opts.result.status,
+          riskScore: opts.result.riskScore,
+        }).catch(() => {});
+
         deliveredDest.add(destId);
       }
     }
@@ -396,39 +490,25 @@ export async function sendTestForDestination(
     .select("id,user_id,organization_id,type,name,enabled,config")
     .eq("id", destId)
     .maybeSingle();
-  if (error || !data) {
-    return { ok: false, error: "Destination not found" };
-  }
+  if (error || !data) return { ok: false, error: "Destination not found" };
+
   const dest = rowToDestination(data as Record<string, unknown>);
-  if (!dest) {
-    return { ok: false, error: "Invalid destination" };
-  }
+  if (!dest) return { ok: false, error: "Invalid destination" };
+
   try {
-    if (dest.type === "slack") {
-      const url = typeof dest.config.webhookUrl === "string" ? dest.config.webhookUrl.trim() : "";
-      if (!url) return { ok: false, error: "Missing webhookUrl in destination config" };
-      const res = await postSlackWebhook(url, message);
-      if (!res) return { ok: false, error: "Slack webhook URL failed validation or network error" };
-      if (!res.ok) return { ok: false, error: `Slack webhook returned HTTP ${res.status}` };
-      return { ok: true };
-    }
-    if (dest.type === "discord") {
-      const url = typeof dest.config.webhookUrl === "string" ? dest.config.webhookUrl.trim() : "";
-      if (!url) return { ok: false, error: "Missing webhookUrl in destination config" };
-      const res = await postDiscordWebhook(url, message);
-      if (!res) return { ok: false, error: "Discord webhook URL failed validation or network error" };
-      if (!res.ok) return { ok: false, error: `Discord webhook returned HTTP ${res.status}` };
-      return { ok: true };
-    }
-    if (dest.type === "email") {
-      const addr = typeof dest.config.address === "string" ? dest.config.address.trim() : "";
-      const r = await sendResendEmail(addr, "Torqa test", message);
-      if (!r.ok) return { ok: false, error: r.error };
-      return { ok: true };
-    }
-    await deliverToDestination(supabase, dest, "Torqa test", message, "info", {
+    const outcome = await deliverToDestination(supabase, dest, "Torqa test alert", message, "info", {
       kind: "destination_test",
     });
+
+    void logDelivery({
+      userId: dest.user_id,
+      destinationId: dest.id,
+      destinationType: dest.type,
+      status: outcome.ok ? "test" : "error",
+      errorMessage: outcome.error,
+    }).catch(() => {});
+
+    if (!outcome.ok) return { ok: false, error: outcome.error ?? "Send failed" };
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Test failed" };

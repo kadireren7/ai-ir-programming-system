@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { LandingNavbar } from "@/components/marketing/landing-navbar";
+import { createClient } from "@/lib/supabase/server";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { LandingPillars } from "@/components/marketing/landing-pillars";
 import { LandingFlow } from "@/components/marketing/landing-flow";
@@ -28,10 +29,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MarketingLandingPage() {
+export default async function MarketingLandingPage() {
+  const supabase = await createClient();
+  let navUser: { email: string; displayName: string | null } | null = null;
+  if (supabase) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user?.email) {
+      const meta = user.user_metadata as Record<string, unknown> | undefined;
+      const dn =
+        (typeof meta?.full_name === "string" && meta.full_name) ||
+        (typeof meta?.name === "string" && meta.name) ||
+        null;
+      navUser = { email: user.email, displayName: dn };
+    }
+  }
+
   return (
     <div className="bg-[#06080b] text-[#f0f3f7]">
-      <LandingNavbar />
+      <LandingNavbar user={navUser} />
 
       <main id="main-content">
         <MarketingHero />

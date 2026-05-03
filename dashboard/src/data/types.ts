@@ -94,7 +94,7 @@ export type HomeDashboardMode = "supabase" | "mock";
 export type HomeRecentScan = {
   id: string;
   workflowName: string | null;
-  source: "n8n" | "generic";
+  source: "n8n" | "generic" | "github" | "ai-agent";
   status: string;
   riskScore: number;
   createdAt: string;

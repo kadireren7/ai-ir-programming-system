@@ -39,9 +39,9 @@ export default function LoginPage() {
         <LoginForm disabled={!configured} />
       </Suspense>
       <p className="text-center text-xs text-muted-foreground">
-        After sign in you will return to the app.{" "}
+        After sign in you will open the dashboard.{" "}
         <Link className="text-primary hover:underline" href="/">
-          Home
+          Torqa home
         </Link>
       </p>
     </div>

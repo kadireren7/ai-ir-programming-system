@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { mainNavItems } from "@/lib/nav";
+import { TorqaLogoMark } from "@/components/torqa-logo";
 
 type AppMobileNavProps = {
   orgName: string;
@@ -33,18 +34,21 @@ export function AppMobileNav({ orgName }: AppMobileNavProps) {
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 border-border bg-sidebar p-0 text-sidebar-foreground">
+      <SheetContent
+        side="left"
+        className="flex h-full w-64 flex-col border-border bg-sidebar p-0 text-sidebar-foreground"
+      >
         <SheetHeader className="border-b border-sidebar-border px-5 py-4 text-left">
           <SheetTitle className="flex items-center gap-2.5 text-sidebar-foreground">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
-              T
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent/80">
+              <TorqaLogoMark size={22} />
             </span>
             <span className="font-semibold tracking-tight">Torqa</span>
           </SheetTitle>
           <p className="text-[11px] text-sidebar-foreground/60">{orgName}</p>
         </SheetHeader>
 
-        <nav className="space-y-0.5 p-3">
+        <nav className="flex min-h-0 flex-1 flex-col space-y-0.5 overflow-y-auto p-3">
           {mainNavItems.map((item) => {
             const active =
               pathname === item.href ||
@@ -72,6 +76,14 @@ export function AppMobileNav({ orgName }: AppMobileNavProps) {
               </Link>
             );
           })}
+          <div className="mt-auto border-t border-sidebar-border pt-3">
+            <Link
+              href="/"
+              className="flex rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+            >
+              Torqa home
+            </Link>
+          </div>
         </nav>
       </SheetContent>
     </Sheet>

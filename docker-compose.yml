@@ -1,4 +1,4 @@
-# Torqa v0.1.6 — local dashboard + optional env file.
+# Torqa v0.2.0 — local dashboard + optional env file.
 # Copy `.env.example` to `.env` in the repo root or set `env_file` below.
 # Python engine / Supabase are not started here; point the dashboard at hosted services.
 

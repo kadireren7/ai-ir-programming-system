@@ -77,16 +77,19 @@ export async function POST(_request: Request, context: Ctx) {
 
   const outcome = await executeManualScheduleRun(supabase, user.id, schedule);
 
-  if (outcome.kind === "integration_not_implemented") {
+  if (outcome.kind === "completed_integration") {
     return NextResponse.json({
-      ok: false,
+      ok: true,
       schedules_checked: 1,
       schedules_run: 1,
-      succeeded: 0,
-      failed: 1,
-      errors: [{ scheduleId: schedule.id, error: "Integration scan execution is not implemented yet." }],
-      code: "integration_scan_not_implemented",
-      message: "Integration scan execution is not implemented yet.",
+      succeeded: 1,
+      failed: 0,
+      errors: [],
+      runId: outcome.runId,
+      scanIds: outcome.scanIds,
+      totalWorkflows: outcome.totalWorkflows,
+      workflowsSucceeded: outcome.succeeded,
+      workflowsFailed: outcome.failed,
     });
   }
 

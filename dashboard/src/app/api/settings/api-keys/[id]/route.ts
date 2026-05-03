@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { apiJsonDatabaseError } from "@/lib/api-json-error";
+import { getActiveOrganizationId } from "@/lib/workspace-scope";
+import { logWorkspaceActivity } from "@/lib/workspace-activity";
 
 export const runtime = "nodejs";
 
@@ -49,6 +51,9 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (error) {
     return apiJsonDatabaseError(request);
   }
+
+  const orgId = await getActiveOrganizationId();
+  void logWorkspaceActivity(supabase, orgId, "api_key.revoked", id, { keyId: id }).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

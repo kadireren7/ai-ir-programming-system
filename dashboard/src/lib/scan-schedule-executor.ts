@@ -9,6 +9,9 @@ import { dispatchAlertRulesForScheduleFailure } from "@/lib/alert-dispatch";
 import { dispatchAlertRulesForScanContext } from "@/lib/alert-dispatch";
 import { isPlainObject } from "@/lib/json-guards";
 import { logWorkspaceActivity, notifyWorkspaceMembers } from "@/lib/workspace-activity";
+import { fetchIntegrationWorkflows } from "@/lib/integration-workflow-fetcher";
+import { dispatchEnforcementWebhooks } from "@/lib/enforcement-webhook-dispatch";
+import type { ResolvedScanPolicy } from "@/lib/resolve-scan-policy";
 import {
   computeNextRunAfterExecution,
   type ScanScheduleFrequency,
@@ -103,7 +106,6 @@ async function bumpScheduleAfterAttempt(
 }
 
 export type ManualRunOutcome =
-  | { kind: "integration_not_implemented" }
   | { kind: "failed"; runId: string | null; error: string }
   | {
       kind: "completed";
@@ -115,6 +117,14 @@ export type ManualRunOutcome =
         policyStatus?: string | null;
         appliedPolicyName?: string | null;
       };
+    }
+  | {
+      kind: "completed_integration";
+      runId: string;
+      scanIds: string[];
+      totalWorkflows: number;
+      succeeded: number;
+      failed: number;
     };
 
 export async function executeManualScheduleRun(
@@ -126,7 +136,7 @@ export async function executeManualScheduleRun(
     return { kind: "failed", runId: null, error: "Schedule is disabled." };
   }
   if (schedule.scope_type === "integration") {
-    return { kind: "integration_not_implemented" };
+    return executeIntegrationScheduleRun(supabase, userId, schedule);
   }
 
   const { data: tpl, error: tplErr } = await supabase
@@ -304,6 +314,16 @@ export async function executeManualScheduleRun(
     source,
     via: "scan_schedule",
   }).catch(() => {});
+  void dispatchEnforcementWebhooks(supabase, {
+    userId,
+    organizationId: orgId,
+    decision: scanResult.status as "PASS" | "FAIL" | "NEEDS REVIEW",
+    riskScore: scanResult.riskScore,
+    workflowName: template.name,
+    source,
+    scanId,
+    findings: scanResult.findings.map((f) => ({ severity: f.severity, rule_id: f.rule_id, target: f.target ?? "" })),
+  }).catch(() => {});
 
   const completedAt = new Date().toISOString();
   await supabase
@@ -337,4 +357,170 @@ export async function executeManualScheduleRun(
       appliedPolicyName: scanResult.policyEvaluation?.appliedPolicyName ?? null,
     },
   };
+}
+
+async function executeIntegrationScheduleRun(
+  supabase: SupabaseClient,
+  userId: string,
+  schedule: ScheduleRunContext
+): Promise<ManualRunOutcome> {
+  const fetchResult = await fetchIntegrationWorkflows(schedule.scope_id);
+  if (!fetchResult.ok) {
+    const runId = await insertTerminalFailedRun(supabase, schedule.id, fetchResult.error);
+    await bumpScheduleAfterAttempt(supabase, schedule);
+    fireScheduleFailedAlerts(supabase, userId, schedule, fetchResult.error);
+    return { kind: "failed", runId, error: fetchResult.error };
+  }
+
+  const { provider, workflows } = fetchResult;
+
+  if (workflows.length === 0) {
+    const msg = `No workflows found in integration (${provider}).`;
+    const runId = await insertTerminalFailedRun(supabase, schedule.id, msg);
+    await bumpScheduleAfterAttempt(supabase, schedule);
+    return { kind: "failed", runId, error: msg };
+  }
+
+  const { data: runQueued, error: runInsErr } = await supabase
+    .from("scan_schedule_runs")
+    .insert({ schedule_id: schedule.id, status: "queued" })
+    .select("id")
+    .single();
+
+  if (runInsErr || !runQueued?.id) {
+    await bumpScheduleAfterAttempt(supabase, schedule);
+    fireScheduleFailedAlerts(supabase, userId, schedule, runInsErr?.message ?? "Could not create run row.");
+    return { kind: "failed", runId: null, error: runInsErr?.message ?? "Could not create run row." };
+  }
+
+  const runId = runQueued.id as string;
+  const started = new Date().toISOString();
+  await supabase
+    .from("scan_schedule_runs")
+    .update({ status: "running", started_at: started })
+    .eq("id", runId);
+
+  const source = provider as ScanSource;
+  const orgId = schedule.organization_id;
+  const scanIds: string[] = [];
+  let succeeded = 0;
+  let failed = 0;
+
+  let policyConfig: ResolvedScanPolicy | null = null;
+  if (schedule.workspace_policy_id) {
+    const resolved = await resolveScanPolicy(supabase, {
+      workspacePolicyId: schedule.workspace_policy_id,
+      policyTemplateSlug: null,
+    });
+    if (resolved) policyConfig = resolved;
+  }
+
+  const scannerProvider = getScanProvider();
+
+  for (const wf of workflows) {
+    let payload: unknown;
+    try {
+      payload = await scannerProvider.scan({ source, content: wf.content });
+    } catch {
+      failed += 1;
+      continue;
+    }
+
+    if (!isScanApiSuccess(payload)) {
+      failed += 1;
+      continue;
+    }
+
+    let scanResult: ScanApiSuccess = payload;
+    if (policyConfig) {
+      scanResult = {
+        ...scanResult,
+        policyEvaluation: evaluateScanAgainstPolicy(scanResult, policyConfig.name, policyConfig.config),
+      };
+    }
+
+    const { data: scanRow, error: scanErr } = await supabase
+      .from("scan_history")
+      .insert({
+        user_id: userId,
+        source,
+        workflow_name: wf.name.slice(0, 512),
+        result: scanResult,
+        organization_id: orgId,
+      })
+      .select("id")
+      .single();
+
+    if (scanErr || !scanRow?.id) {
+      failed += 1;
+      continue;
+    }
+
+    const scanId = scanRow.id as string;
+    scanIds.push(scanId);
+    succeeded += 1;
+
+    void dispatchAlertRulesForScanContext(supabase, {
+      actorUserId: userId,
+      organizationId: orgId,
+      result: scanResult,
+      source,
+      via: "scan_schedule",
+    }).catch(() => {});
+    void dispatchScanNotificationsForUser(userId, scanResult, source, orgId, "scan_schedule", scanId).catch(() => {});
+    void dispatchEnforcementWebhooks(supabase, {
+      userId,
+      organizationId: orgId,
+      decision: scanResult.status as "PASS" | "FAIL" | "NEEDS REVIEW",
+      riskScore: scanResult.riskScore,
+      workflowName: wf.name,
+      source,
+      scanId,
+      findings: scanResult.findings.map((f) => ({ severity: f.severity, rule_id: f.rule_id, target: f.target ?? "" })),
+    }).catch(() => {});
+  }
+
+  const overallStatus = failed === 0 ? "completed" : succeeded > 0 ? "completed" : "failed";
+
+  await supabase
+    .from("scan_schedule_runs")
+    .update({
+      status: overallStatus,
+      completed_at: new Date().toISOString(),
+      result: {
+        scanIds,
+        totalWorkflows: workflows.length,
+        succeeded,
+        failed,
+        provider,
+      },
+      error: failed > 0 ? `${failed} of ${workflows.length} workflow(s) failed to scan.` : null,
+    })
+    .eq("id", runId);
+
+  await bumpScheduleAfterAttempt(supabase, schedule);
+
+  await logWorkspaceActivity(supabase, orgId, "scan.created", schedule.scope_id, {
+    provider,
+    totalWorkflows: workflows.length,
+    succeeded,
+    failed,
+    via: "scan_schedule",
+    scheduleId: schedule.id,
+  });
+  await notifyWorkspaceMembers(
+    supabase,
+    orgId,
+    "Scheduled integration scan completed",
+    `Schedule "${schedule.name}" scanned ${succeeded}/${workflows.length} ${provider} workflow(s).`,
+    failed > 0 ? "warning" : "info",
+    { scanIds, succeeded, failed, scheduleId: schedule.id }
+  );
+
+  if (failed === workflows.length) {
+    fireScheduleFailedAlerts(supabase, userId, schedule, `All ${workflows.length} workflow scans failed.`);
+    return { kind: "failed", runId, error: `All ${workflows.length} workflow scans failed.` };
+  }
+
+  return { kind: "completed_integration", runId, scanIds, totalWorkflows: workflows.length, succeeded, failed };
 }

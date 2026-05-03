@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { MetricCard } from "@/components/ui/metric-card";
 import { GlowCard } from "@/components/ui/glow-card";
+import { TorqaLogoMark } from "@/components/torqa-logo";
 
 type NavEntry = { label: string; href: string; badge?: string; icon: () => React.ReactElement };
 
@@ -63,8 +64,6 @@ function PlayIcon()   { return <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" 
 function GridIcon()   { return <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg>; }
 function BranchIcon() { return <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>; }
 function NodeIcon()   { return <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="3"/><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><line x1="9" y1="9" x2="7" y2="7"/><line x1="15" y1="9" x2="17" y2="7"/><line x1="14" y1="14" x2="17" y2="17"/></svg>; }
-function TorqaLogo()  { return <svg width="18" height="18" viewBox="0 0 64 64" aria-hidden><path d="M8 18 L48 18 L56 26 L16 26 Z M8 38 L40 38 L48 46 L16 46 Z" fill="#22d3ee"/><circle cx="56" cy="46" r="2" fill="#67e8f9"/></svg>; }
-
 /* ─── Sidebar ───────────────────────────────────────────── */
 function Sidebar() {
   const pathname = usePathname();
@@ -118,7 +117,7 @@ function Sidebar() {
           className="flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border border-[#1f2630]"
           style={{ background: "radial-gradient(circle at 50% 30%,#0e131a,#06080b)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}
         >
-          <TorqaLogo />
+          <TorqaLogoMark size={18} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-semibold tracking-[-0.01em] text-[#f0f3f7]">Torqa</div>

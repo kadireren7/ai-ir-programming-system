@@ -5,6 +5,7 @@ export const n8nConnector: Connector = {
   name: "n8n",
   description: "Connect your n8n instance to scan workflows and monitor governance continuously.",
   status: "available",
+  authType: "apikey",
   credentialFields: [
     {
       key: "baseUrl",

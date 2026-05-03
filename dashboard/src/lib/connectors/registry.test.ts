@@ -12,8 +12,10 @@ describe("connectorRegistry", () => {
     expect(ids).toContain("pipedream");
   });
 
-  it("available connectors have credential fields", () => {
-    const available = connectorRegistry.filter((c) => c.status === "available");
+  it("available connectors that require auth have credential fields", () => {
+    const available = connectorRegistry.filter(
+      (c) => c.status === "available" && c.authType !== "none"
+    );
     for (const c of available) {
       expect(c.credentialFields.length).toBeGreaterThan(0);
     }

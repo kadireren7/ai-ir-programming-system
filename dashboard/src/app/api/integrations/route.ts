@@ -90,10 +90,6 @@ export async function POST(request: Request) {
   if (!name) {
     return NextResponse.json({ error: 'Field "name" is required' }, { status: 400 });
   }
-  if (provider !== "n8n") {
-    return NextResponse.json({ error: "Only n8n is available in this release" }, { status: 400 });
-  }
-
   let organizationId: string | null = null;
   const activeOrg = await getActiveOrganizationId();
   if (activeOrg) {
@@ -106,21 +102,23 @@ export async function POST(request: Request) {
     if (membership) organizationId = activeOrg;
   }
 
-  const baseUrlInput = typeof configRaw.baseUrl === "string" ? configRaw.baseUrl : "";
-  const apiKeyInput = typeof configRaw.apiKey === "string" ? configRaw.apiKey : "";
-  const baseUrl = sanitizeBaseUrl(baseUrlInput);
-  if (!baseUrl) {
-    return NextResponse.json({ error: "n8n base URL must start with http:// or https://" }, { status: 400 });
+  let safeConfig: Record<string, unknown>;
+  if (provider === "n8n") {
+    const baseUrlInput = typeof configRaw.baseUrl === "string" ? configRaw.baseUrl : "";
+    const apiKeyInput = typeof configRaw.apiKey === "string" ? configRaw.apiKey : "";
+    const baseUrl = sanitizeBaseUrl(baseUrlInput);
+    if (!baseUrl) {
+      return NextResponse.json({ error: "n8n base URL must start with http:// or https://" }, { status: 400 });
+    }
+    const apiKeyMasked = maskSecret(apiKeyInput);
+    safeConfig = { baseUrl, apiKeyConfigured: Boolean(apiKeyMasked), apiKeyMask: apiKeyMasked };
+  } else if (provider === "webhook") {
+    const apiKeyInput = typeof configRaw.apiKey === "string" ? configRaw.apiKey : "";
+    safeConfig = { apiKeyConfigured: Boolean(apiKeyInput), apiKeyMask: maskSecret(apiKeyInput) };
+  } else {
+    safeConfig = {};
   }
-  const apiKeyMasked = maskSecret(apiKeyInput);
 
-  const safeConfig = {
-    baseUrl,
-    apiKeyConfigured: Boolean(apiKeyMasked),
-    apiKeyMask: apiKeyMasked,
-    mode: "placeholder-not-fully-connected",
-    note: "Torqa stores only masked API-key metadata in this MVP integration foundation.",
-  };
   const status: IntegrationStatus = statusRaw === "connected" ? "connected" : "draft";
 
   const { data, error } = await supabase

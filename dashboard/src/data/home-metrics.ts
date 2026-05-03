@@ -66,14 +66,16 @@ function buildOutcomeTrend(rows: ScanHistoryRow[], sinceIso: string): RiskTrendP
   });
 }
 
+const VALID_SOURCES = new Set(["n8n", "generic", "github", "ai-agent"]);
+
 function rowToRecent(row: ScanHistoryRow): HomeRecentScan | null {
-  if (row.source !== "n8n" && row.source !== "generic") return null;
+  if (!VALID_SOURCES.has(row.source)) return null;
   if (!isScanApiSuccess(row.result)) return null;
   const r = row.result;
   return {
     id: row.id,
     workflowName: row.workflow_name,
-    source: row.source,
+    source: row.source as HomeRecentScan["source"],
     status: r.status,
     riskScore: r.riskScore,
     createdAt: row.created_at,

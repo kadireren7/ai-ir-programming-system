@@ -89,6 +89,38 @@ export const BUILT_IN_POLICY_TEMPLATES: BuiltInPolicyTemplate[] = [
       blockTlsBypass: true,
     },
   },
+  {
+    slug: "ai-agent-governance",
+    name: "AI agent governance",
+    description: "Control plane for AI agents: scope, permissions, prompt safety, and tool access.",
+    category: "ai-agent",
+    config: {
+      minimumTrustScore: 70,
+      failOnCritical: true,
+      maxReviewFindings: 5,
+      reviewOverflowMode: "fail",
+      requireNoPlaintextSecrets: true,
+      requireWebhookAuth: false,
+      requireErrorHandling: true,
+      blockTlsBypass: true,
+    },
+  },
+  {
+    slug: "github-actions-security",
+    name: "GitHub Actions security",
+    description: "Supply chain, secrets, and permission hygiene for GitHub Actions workflows.",
+    category: "github",
+    config: {
+      minimumTrustScore: 65,
+      failOnCritical: true,
+      maxReviewFindings: 4,
+      reviewOverflowMode: "fail",
+      requireNoPlaintextSecrets: true,
+      requireWebhookAuth: false,
+      requireErrorHandling: false,
+      blockTlsBypass: true,
+    },
+  },
 ];
 
 export function getBuiltInTemplateBySlug(slug: string): BuiltInPolicyTemplate | undefined {

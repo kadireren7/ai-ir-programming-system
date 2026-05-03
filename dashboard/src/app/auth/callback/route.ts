@@ -5,8 +5,8 @@ import { supabasePublicEnv } from "@/lib/env";
 export async function GET(request: NextRequest) {
   const env = supabasePublicEnv();
   const requestUrl = new URL(request.url);
-  const next = requestUrl.searchParams.get("next") ?? "/";
-  const safe = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  const next = requestUrl.searchParams.get("next") ?? "/overview";
+  const safe = next.startsWith("/") && !next.startsWith("//") ? next : "/overview";
 
   if (!env) {
     return NextResponse.redirect(new URL(safe, requestUrl.origin));

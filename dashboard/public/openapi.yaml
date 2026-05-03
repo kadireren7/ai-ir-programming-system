@@ -4,7 +4,7 @@ info:
   description: |
     Public and operator-facing endpoints exposed by the Torqa Next.js dashboard.
     Authenticated app routes are cookie-based (Supabase); server-to-server scans use API keys below.
-  version: "0.1.7"
+  version: "0.2.0"
 
 servers:
   - url: /

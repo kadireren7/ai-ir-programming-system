@@ -1,8 +1,11 @@
-export type IntegrationProvider = "n8n" | "github" | "zapier" | "make";
+export type IntegrationProvider = "n8n" | "github" | "zapier" | "make" | "pipedream" | "webhook" | "ai-agent";
 export type IntegrationStatus = "draft" | "connected" | "error" | "paused";
 
 export function isIntegrationProvider(v: unknown): v is IntegrationProvider {
-  return v === "n8n" || v === "github" || v === "zapier" || v === "make";
+  return (
+    v === "n8n" || v === "github" || v === "zapier" || v === "make" ||
+    v === "pipedream" || v === "webhook" || v === "ai-agent"
+  );
 }
 
 export function isIntegrationStatus(v: unknown): v is IntegrationStatus {

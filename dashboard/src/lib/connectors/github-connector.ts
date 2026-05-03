@@ -5,6 +5,7 @@ export const githubConnector: Connector = {
   name: "GitHub",
   description: "Webhook-based scanning on push and pull_request events. PR comments supported.",
   status: "available",
+  authType: "oauth",
   credentialFields: [
     {
       key: "webhookSecret",

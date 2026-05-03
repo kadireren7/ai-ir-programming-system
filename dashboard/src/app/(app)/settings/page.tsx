@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Bell, KeyRound, Users } from "lucide-react";
+import { ArrowRight, Bell, ClipboardList, KeyRound, Users, Webhook } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -73,6 +73,46 @@ export default function SettingsPage() {
             <Button asChild size="sm" variant="outline" className="gap-1.5">
               <Link href="/workspace">
                 Workspace settings
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Webhook className="h-4 w-4 text-primary" />
+              Enforcement Webhooks
+            </CardTitle>
+            <CardDescription>
+              Outbound HTTP callbacks triggered on governance decisions — FAIL, NEEDS REVIEW, or custom triggers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild size="sm" variant="outline" className="gap-1.5">
+              <Link href="/settings/webhooks">
+                Manage webhooks
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              Audit Log
+            </CardTitle>
+            <CardDescription>
+              Full event trail — integrations, scans, policies, access changes, API key activity.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild size="sm" variant="outline" className="gap-1.5">
+              <Link href="/settings/audit-log">
+                View audit log
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>

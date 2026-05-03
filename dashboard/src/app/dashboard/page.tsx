@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import { CommandCenter } from "@/components/dashboard/command-center";
-
-export const metadata: Metadata = {
-  title: "Command Center",
-  description: "Live governance state — decisions, queue, policies.",
-};
+import { redirect } from "next/navigation";
 
 export default function DashboardPage() {
-  return <CommandCenter />;
+  redirect("/overview");
 }

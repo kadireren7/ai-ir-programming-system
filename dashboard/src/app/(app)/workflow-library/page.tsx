@@ -252,7 +252,7 @@ export default function WorkflowLibraryPage() {
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/[0.06] p-6 shadow-lg ring-1 ring-white/[0.05] sm:p-8">
+      <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/[0.06] p-6 shadow-lg ring-1 ring-black/[0.06] dark:ring-white/[0.06] sm:p-8">
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" aria-hidden />
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">

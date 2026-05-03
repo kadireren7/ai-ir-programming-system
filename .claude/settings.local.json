@@ -13,7 +13,12 @@
       "Bash(PLAYWRIGHT_A11Y_BUILT=1 npx playwright test --config=playwright.a11y.config.ts)",
       "Bash(PLAYWRIGHT_A11Y_BUILT=1 npx playwright test --config=playwright.config.ts)",
       "Bash(python -m pip install -e \".[test]\" -q)",
-      "Bash(python -m pytest --tb=short)"
+      "Bash(python -m pytest --tb=short)",
+      "Bash(npx tsc *)",
+      "Bash(npx --prefix /c/Users/kadir/Desktop/Project-X/dashboard tsc --noEmit)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\kadir\\\\Desktop\\\\Project-X\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs grep *)"
     ]
   }
 }

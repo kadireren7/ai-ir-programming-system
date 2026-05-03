@@ -88,6 +88,16 @@ def _make_n8n() -> SourceAdapter:
     return N8nAdapter()
 
 
+def _make_github_actions() -> SourceAdapter:
+    from torqa.integrations.github_actions.adapter import GitHubActionsAdapter
+    return GitHubActionsAdapter()
+
+
+def _make_agent() -> SourceAdapter:
+    from torqa.integrations.agent.adapter import AgentAdapter
+    return AgentAdapter()
+
+
 register_adapter(
     AdapterEntry(
         source_id="n8n",
@@ -104,17 +114,19 @@ register_adapter(
         source_id="github_actions",
         display_name="GitHub Actions",
         description="GitHub Actions CI/CD workflows — parses .github/workflows YAML.",
-        available=False,
+        available=True,
         tags=["ci-cd", "devops", "github"],
     ),
+    factory=_make_github_actions,
 )
 
 register_adapter(
     AdapterEntry(
         source_id="agent",
         display_name="AI Agent",
-        description="AI agent task graphs — parses agent workflow definitions.",
-        available=False,
+        description="AI agent definitions — parses agent JSON for security and scope violations.",
+        available=True,
         tags=["ai", "agent", "llm"],
     ),
+    factory=_make_agent,
 )

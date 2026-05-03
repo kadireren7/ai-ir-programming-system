@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Cloud, Loader2, Megaphone, Send } from "lucide-react";
+import { Bell, CheckCircle2, Cloud, Loader2, Megaphone, Send, XCircle, FlaskConical } from "lucide-react";
 import { EmptyStateCta } from "@/components/onboarding/empty-state-cta";
 import { GovernanceJourneyStrip } from "@/components/onboarding/governance-journey-strip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,18 @@ type RuleRow = {
   destinationIds: string[];
 };
 
+type DeliveryRow = {
+  id: string;
+  destination_type: string;
+  rule_trigger: string | null;
+  status: "ok" | "error" | "test";
+  error_message: string | null;
+  workflow_name: string | null;
+  scan_decision: string | null;
+  risk_score: number | null;
+  created_at: string;
+};
+
 const TRIGGER_OPTIONS: { value: AlertRuleTrigger; label: string }[] = [
   { value: "scan_failed", label: "Scan failed (FAIL)" },
   { value: "scan_needs_review", label: "Scan needs review" },
@@ -41,6 +53,7 @@ const TRIGGER_OPTIONS: { value: AlertRuleTrigger; label: string }[] = [
 export default function AlertsPage() {
   const [destinations, setDestinations] = useState<DestinationRow[]>([]);
   const [rules, setRules] = useState<RuleRow[]>([]);
+  const [deliveries, setDeliveries] = useState<DeliveryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,22 +76,19 @@ export default function AlertsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [dRes, rRes] = await Promise.all([
+      const [dRes, rRes, dlRes] = await Promise.all([
         fetch("/api/alert-destinations", { credentials: "include" }),
         fetch("/api/alert-rules", { credentials: "include" }),
+        fetch("/api/alert-deliveries", { credentials: "include" }),
       ]);
-      const dj = (await dRes.json()) as { destinations?: DestinationRow[]; error?: string };
-      const rj = (await rRes.json()) as { rules?: RuleRow[]; error?: string };
-      if (!dRes.ok) {
-        setError(dj.error ?? "Could not load destinations");
-        return;
-      }
-      if (!rRes.ok) {
-        setError(rj.error ?? "Could not load rules");
-        return;
-      }
+      const dj  = (await dRes.json())  as { destinations?: DestinationRow[]; error?: string };
+      const rj  = (await rRes.json())  as { rules?: RuleRow[]; error?: string };
+      const dlj = (await dlRes.json()) as { deliveries?: DeliveryRow[]; error?: string };
+      if (!dRes.ok) { setError(dj.error ?? "Could not load destinations"); return; }
+      if (!rRes.ok) { setError(rj.error ?? "Could not load rules"); return; }
       setDestinations(dj.destinations ?? []);
       setRules(rj.rules ?? []);
+      setDeliveries(dlj.deliveries ?? []);
     } catch {
       setError("Network error");
     } finally {
@@ -586,6 +596,41 @@ export default function AlertsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delivery log */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Delivery log</p>
+          <div className="h-px flex-1 bg-border/40" />
+        </div>
+        {deliveries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No deliveries yet. Alerts fire when a scan matches a rule.</p>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-border/50">
+            {deliveries.map((d, i) => (
+              <div
+                key={d.id}
+                className={`flex flex-wrap items-center gap-3 bg-card px-5 py-3 text-xs ${
+                  i !== deliveries.length - 1 ? "border-b border-border/40" : ""
+                }`}
+              >
+                <span className="shrink-0">
+                  {d.status === "ok"   ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> :
+                   d.status === "test" ? <FlaskConical className="h-3.5 w-3.5 text-cyan-400" /> :
+                                         <XCircle className="h-3.5 w-3.5 text-destructive" />}
+                </span>
+                <span className="font-medium capitalize">{d.destination_type}</span>
+                {d.rule_trigger && <span className="text-muted-foreground">{d.rule_trigger}</span>}
+                {d.workflow_name && <span className="truncate max-w-[160px] text-muted-foreground">{d.workflow_name}</span>}
+                {d.scan_decision && <span className="font-mono">{d.scan_decision}</span>}
+                {d.risk_score !== null && <span className="font-mono text-muted-foreground">{d.risk_score}/100</span>}
+                {d.error_message && <span className="text-destructive truncate max-w-[200px]">{d.error_message}</span>}
+                <span className="ml-auto text-muted-foreground">{new Date(d.created_at).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <p className="text-xs text-muted-foreground">
         Personal toggles:{" "}

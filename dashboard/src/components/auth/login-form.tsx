@@ -17,8 +17,8 @@ type LoginFormProps = {
 export function LoginForm({ disabled = false }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextRaw = searchParams.get("next") || "/";
-  const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/";
+  const nextRaw = searchParams.get("next") || "/overview";
+  const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/overview";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -16,7 +16,7 @@ export type ScanFinding = {
 };
 
 export type ScanDecision = "PASS" | "NEEDS REVIEW" | "FAIL";
-export type ScanSource = "generic" | "n8n";
+export type ScanSource = "generic" | "n8n" | "github" | "ai-agent";
 
 export type ScanTotals = {
   high: number;
@@ -582,6 +582,152 @@ function analyzeGeneric(data: unknown): ScanFinding[] {
   return out;
 }
 
+function analyzeGitHubActions(content: unknown): ScanFinding[] {
+  const out: ScanFinding[] = [];
+  const yaml = isRecord(content)
+    ? typeof content.yamlContent === "string"
+      ? content.yamlContent
+      : JSON.stringify(content)
+    : typeof content === "string"
+      ? content
+      : "";
+
+  if (!yaml.trim()) {
+    pushFinding(out, "critical", "v1.github.empty_workflow", "workflow", "GitHub Actions workflow file is empty.", "Provide a valid workflow YAML file.");
+    return out;
+  }
+
+  // Secrets exposed in run steps
+  if (/echo\s+\$\{\{\s*secrets\./i.test(yaml)) {
+    pushFinding(out, "critical", "v1.github.secret_echo", "workflow", "A workflow step echoes a secret value directly, which exposes it in CI logs.", "Never echo secrets. Use environment variables passed to processes, not echo/print.");
+  }
+
+  // Overly broad permissions
+  if (/permissions\s*:\s*write-all/i.test(yaml)) {
+    pushFinding(out, "critical", "v1.github.permissions_write_all", "workflow.permissions", "Workflow grants write-all permissions, giving every job full repository write access.", "Scope permissions to minimum required per job using explicit permission keys.");
+  }
+  if (/permissions\s*:\s*\n[\s]*contents\s*:\s*write/im.test(yaml) && /pull_request/i.test(yaml)) {
+    pushFinding(out, "high", "v1.github.write_on_pr", "workflow.permissions", "Workflow grants contents:write on pull_request triggers, risking unauthorized code pushes.", "Restrict write permissions on PR triggers and use pull_request_target only when necessary.");
+  }
+
+  // Unpinned third-party actions (uses: owner/action@v1 not @sha)
+  const usesPattern = /uses\s*:\s*([a-z0-9_-]+\/[a-z0-9_.-]+)@([a-z0-9._-]+)/gi;
+  let match: RegExpExecArray | null;
+  const unpinned: string[] = [];
+  while ((match = usesPattern.exec(yaml)) !== null) {
+    const ref = match[2];
+    if (!/^[0-9a-f]{40}$/.test(ref) && !ref.startsWith("v") && ref !== "main" && ref !== "master") continue;
+    if (/^v\d+\.\d+\.\d+/.test(ref)) continue;
+    if (/^v\d+$/.test(ref)) {
+      unpinned.push(`${match[1]}@${ref}`);
+    }
+  }
+  if (unpinned.length > 0) {
+    pushFinding(out, "review", "v1.github.unpinned_action", "workflow.steps", `${unpinned.length} action(s) pinned to mutable tag (e.g. @v1) — supply chain attack risk. Actions: ${unpinned.slice(0, 3).join(", ")}.`, "Pin third-party actions to a full commit SHA (e.g. @abc1234) and audit with Dependabot.");
+  }
+
+  // Self-hosted runners
+  if (/runs-on\s*:\s*self-hosted/i.test(yaml)) {
+    pushFinding(out, "review", "v1.github.self_hosted_runner", "workflow.jobs", "Workflow uses self-hosted runners which may have elevated host access.", "Harden self-hosted runner environments and limit their network/filesystem access.");
+  }
+
+  // pull_request_target with checkout of PR head (critical escalation)
+  if (/pull_request_target/i.test(yaml) && /ref\s*:\s*\$\{\{\s*github\.event\.pull_request\.head\./i.test(yaml)) {
+    pushFinding(out, "critical", "v1.github.pwn_request", "workflow", "pull_request_target trigger combined with head ref checkout allows attackers to run arbitrary code with repository secrets.", "Never checkout PR head code in pull_request_target workflows unless the code is fully isolated.");
+  }
+
+  // Secrets passed as env without masking hint
+  if (/env\s*:\s*\n[\s\S]*?\$\{\{\s*secrets\./im.test(yaml) && !/add-mask/i.test(yaml)) {
+    pushFinding(out, "info", "v1.github.secret_in_env", "workflow.env", "Secrets are passed as environment variables. Ensure downstream steps do not accidentally log them.", "Use ::add-mask:: or rely on GitHub's automatic secret masking.");
+  }
+
+  // Check for plaintext credentials in env
+  const envLinePattern = /^\s+[A-Z_]+\s*:\s*["']?[a-zA-Z0-9+/=]{20,}["']?\s*$/gm;
+  if (envLinePattern.test(yaml)) {
+    pushFinding(out, "critical", "v1.github.hardcoded_credential", "workflow.env", "Workflow appears to contain hardcoded credential values in environment definitions.", "Replace hardcoded values with GitHub Secrets (${{ secrets.KEY }}) references.");
+  }
+
+  if (out.length === 0) {
+    pushFinding(out, "info", "v1.github.no_critical_risk", "workflow", "No high-signal governance risks detected in this GitHub Actions workflow.", "Continue with branch protection rules, required reviews, and CODEOWNERS.");
+  }
+
+  return out;
+}
+
+function analyzeAiAgent(content: unknown): ScanFinding[] {
+  const out: ScanFinding[] = [];
+  if (!isRecord(content)) {
+    pushFinding(out, "critical", "v1.agent.invalid_definition", "agent", "AI agent definition is not a valid JSON object.", "Provide a valid agent definition with name, model, systemPrompt, and tools fields.");
+    return out;
+  }
+
+  const systemPrompt = typeof content.systemPrompt === "string" ? content.systemPrompt : "";
+  const tools = Array.isArray(content.tools) ? content.tools : [];
+  const model = typeof content.model === "string" ? content.model : "";
+  const permissions = Array.isArray(content.permissions) ? content.permissions : [];
+
+  // Prompt injection risk
+  if (/ignore (previous|above|all) (instructions?|context|prompt)/i.test(systemPrompt)) {
+    pushFinding(out, "critical", "v1.agent.prompt_injection_risk", "agent.systemPrompt", "System prompt contains phrases that could be exploited for prompt injection attacks.", "Remove injection-prone language and add explicit anti-jailbreak constraints to the system prompt.");
+  }
+
+  if (systemPrompt.length === 0) {
+    pushFinding(out, "high", "v1.agent.no_system_prompt", "agent.systemPrompt", "Agent has no system prompt, leaving behavior undefined and exploitable.", "Define a clear system prompt that constrains the agent's role, scope, and refusal policies.");
+  }
+
+  if (systemPrompt.length > 8000) {
+    pushFinding(out, "review", "v1.agent.oversized_prompt", "agent.systemPrompt", "System prompt is very large (>8000 chars), increasing token cost and ambiguity risk.", "Simplify and modularize the system prompt. Move static data to RAG retrieval instead.");
+  }
+
+  // Dangerous tools
+  const DANGEROUS_TOOL_PATTERNS = [
+    { pattern: /(exec|execute|run_code|shell|bash|cmd|subprocess)/i, rule: "v1.agent.tool_code_execution", msg: "Agent has access to code/shell execution tools, enabling arbitrary system command runs." },
+    { pattern: /(file_write|write_file|save_file|delete_file|rm_file|fs\.write)/i, rule: "v1.agent.tool_file_write", msg: "Agent can write or delete files, risking data destruction or exfiltration." },
+    { pattern: /(browse|web_search|fetch_url|http_request|curl)/i, rule: "v1.agent.tool_network", msg: "Agent has unrestricted network/browsing tools — could be used for data exfiltration." },
+    { pattern: /(send_email|send_message|post_webhook|slack|discord|telegram)/i, rule: "v1.agent.tool_side_effect", msg: "Agent can send messages/emails — verify there are rate limits and content filters." },
+    { pattern: /(db_query|sql_execute|database_write|mongo|redis)/i, rule: "v1.agent.tool_db_write", msg: "Agent has database write access — ensure queries are parameterized and scoped." },
+  ];
+
+  for (const toolEntry of tools) {
+    const toolName = isRecord(toolEntry)
+      ? (typeof toolEntry.name === "string" ? toolEntry.name : JSON.stringify(toolEntry))
+      : String(toolEntry);
+    for (const { pattern, rule, msg } of DANGEROUS_TOOL_PATTERNS) {
+      if (pattern.test(toolName)) {
+        pushFinding(out, "high", rule, `agent.tools.${toolName}`, msg, "Restrict tool access to minimum required scope and add human-in-the-loop approval for irreversible actions.");
+      }
+    }
+  }
+
+  // Too many tools = scope creep
+  if (tools.length > 15) {
+    pushFinding(out, "review", "v1.agent.scope_creep", "agent.tools", `Agent has ${tools.length} tools — high number increases attack surface and scope creep risk.`, "Audit and remove unused tools. Use separate agents for distinct task domains.");
+  }
+
+  // Privileged permissions
+  const PRIVILEGED_PERMS = ["admin", "write", "delete", "sudo", "root", "superuser"];
+  for (const perm of permissions) {
+    const p = String(perm).toLowerCase();
+    if (PRIVILEGED_PERMS.some((x) => p.includes(x))) {
+      pushFinding(out, "high", "v1.agent.privileged_permission", `agent.permissions.${perm}`, `Agent has privileged permission "${perm}" which may allow destructive or unauthorized actions.`, "Apply least-privilege principle: grant only the minimum permissions required for the agent's stated task.");
+    }
+  }
+
+  // Secrets in system prompt
+  detectSecretsFromObject(out, "agent.systemPrompt", { systemPrompt });
+
+  // Missing model definition
+  if (!model) {
+    pushFinding(out, "review", "v1.agent.no_model_specified", "agent.model", "Agent definition does not specify which model to use, risking inconsistent governance posture.", "Specify the model explicitly and pin to a tested version.");
+  }
+
+  if (out.filter((f) => f.severity === "critical" || f.severity === "high").length === 0 && out.length === 0) {
+    pushFinding(out, "info", "v1.agent.no_critical_risk", "agent", "No high-signal governance risks detected in this AI agent definition.", "Continuously review tool scope as agent capabilities expand.");
+  }
+
+  return out;
+}
+
 export function riskScoreFromFindings(findings: ScanFinding[]): number {
   let score = 100;
   for (const f of findings) {
@@ -638,6 +784,10 @@ export function runScanAnalysis(raw: unknown, source: ScanSource): {
       const doc = unwrapN8nDoc(raw);
       findings.push(...analyzeN8n(doc));
     }
+  } else if (source === "github") {
+    findings.push(...analyzeGitHubActions(raw));
+  } else if (source === "ai-agent") {
+    findings.push(...analyzeAiAgent(raw));
   } else {
     findings.push(...analyzeGeneric(raw));
     if (looksN8n) {

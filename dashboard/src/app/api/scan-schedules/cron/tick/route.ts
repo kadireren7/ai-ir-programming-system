@@ -88,15 +88,11 @@ export async function POST(request: Request) {
     };
     schedulesRun += 1;
     const outcome = await executeManualScheduleRun(admin, schedule.user_id, schedule);
-    if (outcome.kind === "completed") {
+    if (outcome.kind === "completed" || outcome.kind === "completed_integration") {
       succeeded += 1;
     } else {
       failed += 1;
-      const err =
-        outcome.kind === "failed"
-          ? outcome.error
-          : "Integration scan execution is not implemented yet.";
-      errors.push({ scheduleId: schedule.id, error: err });
+      errors.push({ scheduleId: schedule.id, error: outcome.error });
     }
   }
 

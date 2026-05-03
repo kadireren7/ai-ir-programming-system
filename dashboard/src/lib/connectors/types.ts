@@ -1,5 +1,7 @@
 export type ConnectorStatus = "available" | "beta" | "coming_soon";
 
+export type ConnectorAuthType = "apikey" | "oauth" | "webhook" | "none";
+
 export type CredentialField = {
   key: string;
   label: string;
@@ -13,6 +15,7 @@ export type ConnectorCapability =
   | "test_connection"
   | "list_workflows"
   | "scan_workflow"
+  | "upload_definition"
   | "pr_comments"
   | "webhook"
   | "schedule";
@@ -22,6 +25,7 @@ export type Connector = {
   name: string;
   description: string;
   status: ConnectorStatus;
+  authType: ConnectorAuthType;
   credentialFields: CredentialField[];
   capabilities: ConnectorCapability[];
   docsUrl?: string;

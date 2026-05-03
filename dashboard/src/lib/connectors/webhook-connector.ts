@@ -5,6 +5,7 @@ export const webhookConnector: Connector = {
   name: "Generic Webhook / API",
   description: "Send workflow JSON to Torqa via POST. Works with any CI/CD system.",
   status: "available",
+  authType: "webhook",
   credentialFields: [
     {
       key: "apiKey",

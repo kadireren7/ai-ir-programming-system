@@ -137,7 +137,7 @@ function TrustIndexVisual({ score }: { score: number }) {
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Trust</span>
         </div>
       </div>
-      <div className="mt-4 h-2 w-full max-w-[200px] overflow-hidden rounded-full bg-muted/60 ring-1 ring-white/5">
+      <div className="mt-4 h-2 w-full max-w-[200px] overflow-hidden rounded-full bg-muted/60 ring-1 ring-black/[0.06] dark:ring-white/10">
         <div
           className={cn("h-full rounded-full bg-gradient-to-r transition-all duration-1000 ease-out motion-reduce:transition-none", riskMeterFill(score))}
           style={{ width: `${pct}%` }}
@@ -293,7 +293,7 @@ function RecommendationsPanel({ result }: { result: ScanApiSuccess }) {
   const items = useMemo(() => buildScanRecommendations(result), [result]);
 
   return (
-    <Card className="border-border/60 bg-gradient-to-b from-card to-muted/20 shadow-lg ring-1 ring-white/[0.04]">
+    <Card className="border-border/60 bg-gradient-to-b from-card to-muted/20 shadow-lg ring-1 ring-black/[0.05] dark:ring-white/[0.06]">
       <CardHeader className="space-y-1 pb-3">
         <div className="flex items-center gap-2 text-primary">
           <Sparkles className="h-4 w-4" aria-hidden />
@@ -546,7 +546,7 @@ export function ScanReportView({
 
       {/* KPI strip */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
-        <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-lg ring-1 ring-white/[0.04] sm:p-6">
+        <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-lg ring-1 ring-black/[0.05] dark:ring-white/[0.06] sm:p-6">
           <div className={cn("pointer-events-none absolute inset-0 bg-gradient-to-br to-transparent opacity-95", decisionCardAccent(result.status))} />
           <div className="relative flex flex-col gap-2">
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Gate</span>
