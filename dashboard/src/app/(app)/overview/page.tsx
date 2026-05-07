@@ -10,8 +10,6 @@ import {
   Shield,
   Zap,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { RiskTrendChart } from "@/components/risk-trend-chart";
 import { ScanOutcomeBadge } from "@/components/scan-outcome-badge";
 import {

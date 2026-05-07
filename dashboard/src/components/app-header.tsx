@@ -38,7 +38,7 @@ function initialsFrom(email: string, displayName: string | null): string {
 
 const hasSupabaseEnv = hasPublicSupabaseUrl();
 
-export function AppHeader({ orgName: _orgName, user }: AppHeaderProps) {
+export function AppHeader({ orgName, user }: AppHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const title = titleForPath(pathname);
@@ -69,7 +69,7 @@ export function AppHeader({ orgName: _orgName, user }: AppHeaderProps) {
         borderBottom: "1px solid var(--line)",
       }}
     >
-      <AppMobileNav orgName="" />
+      <AppMobileNav orgName={orgName} />
 
       {/* Page title */}
       <div className="flex min-w-0 flex-1 items-center gap-2">
