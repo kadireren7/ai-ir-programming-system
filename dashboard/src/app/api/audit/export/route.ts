@@ -9,6 +9,7 @@ import {
 import { getOrCreateRequestId } from "@/lib/api-request-id";
 import { buildAuditCsv, type ExportRowInput } from "@/lib/audit/export-csv";
 import type { GovernanceDecisionRow, GovernanceDecisionType } from "@/lib/governance/types";
+import { generateAuditReportPdfBuffer } from "@/lib/pdf/audit-report-pdf";
 
 export const runtime = "nodejs";
 
@@ -39,8 +40,8 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const format = (url.searchParams.get("format") ?? "csv").toLowerCase();
-  if (format !== "csv" && format !== "json") {
-    return jsonErrorResponse(400, "format must be 'csv' or 'json'", requestId);
+  if (format !== "csv" && format !== "json" && format !== "pdf") {
+    return jsonErrorResponse(400, "format must be 'csv', 'json', or 'pdf'", requestId);
   }
   const since = parseIso(url.searchParams.get("since"));
   const until = parseIso(url.searchParams.get("until"));
@@ -89,10 +90,15 @@ export async function GET(request: Request) {
     }
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+  const scopeShape = scope.organizationId
+    ? ({ type: "organization" as const, id: scope.organizationId })
+    : ({ type: "personal" as const, userId: scope.userId! });
+
   if (format === "json") {
     const payload = {
       generated_at: new Date().toISOString(),
-      scope: scope.organizationId ? { type: "organization", id: scope.organizationId } : { type: "personal", userId: scope.userId },
+      scope: scopeShape,
       filters: { since, until, decisionType, actor, signature },
       total: rows.length,
       capped: rows.length === MAX_EXPORT_ROWS,
@@ -102,11 +108,41 @@ export async function GET(request: Request) {
       })),
     };
     const res = NextResponse.json(payload);
-    res.headers.set(
-      "content-disposition",
-      `attachment; filename="torqa-audit-${new Date().toISOString().slice(0, 10)}.json"`
-    );
+    res.headers.set("content-disposition", `attachment; filename="torqa-audit-${today}.json"`);
     return attachRequestIdHeader(res, requestId);
+  }
+
+  if (format === "pdf") {
+    try {
+      const buf = await generateAuditReportPdfBuffer({
+        generated_at: new Date().toISOString(),
+        scope: scopeShape,
+        filters: { since, until, decisionType, actor },
+        rows: rows.map((r) => ({
+          id: r.id,
+          decision_type: r.decision_type,
+          finding_signature: r.finding_signature ?? null,
+          mode: r.mode ?? null,
+          actor_user_id: r.actor_user_id,
+          actor_display_name: actors[r.actor_user_id] ?? null,
+          rationale: r.rationale ?? null,
+          created_at: r.created_at,
+        })),
+        capped: rows.length === MAX_EXPORT_ROWS,
+      });
+      return new NextResponse(new Uint8Array(buf), {
+        status: 200,
+        headers: {
+          "content-type": "application/pdf",
+          "content-disposition": `attachment; filename="torqa-audit-${today}.pdf"`,
+          "cache-control": "private, no-store",
+          "x-request-id": requestId,
+        },
+      });
+    } catch (e) {
+      console.error("[audit/export] PDF generation failed:", e);
+      return jsonErrorResponse(500, "PDF generation failed", requestId);
+    }
   }
 
   const inputs: ExportRowInput[] = rows.map((r) => ({
@@ -118,7 +154,7 @@ export async function GET(request: Request) {
     status: 200,
     headers: {
       "content-type": "text/csv; charset=utf-8",
-      "content-disposition": `attachment; filename="torqa-audit-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "content-disposition": `attachment; filename="torqa-audit-${today}.csv"`,
       "x-request-id": requestId,
     },
   });

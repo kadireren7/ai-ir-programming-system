@@ -184,7 +184,7 @@ export default function AlertsPage() {
       return;
     }
     let config: Record<string, unknown> = {};
-    if (destType === "slack" || destType === "discord") {
+    if (destType === "slack" || destType === "discord" || destType === "teams") {
       if (!webhookUrl.trim().startsWith("https://")) {
         setError("Webhook URL must start with https://");
         setSaving(false);
@@ -534,19 +534,24 @@ export default function AlertsPage() {
             >
               <option value="slack">Slack incoming webhook</option>
               <option value="discord">Discord webhook</option>
+              <option value="teams">Microsoft Teams webhook</option>
               <option value="webhook">HTTPS webhook (Torqa-signed JSON)</option>
               <option value="email">Email (placeholder)</option>
               <option value="in_app">In-app (workspace fanout)</option>
             </select>
           </div>
-          {destType === "slack" || destType === "discord" ? (
+          {(destType === "slack" || destType === "discord" || destType === "teams") ? (
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="ad-url">Webhook URL (https only, shown once)</Label>
               <Input
                 id="ad-url"
                 value={webhookUrl}
                 onChange={(e) => setWebhookUrl(e.target.value)}
-                placeholder="https://hooks.slack.com/..."
+                placeholder={
+                  destType === "teams"
+                    ? "https://outlook.office.com/webhookb2/..."
+                    : "https://hooks.slack.com/..."
+                }
                 autoComplete="off"
               />
             </div>
@@ -626,7 +631,7 @@ export default function AlertsPage() {
                   <p className="text-sm font-medium">{d.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {d.type}
-                    {d.type === "slack" || d.type === "discord" ? (
+                    {(d.type === "slack" || d.type === "discord" || d.type === "teams") ? (
                       <> · webhook {d.config.webhookConfigured ? "on file" : "not set"}</>
                     ) : null}
                     {d.type === "email" ? (

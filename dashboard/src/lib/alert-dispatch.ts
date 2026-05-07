@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ScanApiSuccess } from "@/lib/scan-engine";
 import { notifyWorkspaceMembers } from "@/lib/workspace-activity";
 import type { AlertDestinationType, AlertRuleTrigger } from "@/lib/alerts";
-import { validateDiscordWebhookUrlForOutbound, validateSlackWebhookUrlForOutbound } from "@/lib/webhook-ssrf";
+import { validateDiscordWebhookUrlForOutbound, validateSlackWebhookUrlForOutbound, validateTeamsWebhookUrlForOutbound } from "@/lib/webhook-ssrf";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { postSignedGovernanceWebhook } from "@/lib/governance-signals";
 import { isAlertRuleTrigger } from "@/lib/alerts";
@@ -89,6 +89,7 @@ const VALID_DESTINATION_TYPES = new Set<AlertDestinationType>([
   "in_app",
   "slack",
   "discord",
+  "teams",
   "email",
   "webhook",
 ]);
@@ -174,6 +175,24 @@ async function postDiscordWebhook(url: string, content: string): Promise<Respons
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),
+      signal: ac.signal,
+    });
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function postTeamsWebhook(url: string, text: string): Promise<Response | null> {
+  if (!validateTeamsWebhookUrlForOutbound(url).ok) return null;
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 5000);
+  try {
+    return await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ "@type": "MessageCard", "@context": "http://schema.org/extensions", text }),
       signal: ac.signal,
     });
   } catch {
@@ -285,6 +304,14 @@ export async function deliverToDestination(
       const res = await postDiscordWebhook(url, `**${title}**\n${body}`);
       if (!res) return { ok: false, error: "Discord webhook failed validation or network error" };
       if (!res.ok) return { ok: false, error: `Discord HTTP ${res.status}` };
+      return { ok: true };
+    }
+    case "teams": {
+      const url = typeof dest.config.webhookUrl === "string" ? dest.config.webhookUrl.trim() : "";
+      if (!url) return { ok: false, error: "missing webhookUrl" };
+      const res = await postTeamsWebhook(url, `${title}\n${body}`);
+      if (!res) return { ok: false, error: "Teams webhook failed validation or network error" };
+      if (!res.ok) return { ok: false, error: `Teams HTTP ${res.status}` };
       return { ok: true };
     }
     case "email": {

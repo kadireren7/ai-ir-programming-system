@@ -1,0 +1,164 @@
+import PDFDocument from "pdfkit";
+
+export type AuditExportRow = {
+  id: string;
+  decision_type: string;
+  finding_signature: string | null;
+  mode: string | null;
+  actor_user_id: string;
+  actor_display_name: string | null;
+  rationale: string | null;
+  created_at: string;
+};
+
+export type AuditReportPdfModel = {
+  generated_at: string;
+  scope: { type: "organization"; id: string } | { type: "personal"; userId: string };
+  filters: {
+    since: string | null;
+    until: string | null;
+    decisionType: string | null;
+    actor: string | null;
+  };
+  rows: AuditExportRow[];
+  capped: boolean;
+};
+
+const PAGE_MARGIN = 48;
+
+function cw(doc: InstanceType<typeof PDFDocument>): number {
+  return doc.page.width - PAGE_MARGIN * 2;
+}
+
+function heading(doc: InstanceType<typeof PDFDocument>, text: string) {
+  doc.moveDown(0.8);
+  doc.fontSize(10).fillColor("#0f766e").text(text.toUpperCase(), { width: cw(doc) });
+  doc.moveDown(0.3);
+  doc.fillColor("#0f172a");
+}
+
+function kv(doc: InstanceType<typeof PDFDocument>, key: string, value: string) {
+  doc.fontSize(9).fillColor("#64748b").text(`${key}: `, { continued: true, width: cw(doc) });
+  doc.fillColor("#0f172a").text(value);
+}
+
+function toneColor(decisionType: string): string {
+  if (decisionType === "apply_fix" || decisionType === "approve_fix") return "#0d9488";
+  if (decisionType === "accept_risk") return "#d97706";
+  if (decisionType === "reject_fix" || decisionType === "revoke_risk") return "#dc2626";
+  if (decisionType === "mode_change") return "#0369a1";
+  return "#334155";
+}
+
+/**
+ * Generates a Torqa governance audit report PDF buffer.
+ * pdfkit — no headless browser; Vercel-compatible.
+ */
+export function generateAuditReportPdfBuffer(model: AuditReportPdfModel): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({
+      margin: PAGE_MARGIN,
+      size: "LETTER",
+      info: {
+        Title: "Torqa Governance Audit Report",
+        Author: "Torqa",
+        Subject: "Governance decisions export",
+      },
+    });
+
+    const chunks: Buffer[] = [];
+    doc.on("data", (c: Buffer) => chunks.push(c));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+
+    // Header
+    doc.fontSize(22).fillColor("#0d9488").text("Torqa");
+    doc.moveDown(0.15);
+    doc.fontSize(16).fillColor("#0f172a").text("Governance Audit Report");
+    doc.moveDown(0.4);
+    doc.fontSize(9).fillColor("#64748b").text(`Generated: ${new Date(model.generated_at).toUTCString()}`);
+    doc.moveDown(0.2);
+    const scopeLabel =
+      model.scope.type === "organization"
+        ? `Organization ${model.scope.id}`
+        : `Personal workspace`;
+    doc.fontSize(9).fillColor("#64748b").text(`Scope: ${scopeLabel}`);
+
+    if (model.filters.since || model.filters.until) {
+      const range = [
+        model.filters.since ? `from ${model.filters.since.slice(0, 10)}` : "",
+        model.filters.until ? `to ${model.filters.until.slice(0, 10)}` : "",
+      ].filter(Boolean).join(" ");
+      doc.fontSize(9).fillColor("#64748b").text(`Date range: ${range}`);
+    }
+
+    doc.moveDown(0.3);
+    doc.fontSize(9).fillColor("#64748b").text(
+      `Total decisions: ${model.rows.length}${model.capped ? " (export capped at 5000 rows)" : ""}`
+    );
+
+    // Divider
+    doc.moveDown(0.6);
+    doc
+      .strokeColor("#e2e8f0")
+      .lineWidth(1)
+      .moveTo(PAGE_MARGIN, doc.y)
+      .lineTo(doc.page.width - PAGE_MARGIN, doc.y)
+      .stroke();
+
+    heading(doc, "Decisions");
+
+    const MAX_IN_PDF = 500;
+    const visibleRows = model.rows.slice(0, MAX_IN_PDF);
+
+    for (const row of visibleRows) {
+      const actor = row.actor_display_name ?? row.actor_user_id.slice(0, 8);
+      const when = new Date(row.created_at).toUTCString();
+      const type = row.decision_type.replace(/_/g, " ");
+
+      doc.moveDown(0.4);
+      doc
+        .fontSize(9)
+        .fillColor(toneColor(row.decision_type))
+        .text(type.toUpperCase(), { width: cw(doc) });
+      doc.fillColor("#0f172a");
+
+      if (row.finding_signature) {
+        doc
+          .fontSize(8)
+          .fillColor("#475569")
+          .font("Courier")
+          .text(row.finding_signature.slice(0, 80), { width: cw(doc) });
+        doc.font("Helvetica");
+      }
+
+      kv(doc, "Actor", actor);
+      kv(doc, "Mode", row.mode ?? "—");
+      kv(doc, "When", when);
+      if (row.rationale) kv(doc, "Rationale", row.rationale.slice(0, 200));
+
+      doc
+        .strokeColor("#f1f5f9")
+        .lineWidth(0.5)
+        .moveTo(PAGE_MARGIN, doc.y + 4)
+        .lineTo(doc.page.width - PAGE_MARGIN, doc.y + 4)
+        .stroke();
+    }
+
+    if (model.rows.length > MAX_IN_PDF) {
+      doc.moveDown(0.8);
+      doc.fontSize(9).fillColor("#64748b").text(
+        `PDF truncated at ${MAX_IN_PDF} decisions. Use JSON/CSV export for full data.`
+      );
+    }
+
+    // Footer on last page
+    doc.moveDown(1.5);
+    doc
+      .fontSize(8)
+      .fillColor("#94a3b8")
+      .text("Generated by Torqa Governance Engine · torqa.dev", { align: "center" });
+
+    doc.end();
+  });
+}

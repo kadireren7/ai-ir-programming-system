@@ -38,6 +38,18 @@ export async function fetchIntegrationWorkflows(integrationId: string): Promise<
     return fetchAiAgentWorkflows(integrationId, row as { config: unknown });
   }
 
+  if (provider === "zapier") {
+    return fetchZapierWorkflows(integrationId, row as { config: unknown; token_id: unknown });
+  }
+
+  if (provider === "make") {
+    return fetchMakeWorkflows(integrationId, row as { config: unknown; token_id: unknown });
+  }
+
+  if (provider === "pipedream") {
+    return fetchPipedreamWorkflows(integrationId, row as { token_id: unknown });
+  }
+
   return { ok: false, error: `Provider "${provider}" does not support scheduled workflow scanning yet` };
 }
 
@@ -216,4 +228,150 @@ function fetchAiAgentWorkflows(
     }));
 
   return { ok: true, provider: "ai-agent", integrationId, workflows };
+}
+
+async function fetchZapierWorkflows(
+  integrationId: string,
+  row: { config: unknown; token_id: unknown }
+): Promise<IntegrationFetchResult> {
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Admin client not configured" };
+
+  let apiKey = "";
+  if (typeof row.token_id === "string" && row.token_id) {
+    const { data: tokenRow } = await admin
+      .from("provider_tokens").select("encrypted_token").eq("id", row.token_id).single();
+    if (tokenRow?.encrypted_token) {
+      try { apiKey = decryptToken(tokenRow.encrypted_token); } catch { /* */ }
+    }
+  }
+  if (!apiKey) return { ok: false, error: "Could not resolve Zapier API key" };
+
+  const cfg = row.config && typeof row.config === "object" && !Array.isArray(row.config)
+    ? (row.config as Record<string, unknown>) : {};
+  const authMethod = typeof cfg.authMethod === "string" ? cfg.authMethod : "apikey";
+
+  const ac = new AbortController();
+  const timeout = setTimeout(() => ac.abort(), 15_000);
+  try {
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (authMethod === "oauth") {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    } else {
+      headers["X-API-Key"] = apiKey;
+    }
+    const res = await fetch("https://api.zapier.com/v1/zaps?limit=100&status=on", {
+      headers,
+      signal: ac.signal,
+    });
+    if (!res.ok) return { ok: false, error: `Zapier API ${res.status}` };
+    const data = (await res.json()) as { results?: unknown[] };
+    const raw = data.results ?? [];
+    const workflows: FetchedWorkflow[] = raw
+      .filter((z): z is Record<string, unknown> => z !== null && typeof z === "object" && !Array.isArray(z))
+      .map((z) => ({
+        id: typeof z.id === "string" ? z.id : String(z.id ?? ""),
+        name: typeof z.title === "string" && z.title.trim() ? z.title.trim() : "Unnamed Zap",
+        content: z,
+      }));
+    return { ok: true, provider: "zapier", integrationId, workflows };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Zapier fetch failed" };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchMakeWorkflows(
+  integrationId: string,
+  row: { config: unknown; token_id: unknown }
+): Promise<IntegrationFetchResult> {
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Admin client not configured" };
+
+  const cfg = row.config && typeof row.config === "object" && !Array.isArray(row.config)
+    ? (row.config as Record<string, unknown>) : {};
+  const zone = typeof cfg.zone === "string" ? cfg.zone : "eu1";
+  const teamId = typeof cfg.teamId === "string" ? cfg.teamId : null;
+  const domain = `https://${zone}.make.com`;
+
+  let apiKey = "";
+  if (typeof row.token_id === "string" && row.token_id) {
+    const { data: tokenRow } = await admin
+      .from("provider_tokens").select("encrypted_token").eq("id", row.token_id).single();
+    if (tokenRow?.encrypted_token) {
+      try { apiKey = decryptToken(tokenRow.encrypted_token); } catch { /* */ }
+    }
+  }
+  if (!apiKey) return { ok: false, error: "Could not resolve Make API key" };
+
+  const scenariosUrl = teamId
+    ? `${domain}/api/v2/scenarios?teamId=${teamId}&pg%5Blimit%5D=100`
+    : `${domain}/api/v2/scenarios?pg%5Blimit%5D=100`;
+
+  const ac = new AbortController();
+  const timeout = setTimeout(() => ac.abort(), 15_000);
+  try {
+    const res = await fetch(scenariosUrl, {
+      headers: { Authorization: `Token ${apiKey}`, Accept: "application/json" },
+      signal: ac.signal,
+    });
+    if (!res.ok) return { ok: false, error: `Make API ${res.status}` };
+    const data = (await res.json()) as { scenarios?: unknown[] };
+    const raw = data.scenarios ?? [];
+    const workflows: FetchedWorkflow[] = raw
+      .filter((s): s is Record<string, unknown> => s !== null && typeof s === "object" && !Array.isArray(s))
+      .map((s) => ({
+        id: typeof s.id === "string" ? s.id : String(s.id ?? ""),
+        name: typeof s.name === "string" && s.name.trim() ? s.name.trim() : "Unnamed Scenario",
+        content: s,
+      }));
+    return { ok: true, provider: "make", integrationId, workflows };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Make fetch failed" };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchPipedreamWorkflows(
+  integrationId: string,
+  row: { token_id: unknown }
+): Promise<IntegrationFetchResult> {
+  const admin = createAdminClient();
+  if (!admin) return { ok: false, error: "Admin client not configured" };
+
+  let apiKey = "";
+  if (typeof row.token_id === "string" && row.token_id) {
+    const { data: tokenRow } = await admin
+      .from("provider_tokens").select("encrypted_token").eq("id", row.token_id).single();
+    if (tokenRow?.encrypted_token) {
+      try { apiKey = decryptToken(tokenRow.encrypted_token); } catch { /* */ }
+    }
+  }
+  if (!apiKey) return { ok: false, error: "Could not resolve Pipedream API key" };
+
+  const ac = new AbortController();
+  const timeout = setTimeout(() => ac.abort(), 15_000);
+  try {
+    const res = await fetch("https://api.pipedream.com/v1/users/me/workflows?limit=100", {
+      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+      signal: ac.signal,
+    });
+    if (!res.ok) return { ok: false, error: `Pipedream API ${res.status}` };
+    const data = (await res.json()) as { data?: unknown[] };
+    const raw = data.data ?? [];
+    const workflows: FetchedWorkflow[] = raw
+      .filter((w): w is Record<string, unknown> => w !== null && typeof w === "object" && !Array.isArray(w))
+      .map((w) => ({
+        id: typeof w.id === "string" ? w.id : String(w.id ?? ""),
+        name: typeof w.name === "string" && w.name.trim() ? w.name.trim() : "Unnamed Workflow",
+        content: w,
+      }));
+    return { ok: true, provider: "pipedream", integrationId, workflows };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Pipedream fetch failed" };
+  } finally {
+    clearTimeout(timeout);
+  }
 }

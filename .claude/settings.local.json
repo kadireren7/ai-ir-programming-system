@@ -28,7 +28,10 @@
       "Bash(npm install *)",
       "Bash(python -m pytest tests/ -q)",
       "Bash(python -m py_compile src/torqa/cli/io.py src/torqa/integrations/registry.py tests/test_adapter_registry.py)",
-      "Bash(ruff check *)"
+      "Bash(ruff check *)",
+      "Bash(git diff *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\kadir\\\\Desktop\\\\Project-X\\\\dashboard\\\\src\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

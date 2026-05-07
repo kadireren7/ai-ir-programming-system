@@ -11,6 +11,7 @@ import {
   Scale,
   Shield,
   Sparkles,
+  Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,8 @@ import { getHomeDashboardData } from "@/data/home-metrics";
 import { cn } from "@/lib/utils";
 import { OverviewFirstRun } from "@/components/onboarding/overview-first-run";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +48,55 @@ function formatRatio(pass: number, fail: number): string {
   return `${Math.round(pass / d)} : ${Math.round(fail / d)}`;
 }
 
+type GovernanceDecisionRow = {
+  id: string;
+  decision_type: string;
+  finding_signature: string | null;
+  rationale: string | null;
+  mode: string | null;
+  created_at: string;
+};
+
+async function getRecentDecisions(): Promise<GovernanceDecisionRow[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from("governance_decisions")
+    .select("id, decision_type, finding_signature, rationale, mode, created_at")
+    .order("created_at", { ascending: false })
+    .limit(10);
+  return (data ?? []) as GovernanceDecisionRow[];
+}
+
+function decisionLabel(type: string): { label: string; tone: string } {
+  const map: Record<string, { label: string; tone: string }> = {
+    apply_fix: { label: "Fix applied", tone: "text-emerald-400" },
+    accept_risk: { label: "Risk accepted", tone: "text-amber-400" },
+    revoke_risk: { label: "Risk revoked", tone: "text-muted-foreground" },
+    approve_fix: { label: "Fix approved", tone: "text-emerald-400" },
+    reject_fix: { label: "Fix rejected", tone: "text-red-400" },
+    mode_change: { label: "Mode changed", tone: "text-cyan-400" },
+    interactive_response: { label: "Response recorded", tone: "text-muted-foreground" },
+  };
+  return map[type] ?? { label: type, tone: "text-muted-foreground" };
+}
+
+function timeAgoShort(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "now";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+
 export default async function DashboardOverviewPage() {
-  const home = await getHomeDashboardData();
+  const [home, recentDecisions] = await Promise.all([
+    getHomeDashboardData(),
+    getRecentDecisions(),
+  ]);
   const totalOutcomes = home.passCount + home.failCount + home.reviewCount;
   const passRatePct =
     totalOutcomes > 0 ? Math.round((home.passCount / totalOutcomes) * 100) : null;
@@ -286,6 +336,56 @@ export default async function DashboardOverviewPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Governance Activity Feed */}
+      {recentDecisions.length > 0 && (
+        <Card className="border-border/80 bg-card/40 shadow-md ring-1 ring-black/[0.06] dark:ring-white/[0.06]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Zap className="h-4 w-4 text-cyan-400" aria-hidden />
+                Governance Activity
+              </CardTitle>
+              <CardDescription>Last 10 governance decisions across your workspace.</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" asChild className="border-border/80">
+              <Link href="/audit">Full audit log</Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="px-0 pb-2 pt-0">
+            <div className="divide-y divide-border/40">
+              {recentDecisions.map((d) => {
+                const { label, tone } = decisionLabel(d.decision_type);
+                return (
+                  <div key={d.id} className="flex items-start justify-between gap-4 px-6 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <span className={`text-xs font-medium ${tone}`}>{label}</span>
+                      {d.finding_signature && (
+                        <code className="ml-2 font-mono text-[10px] text-muted-foreground">
+                          {d.finding_signature.length > 40
+                            ? `${d.finding_signature.slice(0, 40)}…`
+                            : d.finding_signature}
+                        </code>
+                      )}
+                      {d.rationale && (
+                        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{d.rationale}</p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2 text-[10px] text-muted-foreground">
+                      {d.mode && (
+                        <span className="rounded-full border border-border/40 bg-muted/20 px-1.5 py-0.5 capitalize">
+                          {d.mode}
+                        </span>
+                      )}
+                      <span>{timeAgoShort(d.created_at)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-border/80 bg-card/40 shadow-md ring-1 ring-black/[0.06] dark:ring-white/[0.06]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">

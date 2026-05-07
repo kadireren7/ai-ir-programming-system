@@ -8,6 +8,7 @@ import {
   BarChart3,
   Settings,
   ScrollText,
+  Code2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,6 +32,7 @@ export const mainNavItems: NavItem[] = [
   { title: "Audit", href: "/audit", icon: ScrollText, badge: "new" },
   { title: "Automations", href: "/automations", icon: Zap },
   { title: "Reports", href: "/reports", icon: BarChart3 },
+  { title: "Developer", href: "/developer", icon: Code2 },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -63,5 +65,6 @@ export function titleForPath(pathname: string): string {
   if (pathname.startsWith("/workflow-library")) return "Workflows";
   if (pathname.startsWith("/validation")) return "Validation";
   if (pathname.startsWith("/notifications")) return "Settings";
+  if (pathname.startsWith("/developer")) return "Developer";
   return "Torqa";
 }

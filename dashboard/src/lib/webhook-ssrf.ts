@@ -7,6 +7,7 @@ export const WEBHOOK_URL_MAX_LENGTH = 2048;
 
 const SLACK_HOST = "hooks.slack.com";
 const DISCORD_HOSTS = new Set(["discord.com", "discordapp.com"]);
+const TEAMS_HOSTS = new Set(["outlook.office.com", "outlook.office365.com"]);
 
 function parsedHttpsUrl(url: string): URL | null {
   const trimmed = url.trim();
@@ -52,11 +53,25 @@ export function validateDiscordWebhookUrlForOutbound(url: string): { ok: true } 
   return { ok: true };
 }
 
+export function validateTeamsWebhookUrlForOutbound(url: string): { ok: true } | { ok: false; message: string } {
+  const u = parsedHttpsUrl(url);
+  if (!u) return { ok: false, message: "Teams webhook must be a valid https URL" };
+  if (!TEAMS_HOSTS.has(u.hostname.toLowerCase())) {
+    return { ok: false, message: "Teams webhook host must be outlook.office.com or outlook.office365.com" };
+  }
+  if (!u.pathname.startsWith("/webhookb2/")) {
+    return { ok: false, message: "Teams webhook path must start with /webhookb2/" };
+  }
+  return { ok: true };
+}
+
 export function validateWebhookUrlForDestination(
-  type: "slack" | "discord",
+  type: "slack" | "discord" | "teams",
   url: string
 ): { ok: true } | { ok: false; message: string } {
-  return type === "slack" ? validateSlackWebhookUrlForOutbound(url) : validateDiscordWebhookUrlForOutbound(url);
+  if (type === "slack") return validateSlackWebhookUrlForOutbound(url);
+  if (type === "teams") return validateTeamsWebhookUrlForOutbound(url);
+  return validateDiscordWebhookUrlForOutbound(url);
 }
 
 /**

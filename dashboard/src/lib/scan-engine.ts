@@ -779,6 +779,46 @@ function analyzeAiAgent(content: unknown): ScanFinding[] {
     pushFinding(out, "review", "v1.agent.no_model_specified", "agent.model", "Agent definition does not specify which model to use, risking inconsistent governance posture.", "Specify the model explicitly and pin to a tested version.");
   }
 
+  // v2: Tool chain escalation — network + file_write = exfil chain
+  const hasNetwork = tools.some((t) => {
+    const n = isRecord(t) ? (typeof t.name === "string" ? t.name : "") : String(t);
+    return /(browse|web_search|fetch_url|http_request|curl)/i.test(n);
+  });
+  const hasFileWrite = tools.some((t) => {
+    const n = isRecord(t) ? (typeof t.name === "string" ? t.name : "") : String(t);
+    return /(file_write|write_file|save_file)/i.test(n);
+  });
+  if (hasNetwork && hasFileWrite) {
+    pushFinding(out, "critical", "v1.agent.exfil_chain", "agent.tools", "Agent has both network access and file-write tools — this combination enables data exfiltration.", "Separate these capabilities into isolated agents with distinct scopes and approval gates.");
+  }
+
+  // v2: High temperature — non-deterministic behavior risk
+  const temperature = typeof (content as Record<string, unknown>).temperature === "number"
+    ? (content as Record<string, unknown>).temperature as number
+    : null;
+  if (temperature !== null && temperature > 0.9) {
+    pushFinding(out, "review", "v1.agent.high_temperature", "agent.temperature", `Agent temperature is ${temperature} — high randomness increases non-deterministic governance behavior.`, "Use temperature ≤ 0.7 for production agents. Reserve high temperature for creative tasks only.");
+  }
+
+  // v2: Missing output filter / content moderation
+  const hasOutputFilter = isRecord(content) && (
+    typeof (content as Record<string, unknown>).outputFilter !== "undefined" ||
+    typeof (content as Record<string, unknown>).contentPolicy !== "undefined" ||
+    typeof (content as Record<string, unknown>).safetySettings !== "undefined"
+  );
+  if (!hasOutputFilter && tools.some((t) => {
+    const n = isRecord(t) ? (typeof t.name === "string" ? t.name : "") : String(t);
+    return /(send_email|post_webhook|slack|discord|telegram|publish|post|notify)/i.test(n);
+  })) {
+    pushFinding(out, "high", "v1.agent.missing_output_filter", "agent", "Agent can send external messages but has no output filtering or content policy defined.", "Add outputFilter or contentPolicy to prevent harmful/unintended content from being sent.");
+  }
+
+  // v2: Max tokens not set on an agent with side-effect tools
+  const maxTokens = (content as Record<string, unknown>).maxTokens ?? (content as Record<string, unknown>).max_tokens;
+  if (maxTokens === undefined && tools.length > 5) {
+    pushFinding(out, "review", "v1.agent.unbounded_context", "agent.maxTokens", "Agent has no maxTokens limit — runaway context consumption can trigger unexpected cost spikes.", "Set maxTokens to bound context usage and prevent resource exhaustion.");
+  }
+
   if (out.filter((f) => f.severity === "critical" || f.severity === "high").length === 0 && out.length === 0) {
     pushFinding(out, "info", "v1.agent.no_critical_risk", "agent", "No high-signal governance risks detected in this AI agent definition.", "Continuously review tool scope as agent capabilities expand.");
   }

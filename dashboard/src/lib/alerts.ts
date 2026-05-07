@@ -1,4 +1,4 @@
-export type AlertDestinationType = "in_app" | "slack" | "discord" | "email" | "webhook";
+export type AlertDestinationType = "in_app" | "slack" | "discord" | "teams" | "email" | "webhook";
 
 export type AlertRuleTrigger =
   // scan triggers
@@ -36,6 +36,7 @@ export function isAlertDestinationType(v: unknown): v is AlertDestinationType {
     v === "in_app" ||
     v === "slack" ||
     v === "discord" ||
+    v === "teams" ||
     v === "email" ||
     v === "webhook"
   );
@@ -62,7 +63,7 @@ export function maskDestinationConfig(
   config: Record<string, unknown>
 ): Record<string, unknown> {
   const out = { ...config };
-  if (type === "slack" || type === "discord") {
+  if (type === "slack" || type === "discord" || type === "teams") {
     delete out.webhookUrl;
     out.webhookConfigured = Boolean(
       typeof config.webhookUrl === "string" && (config.webhookUrl as string).trim().length > 0

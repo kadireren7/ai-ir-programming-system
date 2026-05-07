@@ -16,6 +16,10 @@ import {
   Puzzle,
   Zap,
   Bot,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  RefreshCcw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +31,9 @@ import { connectorRegistry } from "@/lib/connectors";
 import { ProviderCard } from "@/components/provider-card";
 import { N8nConnectPanel } from "@/components/n8n-connect-panel";
 import { AiAgentScanPanel } from "@/components/ai-agent-scan-panel";
+import { ZapierConnectPanel } from "@/components/zapier-connect-panel";
+import { MakeConnectPanel } from "@/components/make-connect-panel";
+import { PipedreamConnectPanel } from "@/components/pipedream-connect-panel";
 import type { IntegrationProvider, IntegrationStatus } from "@/lib/integrations";
 
 const useCloud = hasPublicSupabaseUrl();
@@ -59,16 +66,43 @@ export default function SourcesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(searchParams.get("error"));
-  const [message, setMessage] = useState<string | null>(
-    searchParams.get("connected") === "github" ? "GitHub connected successfully." : null
-  );
+  const [message, setMessage] = useState<string | null>(() => {
+    const c = searchParams.get("connected");
+    if (c === "github") return "GitHub connected successfully.";
+    if (c === "zapier") return "Zapier connected successfully.";
+    return null;
+  });
 
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [syncingAll, setSyncingAll] = useState(false);
+  const [health, setHealth] = useState<Record<string, { health: string; workflowCount: number; lastSync: { at: string; added: number; updated: number } | null }>>({});
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [formName, setFormName] = useState("");
   const [n8nPanelOpen, setN8nPanelOpen] = useState(false);
   const [aiAgentPanelOpen, setAiAgentPanelOpen] = useState(false);
+  const [zapierPanelOpen, setZapierPanelOpen] = useState(false);
+  const [makePanelOpen, setMakePanelOpen] = useState(false);
+  const [pipedreamPanelOpen, setPipedreamPanelOpen] = useState(false);
+
+  const loadHealth = useCallback(async (connectedItems: IntegrationRow[]) => {
+    if (!useCloud || connectedItems.length === 0) return;
+    const results = await Promise.allSettled(
+      connectedItems.map(async (item) => {
+        const res = await fetch(`/api/integrations/${item.id}/health`, { credentials: "include" });
+        if (!res.ok) return null;
+        const j = await res.json() as { health: string; workflowCount: number; lastSync: { at: string; added: number; updated: number } | null };
+        return { id: item.id, data: j };
+      })
+    );
+    const map: typeof health = {};
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value) {
+        map[r.value.id] = r.value.data;
+      }
+    }
+    setHealth(map);
+  }, []);
 
   const load = useCallback(async () => {
     if (!useCloud) { setLoading(false); return; }
@@ -78,10 +112,12 @@ export default function SourcesPage() {
       const res = await fetch("/api/integrations", { credentials: "include" });
       const j = (await res.json()) as { integrations?: IntegrationRow[]; error?: string };
       if (!res.ok) { setError(j.error ?? "Could not load sources"); setItems([]); return; }
+      const connectedItems = (j.integrations ?? []).filter((i) => i.status === "connected");
       setItems(j.integrations ?? []);
+      void loadHealth(connectedItems);
     } catch { setError("Network error"); setItems([]); }
     finally { setLoading(false); }
-  }, []);
+  }, [loadHealth]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -97,6 +133,18 @@ export default function SourcesPage() {
     }
     if (id === "ai-agent") {
       setAiAgentPanelOpen(true);
+      return;
+    }
+    if (id === "zapier") {
+      setZapierPanelOpen(true);
+      return;
+    }
+    if (id === "make") {
+      setMakePanelOpen(true);
+      return;
+    }
+    if (id === "pipedream") {
+      setPipedreamPanelOpen(true);
       return;
     }
     setConnectingId(id);
@@ -163,6 +211,17 @@ export default function SourcesPage() {
   const n8nBaseUrl = typeof n8nRow?.config?.baseUrl === "string" ? n8nRow.config.baseUrl : undefined;
   const n8nApiKeyMask = typeof n8nRow?.config?.apiKeyMask === "string" ? n8nRow.config.apiKeyMask : undefined;
 
+  const zapierRow = useMemo(() => items.find((i) => i.provider === "zapier"), [items]);
+  const zapierMask = typeof zapierRow?.config?.apiKeyMask === "string" ? zapierRow.config.apiKeyMask : undefined;
+  const zapierAuthMethod = typeof zapierRow?.config?.authMethod === "string" ? zapierRow.config.authMethod : undefined;
+
+  const makeRow = useMemo(() => items.find((i) => i.provider === "make"), [items]);
+  const makeMask = typeof makeRow?.config?.apiKeyMask === "string" ? makeRow.config.apiKeyMask : undefined;
+  const makeZone = typeof makeRow?.config?.zone === "string" ? makeRow.config.zone : undefined;
+
+  const pipedreamRow = useMemo(() => items.find((i) => i.provider === "pipedream"), [items]);
+  const pipedreamMask = typeof pipedreamRow?.config?.apiKeyMask === "string" ? pipedreamRow.config.apiKeyMask : undefined;
+
   const syncSource = async (id: string) => {
     setSyncingId(id);
     try {
@@ -183,6 +242,46 @@ export default function SourcesPage() {
       await fetch(`/api/integrations/${n8nRow.id}`, { method: "DELETE", credentials: "include" });
       await load();
     } finally { setSaving(false); }
+  };
+
+  const disconnectZapier = async () => {
+    if (!zapierRow) return;
+    setSaving(true);
+    try {
+      await fetch(`/api/integrations/${zapierRow.id}`, { method: "DELETE", credentials: "include" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const disconnectMake = async () => {
+    if (!makeRow) return;
+    setSaving(true);
+    try {
+      await fetch(`/api/integrations/${makeRow.id}`, { method: "DELETE", credentials: "include" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const disconnectPipedream = async () => {
+    if (!pipedreamRow) return;
+    setSaving(true);
+    try {
+      await fetch(`/api/integrations/${pipedreamRow.id}`, { method: "DELETE", credentials: "include" });
+      await load();
+    } finally { setSaving(false); }
+  };
+
+  const syncAll = async () => {
+    setSyncingAll(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/integrations/sync/all", { method: "POST", credentials: "include" });
+      const j = (await res.json()) as { ok?: boolean; totalAdded?: number; totalUpdated?: number; succeeded?: number; failed?: number; error?: string };
+      if (!res.ok) { setError(j.error ?? "Sync all failed"); return; }
+      setMessage(`Sync all complete — ${j.totalAdded ?? 0} added, ${j.totalUpdated ?? 0} updated across ${j.succeeded ?? 0} sources.`);
+      await load();
+    } catch { setError("Network error"); }
+    finally { setSyncingAll(false); }
   };
 
   const availableConnectors = connectorRegistry.filter((c) => c.status !== "coming_soon");
@@ -299,6 +398,16 @@ export default function SourcesPage() {
           <div className="flex items-center gap-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Connected</p>
             <div className="h-px flex-1 bg-border/40" />
+            {items.some((i) => i.status === "connected") && (
+              <Button
+                size="sm" variant="outline" className="h-7 gap-1.5 text-xs"
+                disabled={syncingAll}
+                onClick={() => void syncAll()}
+              >
+                <RefreshCcw className={`h-3 w-3 ${syncingAll ? "animate-spin" : ""}`} />
+                {syncingAll ? "Syncing all…" : "Sync all"}
+              </Button>
+            )}
           </div>
           {loading ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -313,6 +422,9 @@ export default function SourcesPage() {
             <div className="overflow-hidden rounded-xl border border-border/50">
               {items.map((row, i) => {
                 const Icon = ROW_ICONS[row.provider] ?? Cable;
+                const h = health[row.id];
+                const HealthIcon = h?.health === "healthy" ? CheckCircle2 : h?.health === "degraded" ? AlertTriangle : XCircle;
+                const healthColor = h?.health === "healthy" ? "text-emerald-400" : h?.health === "degraded" ? "text-amber-400" : "text-muted-foreground";
                 return (
                   <div
                     key={row.id}
@@ -327,8 +439,15 @@ export default function SourcesPage() {
                         <p className="text-xs text-muted-foreground">
                           {row.provider}
                           {typeof row.config.baseUrl === "string" ? ` · ${row.config.baseUrl}` : ""}
+                          {h?.workflowCount != null ? ` · ${h.workflowCount} workflow${h.workflowCount !== 1 ? "s" : ""}` : ""}
+                          {h?.lastSync ? ` · synced ${new Date(h.lastSync.at).toLocaleDateString()}` : ""}
                         </p>
                       </div>
+                      {h && row.status === "connected" && (
+                        <span title={h.health}>
+                          <HealthIcon className={`h-3.5 w-3.5 shrink-0 ${healthColor}`} />
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge
@@ -392,6 +511,32 @@ export default function SourcesPage() {
         existingApiKeyMask={n8nApiKeyMask}
         onDisconnect={n8nRow ? disconnectN8n : undefined}
         onSaved={() => { void load(); setMessage("n8n connected."); }}
+      />
+
+      <ZapierConnectPanel
+        open={zapierPanelOpen}
+        onClose={() => setZapierPanelOpen(false)}
+        existingMask={zapierMask}
+        existingAuthMethod={zapierAuthMethod}
+        onDisconnect={zapierRow ? disconnectZapier : undefined}
+        onSaved={() => { void load(); setMessage("Zapier connected."); }}
+      />
+
+      <MakeConnectPanel
+        open={makePanelOpen}
+        onClose={() => setMakePanelOpen(false)}
+        existingMask={makeMask}
+        existingZone={makeZone}
+        onDisconnect={makeRow ? disconnectMake : undefined}
+        onSaved={() => { void load(); setMessage("Make connected."); }}
+      />
+
+      <PipedreamConnectPanel
+        open={pipedreamPanelOpen}
+        onClose={() => setPipedreamPanelOpen(false)}
+        existingMask={pipedreamMask}
+        onDisconnect={pipedreamRow ? disconnectPipedream : undefined}
+        onSaved={() => { void load(); setMessage("Pipedream connected."); }}
       />
     </div>
   );

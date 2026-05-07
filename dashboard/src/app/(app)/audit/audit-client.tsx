@@ -297,6 +297,7 @@ export function AuditClient() {
   }, [actorFilter, signatureFilter, sinceFilter, typeFilter, untilFilter]);
 
   const exportJsonUrl = useMemo(() => exportUrl.replace("format=csv", "format=json"), [exportUrl]);
+  const exportPdfUrl = useMemo(() => exportUrl.replace("format=csv", "format=pdf"), [exportUrl]);
 
   const totals = stats?.totals ?? {};
   const byDay = stats?.byDay ?? [];
@@ -462,6 +463,11 @@ export function AuditClient() {
               <Button asChild size="sm" variant="ghost" className="h-8 text-xs">
                 <a href={exportJsonUrl} download>
                   JSON
+                </a>
+              </Button>
+              <Button asChild size="sm" variant="ghost" className="h-8 text-xs">
+                <a href={exportPdfUrl} download>
+                  PDF
                 </a>
               </Button>
             </span>

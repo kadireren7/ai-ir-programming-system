@@ -158,6 +158,26 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <KeyRound className="h-4 w-4 text-primary" />
+              SSO / Identity
+            </CardTitle>
+            <CardDescription>
+              Single sign-on via SAML 2.0 or OIDC. Planned for enterprise tier (v0.3).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild size="sm" variant="outline" className="gap-1.5">
+              <Link href="/settings/sso">
+                View SSO settings
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
