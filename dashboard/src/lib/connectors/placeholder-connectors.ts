@@ -51,10 +51,19 @@ export const makeConnector: Connector = {
 export const pipedreamConnector: Connector = {
   id: "pipedream",
   name: "Pipedream",
-  description: "Connect Pipedream workflows for continuous risk monitoring.",
-  status: "coming_soon",
+  description: "Connect Pipedream workflows for continuous risk monitoring. Scans components, triggers, and actions for governance violations.",
+  status: "available",
   authType: "apikey",
-  credentialFields: [],
+  credentialFields: [
+    {
+      key: "apiKey",
+      label: "API Key",
+      type: "password",
+      placeholder: "Paste your Pipedream API key",
+      required: true,
+      hint: "Pipedream → Settings → API Keys → Create key.",
+    },
+  ],
   capabilities: ["scan_workflow"],
   docsUrl: "https://pipedream.com/docs/api/",
 };

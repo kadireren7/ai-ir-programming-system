@@ -8,6 +8,8 @@ import {
   Copy,
   Download,
   FileCode2,
+  GitPullRequest,
+  Loader2,
   Shield,
   XCircle,
   Clock,
@@ -325,6 +327,88 @@ function buildPrMarkdown(result: ScanApiSuccess): string {
   return lines.join("\n");
 }
 
+function GithubIssueButton({ scanId }: { scanId: string }) {
+  const [open, setOpen] = useState(false);
+  const [owner, setOwner] = useState("");
+  const [repo, setRepo] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ url: string; number: number } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = useCallback(async () => {
+    if (!owner.trim() || !repo.trim()) return;
+    setLoading(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/fixes/github-issue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scanId, repoOwner: owner.trim(), repoName: repo.trim() }),
+      });
+      const data = await res.json() as { ok?: boolean; issueUrl?: string; issueNumber?: number; error?: string };
+      if (!res.ok || !data.ok) {
+        setErr(data.error ?? "Failed to create issue");
+      } else {
+        setResult({ url: data.issueUrl!, number: data.issueNumber! });
+      }
+    } catch {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  }, [scanId, owner, repo]);
+
+  if (!open) {
+    return (
+      <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setOpen(true)}>
+        <GitPullRequest className="h-3 w-3" />
+        GitHub Issue
+      </Button>
+    );
+  }
+
+  if (result) {
+    return (
+      <a
+        href={result.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20"
+      >
+        <GitPullRequest className="h-3 w-3" />
+        Issue #{result.number} created ↗
+      </a>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <input
+        type="text"
+        placeholder="owner"
+        value={owner}
+        onChange={(e) => setOwner(e.target.value)}
+        className="h-8 w-24 rounded-md border border-border/60 bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+      />
+      <span className="text-muted-foreground text-xs">/</span>
+      <input
+        type="text"
+        placeholder="repo"
+        value={repo}
+        onChange={(e) => setRepo(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
+        className="h-8 w-28 rounded-md border border-border/60 bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+      />
+      <Button size="sm" className="h-8 gap-1 text-xs" onClick={() => void submit()} disabled={loading || !owner || !repo}>
+        {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <GitPullRequest className="h-3 w-3" />}
+        {loading ? "Creating…" : "Open"}
+      </Button>
+      <button type="button" onClick={() => { setOpen(false); setErr(null); }} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
+      {err && <span className="text-xs text-rose-400">{err}</span>}
+    </div>
+  );
+}
+
 function ExportToolbar({ result, scanId, pdfExportUrl, pdfFilename, supabaseConfigured }: {
   result: ScanApiSuccess;
   scanId: string;
@@ -365,6 +449,7 @@ function ExportToolbar({ result, scanId, pdfExportUrl, pdfFilename, supabaseConf
           Export PDF
         </Button>
       )}
+      {supabaseConfigured && <GithubIssueButton scanId={scanId} />}
       {supabaseConfigured && (
         <ShareScanButton scanId={scanId} />
       )}

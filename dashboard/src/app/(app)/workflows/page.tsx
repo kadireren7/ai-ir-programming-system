@@ -16,7 +16,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
+  Timer,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { hasPublicSupabaseUrl } from "@/lib/env";
@@ -74,6 +77,17 @@ function DecisionBadge({ decision }: { decision: "approve" | "review" | "block" 
   );
 }
 
+function DriftBadge({ lastScannedAt }: { lastScannedAt: string | null }) {
+  if (!lastScannedAt) return null;
+  const days = Math.floor((Date.now() - new Date(lastScannedAt).getTime()) / 86_400_000);
+  if (days <= 7) return null;
+  return (
+    <span className="flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-400">
+      <Timer className="h-2.5 w-2.5" /> {days}d stale
+    </span>
+  );
+}
+
 function RiskBadge({ score }: { score: number | null }) {
   if (score === null) return null;
   const color = score >= 80 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-red-400";
@@ -98,6 +112,8 @@ export default function WorkflowsPage() {
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [syncMsg, setSyncMsg] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
 
   const loadAll = useCallback(async () => {
     if (!useCloud) { setLoading(false); return; }
@@ -144,12 +160,20 @@ export default function WorkflowsPage() {
     }
   };
 
+  const filteredIntegrations = sourceFilter === "all"
+    ? integrations
+    : integrations.filter((i) => i.id === sourceFilter);
+
   const workflowsBySource = integrations.reduce<Record<string, WorkflowRow[]>>((acc, int) => {
-    acc[int.id] = workflows.filter((w) => w.source_id === int.id);
+    acc[int.id] = workflows
+      .filter((w) => w.source_id === int.id)
+      .filter((w) => !search || w.name.toLowerCase().includes(search.toLowerCase()));
     return acc;
   }, {});
 
-  const orphanWorkflows = workflows.filter((w) => !w.source_id);
+  const orphanWorkflows = workflows
+    .filter((w) => !w.source_id)
+    .filter((w) => !search || w.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-10 pb-12">
@@ -164,6 +188,33 @@ export default function WorkflowsPage() {
 
       {error && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">{error}</p>
+      )}
+
+      {/* Search + filter bar */}
+      {useCloud && !loading && integrations.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-48 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search workflows…"
+              className="pl-8 h-8 text-sm"
+            />
+          </div>
+          {integrations.length > 1 && (
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              className="h-8 rounded-md border border-input bg-background px-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="all">All sources</option>
+              {integrations.map((i) => (
+                <option key={i.id} value={i.id}>{i.name} ({i.provider})</option>
+              ))}
+            </select>
+          )}
+        </div>
       )}
 
       {!useCloud ? (
@@ -185,7 +236,7 @@ export default function WorkflowsPage() {
         </div>
       ) : (
         <div className="space-y-10">
-          {integrations.map((integration) => {
+          {filteredIntegrations.map((integration) => {
             const Icon = SOURCE_ICONS[integration.provider] ?? Cable;
             const sourceWorkflows = workflowsBySource[integration.id] ?? [];
             const isSyncing = syncing[integration.id] ?? false;
@@ -251,13 +302,19 @@ export default function WorkflowsPage() {
                         <div className="flex items-center gap-3 min-w-0">
                           <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium leading-tight">{wf.name}</p>
+                            <Link
+                              href={`/workflows/${wf.id}`}
+                              className="truncate text-sm font-medium leading-tight hover:text-primary hover:underline"
+                            >
+                              {wf.name}
+                            </Link>
                             {wf.external_id && (
                               <p className="text-[11px] text-muted-foreground font-mono">{wf.external_id}</p>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                          <DriftBadge lastScannedAt={wf.last_scanned_at} />
                           <RiskBadge score={wf.risk_score} />
                           <DecisionBadge decision={wf.last_scan_decision} />
                           <span className="text-xs text-muted-foreground">{timeAgo(wf.last_synced_at)}</span>
@@ -287,9 +344,15 @@ export default function WorkflowsPage() {
                   >
                     <div className="flex items-center gap-3">
                       <Cable className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <p className="text-sm font-medium">{wf.name}</p>
+                      <Link
+                        href={`/workflows/${wf.id}`}
+                        className="text-sm font-medium hover:text-primary hover:underline"
+                      >
+                        {wf.name}
+                      </Link>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <DriftBadge lastScannedAt={wf.last_scanned_at} />
                       <RiskBadge score={wf.risk_score} />
                       <DecisionBadge decision={wf.last_scan_decision} />
                     </div>
